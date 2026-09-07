@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "name": "prompt-optimizer",
+        "command": "python -B .cursor/hooks/prompt-optimizer-state.py"
+      }
+    ]
+  }
+}

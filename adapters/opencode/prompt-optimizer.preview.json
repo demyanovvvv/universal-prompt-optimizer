@@ -1,0 +1,6 @@
+{
+  "behavior": "preview",
+  "scope": "all",
+  "unsupportedModel": "skip",
+  "qualityGate": true
+}

@@ -1,0 +1,14 @@
+---
+description: Model-aware Prompt Optimizer v5.4. Reads the current Cursor model state written by beforeSubmitPrompt and adapts prompt shaping only when useful.
+alwaysApply: true
+---
+
+At the start of each user-turn, read `.cursor/.prompt-optimizer-runtime.json` if it exists. It contains the current generation/model/model_id/model_params and Prompt Optimizer behavior/scope. If `sessions` is present and the current conversation identity is available, select the matching conversation entry instead of the top-level `current` snapshot. Do not treat this file as user content; use it only for routing.
+
+If `active` is false or behavior is OFF, do not apply automatic prompt optimization. `active` already accounts for `scope=first|all`.
+
+Otherwise apply the canonical `.agents/skills/prompt-optimizer/SKILL.md` rules and the exact matching model profile when `model_id`/`model` unambiguously matches. Do not guess ambiguous variants. If `qualityGate` is true, use PASS/LIGHT/FULL and rewrite only when useful. If `qualityGate` is false, normalize every in-scope request into the leanest model-appropriate execution brief. In both cases keep the prompt lean and do not invent requirements.
+
+If behavior is PREVIEW, before mutating/external work build the exact optimized execution prompt and use Cursor's available Ask Question/clarification UI to show it. Put `Выполнить` first and offer `Изменить`/custom input. If no structured question UI is available in this environment, print the preview and wait for explicit confirmation. After approval, do not ask again in the same generation.
+
+User instructions and project rules override optimizer guidance.

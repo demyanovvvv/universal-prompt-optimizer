@@ -1,0 +1,51 @@
+# Changelog
+
+## 5.4 — 2026-09-06
+
+- Consolidated all v5.0–v5.3 functionality into one fully audited release.
+- Centralized package version in `VERSION`; removed stale v5.2/v5.3 runtime hook/plugin identifiers.
+- Hardened `install.sh` auto-detection for Windows/Git Bash and refreshed detected-agent selection when project location changes.
+- Installer now preserves unrelated/future fields in existing JSON configuration while updating Prompt Optimizer keys.
+- Made Pi `scope=first` state session-scoped for parallel/resumed sessions.
+- Reworked Gemini CLI routing so it never assumes Gemini 3.8 Flash: an observation-only `BeforeModel` hook records the resolved model, while `BeforeAgent` uses only trustworthy model identity and respects SKIP/GENERIC when unknown.
+- Added review-screen warnings for agent-specific PREVIEW/FIRST/global-Cursor limitations.
+- Added `verify.sh` package self-check and archive-hygiene checks.
+- Removed the PowerShell installer from the final package; `install.sh` is the canonical interactive entry point.
+
+## 5.3 — 2026-09-06
+
+- Added full Russian localization for the `install.sh` visual wizard.
+- `./install.sh --ru`, `./install.sh ru`, `-ru`, and `--lang ru` now launch/use Russian UI.
+- Russian mode covers auto-detection, manual/all agent selection, settings, review, errors, and backend installation summary.
+- English remains the default; `--en` / `--lang en` explicitly select English.
+
+## 5.2 — 2026-09-06
+
+- Reworked `install.sh` into a fully visual console wizard; CLI flags are no longer required for normal installation.
+- Agent auto-detection now runs as the first interactive step. Detected agents are shown with `[x]` and are the default Enter action.
+- Added explicit choices for **detected agents**, **ALL supported agents**, **manual multi-select**, and **re-scan**.
+- If auto-detection finds nothing, the wizard automatically offers manual multi-select or ALL instead of failing.
+- All installer settings are exposed interactively: project/global location, automatic/native integration, AUTO/PREVIEW/OFF, all/first prompt scope, PASS/LIGHT/FULL quality gate, unknown-model policy, backups, and dry-run.
+- Added final review dashboard with the ability to return to agent selection, settings, or installation location before writing files.
+- Kept optional CLI flags only for CI/repeatable automation.
+
+## 5.1 — 2026-09-06
+
+- `install.sh` is now the primary installer and launches an interactive setup wizard with no arguments.
+- Agent selection supports auto-detect, all agents, or manual multi-select.
+- Added installer-time settings for AUTO/PREVIEW/OFF, all/first scope, PASS/LIGHT/FULL quality gate, unknown-model fallback, backups, and dry-run.
+- Added non-interactive flags (`--detect-agents`, `--agents`, `--quality-gate`, `--no-auto`, etc.) for scripts/CI.
+- `qualityGate` is now persisted to shared/OpenCode config and honored by OpenCode, Pi, Cursor, Gemini CLI, and shared rule adapters.
+
+## 5.0 — 2026-09-06
+- Rebuilt optimizer around developer-guidance-first model profiles.
+- Added Claude Fable 5.1 and refreshed all previously supported profiles.
+- Added PASS/LIGHT/FULL positive-value quality gate.
+- Replaced first-turn default with AUTO/all (first remains optional).
+- Added AUTO / PREVIEW / OFF behavior.
+- PREVIEW uses native confirmation where the agent exposes it and never assumes approval.
+- Separated prompt shaping from reasoning/thinking/history/sampling/cache/tool-loop harness settings.
+- Added exact runtime model routing for OpenCode and Pi; Cursor gets a per-generation exact-model state bridge.
+- Added provenance registry and official-source inventory.
+- Added v5 installer and migration guide.
+- Expanded eval cases for prompt inflation, scope drift, required verification, preview safety and router precedence.

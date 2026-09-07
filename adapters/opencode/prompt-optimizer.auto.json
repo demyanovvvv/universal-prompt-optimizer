@@ -1,0 +1,6 @@
+{
+  "behavior": "auto",
+  "scope": "all",
+  "unsupportedModel": "skip",
+  "qualityGate": true
+}

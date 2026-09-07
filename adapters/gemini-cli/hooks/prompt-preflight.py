@@ -1,0 +1,271 @@
+#!/usr/bin/env python3
+import json
+import os
+import re
+import sys
+import tempfile
+import time
+from contextlib import contextmanager
+from pathlib import Path
+
+
+def read_json(path: Path, default):
+    try:
+        if path.exists():
+            value = json.loads(path.read_text(encoding="utf-8"))
+            return value if isinstance(value, dict) else default
+    except Exception:
+        pass
+    return default
+
+
+def config(cwd: Path):
+    d = {"behavior": "auto", "scope": "all", "qualityGate": True, "unsupportedModel": "skip"}
+    invalid_config = False
+    for p in [Path.home() / ".config/prompt-optimizer/config.json", cwd / ".prompt-optimizer.json"]:
+        if not p.exists():
+            continue
+        try:
+            value = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            invalid_config = True
+            continue
+        if not isinstance(value, dict):
+            invalid_config = True
+            continue
+        if (
+            ("behavior" in value and value["behavior"] not in {"auto", "preview", "off"})
+            or ("scope" in value and value["scope"] not in {"first", "all"})
+            or ("qualityGate" in value and not isinstance(value["qualityGate"], bool))
+            or ("unsupportedModel" in value and value["unsupportedModel"] not in {"skip", "generic"})
+        ):
+            invalid_config = True
+            continue
+        if value.get("behavior") in {"auto", "preview", "off"}:
+            d["behavior"] = value["behavior"]
+        if value.get("scope") in {"first", "all"}:
+            d["scope"] = value["scope"]
+        if isinstance(value.get("qualityGate"), bool):
+            d["qualityGate"] = value["qualityGate"]
+        if value.get("unsupportedModel") in {"skip", "generic"}:
+            d["unsupportedModel"] = value["unsupportedModel"]
+    if invalid_config:
+        d["behavior"] = "off"
+    return d
+
+
+def state_path(cwd: Path) -> Path:
+    return cwd / ".gemini/.prompt-optimizer-model-state.json"
+
+
+@contextmanager
+def state_lock(path: Path):
+    """Serialize state read-modify-write across concurrent hook processes."""
+    lock = path.with_name(path.name + ".lock")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + 5
+    acquired = False
+    while time.monotonic() < deadline:
+        try:
+            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            os.close(fd)
+            acquired = True
+            break
+        except FileExistsError:
+            try:
+                if time.time() - lock.stat().st_mtime > 30:
+                    lock.unlink()
+                    continue
+            except FileNotFoundError:
+                continue
+            time.sleep(0.02)
+    if not acquired:
+        raise TimeoutError(f"Timed out waiting for state lock: {path}")
+    try:
+        yield
+    finally:
+        try:
+            lock.unlink()
+        except FileNotFoundError:
+            pass
+
+
+def write_json_atomic(path: Path, value: dict) -> None:
+    fd, temp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+    temp = Path(temp_name)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            json.dump(value, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temp, path)
+    finally:
+        if temp.exists():
+            temp.unlink()
+
+
+def read_model_state(cwd: Path) -> dict:
+    return read_json(state_path(cwd), {})
+
+
+def remember_model(cwd: Path, session: str | None, model: str | None) -> None:
+    if not session or not model:
+        return
+    try:
+        path = state_path(cwd)
+        with state_lock(path):
+            state = read_model_state(cwd)
+            state[str(session)] = str(model)
+            # Bound growth if many short-lived sessions are created in one workspace.
+            if len(state) > 200:
+                for key in list(state)[:-100]:
+                    state.pop(key, None)
+            write_json_atomic(path, state)
+    except Exception:
+        pass
+
+
+def observed_model(cwd: Path, session: str | None) -> str | None:
+    if not session:
+        return None
+    value = read_model_state(cwd).get(str(session))
+    return str(value) if isinstance(value, str) and value.strip() else None
+
+
+def configured_model(cwd: Path) -> str | None:
+    # Gemini CLI precedence relevant to what a hook can observe before the first
+    # model call: environment > project settings > user settings. A CLI --model
+    # argument has higher precedence but is not exposed to BeforeAgent, so we do
+    # not pretend to know it until BeforeModel reports the resolved model.
+    env_model = os.environ.get("GEMINI_MODEL", "").strip()
+    if env_model:
+        return env_model
+    for path in [cwd / ".gemini/settings.json", Path.home() / ".gemini/settings.json"]:
+        data = read_json(path, {})
+        model = data.get("model")
+        if isinstance(model, dict):
+            name = model.get("name")
+            if isinstance(name, str) and name.strip():
+                return name.strip()
+    return None
+
+
+def exact_profile_for(model: str | None) -> str | None:
+    if not model:
+        return None
+    mid = model.lower().replace("_", "-")
+    # Only map an unambiguous ID. Aliases such as auto/pro/flash are deliberately
+    # not treated as Gemini 3.8 Flash because routing can resolve them elsewhere.
+    if re.search(r"(?:^|[/._-])gemini[-_. ]*3[.-]8(?:[^a-z0-9]+|.*)flash(?:$|[/._-])", mid):
+        return "gemini-3.8-flash"
+    if "gemini-3.8-flash" in mid:
+        return "gemini-3.8-flash"
+    return None
+
+
+def first_scope_active(inp: dict, cwd: Path, cfg: dict) -> bool:
+    if cfg.get("scope") != "first":
+        return True
+    session = inp.get("session_id") or inp.get("sessionId")
+    if not session:
+        # Do not invent session identity. Applying the preflight is safer than
+        # silently skipping a user's first request on an unknown schema.
+        return True
+    turn_state_path = cwd / ".gemini/.prompt-optimizer-session-state.json"
+    key = str(session)
+    try:
+        with state_lock(turn_state_path):
+            state = read_json(turn_state_path, {})
+            if key in state:
+                return False
+            state[key] = True
+            write_json_atomic(turn_state_path, state)
+    except Exception:
+        # If state cannot be locked or persisted, do not silently suppress the
+        # user's first eligible request.
+        return True
+    return True
+
+
+def silent_output(event: str) -> dict:
+    # BeforeModel does not need hookSpecificOutput when no request fields are
+    # overridden. Returning only suppressOutput leaves the original request intact.
+    if event == "BeforeAgent":
+        return {"suppressOutput": True, "hookSpecificOutput": {"additionalContext": ""}}
+    return {"suppressOutput": True}
+
+
+inp = json.load(sys.stdin)
+cwd = Path(inp.get("cwd") or os.environ.get("GEMINI_PROJECT_DIR") or os.getcwd())
+event = str(inp.get("hook_event_name") or "BeforeAgent")
+session = inp.get("session_id") or inp.get("sessionId")
+cfg = config(cwd)
+
+if cfg.get("behavior") == "off":
+    print(json.dumps(silent_output(event)))
+    raise SystemExit
+
+# BeforeModel is observation-only: capture the resolved model and never rewrite,
+# replace, or reconstruct the outgoing request.
+if event == "BeforeModel":
+    request = inp.get("llm_request")
+    if isinstance(request, dict):
+        model = request.get("model")
+        if isinstance(model, str) and model.strip():
+            remember_model(cwd, str(session) if session else None, model.strip())
+    print(json.dumps(silent_output(event)))
+    raise SystemExit
+
+common = (
+    "Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; "
+    "do not invent requirements. Keep the execution brief as concise as the active model permits. Native Reasoning First: "
+    "never request hidden chain-of-thought or add generic think-step-by-step scaffolding. User instructions override this preflight. "
+)
+if cfg.get("qualityGate", True):
+    base = "Prompt Optimizer v5.4. Apply PASS/LIGHT/FULL quality gating before acting. " + common
+else:
+    base = "Prompt Optimizer v5.4. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
+
+# Prefer the exact model observed by BeforeModel in this session. Before the first
+# model call, use only explicit configuration visible to the hook. Never assume a
+# model from the agent name itself.
+model = observed_model(cwd, str(session) if session else None) or configured_model(cwd)
+profile = exact_profile_for(model)
+
+# Keep SKIP semantics consistent with OpenCode/Pi: if there is no exact supported
+# profile, do not inject the optimizer at all. GENERIC explicitly opts into the
+# neutral model-agnostic preflight.
+if profile is None and cfg.get("unsupportedModel") != "generic":
+    print(json.dumps(silent_output("BeforeAgent")))
+    raise SystemExit
+
+# Consume the first-turn slot only after this turn is eligible. An unknown
+# model with SKIP must not prevent a later, observable supported model turn.
+if not first_scope_active(inp, cwd, cfg):
+    print(json.dumps(silent_output("BeforeAgent")))
+    raise SystemExit
+
+if profile == "gemini-3.8-flash":
+    base += (
+        "Resolved model profile: Gemini 3.8 Flash. Prefer concise direct instructions and aggressively PASS/LIGHT. "
+        "For long context put source data first and the specific task at the end; avoid verbose legacy prompt frameworks. "
+    )
+elif model:
+    base += f"Observed/configured model: {model}. No exact installed model profile matches it; use the neutral model-agnostic optimizer profile and do not invent model-specific behavior. "
+else:
+    base += "The exact active model is not yet observable on this turn; use only the neutral model-agnostic optimizer profile. Do not guess a model family or variant. "
+
+if cfg.get("behavior") == "preview":
+    base += (
+        "PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call the built-in ask_user tool once with a choice/yes-no approval. "
+        "Show the exact prompt, put Выполнить first/default and allow modification/custom text. After approval execute without re-previewing. "
+        "If ask_user is unavailable, print the prompt and wait for explicit confirmation. "
+    )
+else:
+    if cfg.get("qualityGate", True):
+        base += "AUTO MODE: silently optimize only when useful and execute in the same turn. "
+    else:
+        base += "AUTO MODE: normalize every in-scope prompt and execute in the same turn. "
+
+print(json.dumps({"suppressOutput": True, "hookSpecificOutput": {"additionalContext": base}}))

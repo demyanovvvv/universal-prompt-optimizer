@@ -1,0 +1,8 @@
+# Runtime state is local to an agent session and must not be committed.
+.cursor/.prompt-optimizer-runtime.json
+.cursor/.prompt-optimizer-session-state.json
+.cursor/*.prompt-optimizer-session-state.json.lock
+.cursor/*.prompt-optimizer-runtime.json.lock
+.gemini/.prompt-optimizer-model-state.json
+.gemini/.prompt-optimizer-session-state.json
+.gemini/*.prompt-optimizer-*.json.lock

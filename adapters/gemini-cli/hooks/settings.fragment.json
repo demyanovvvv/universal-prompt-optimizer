@@ -1,0 +1,30 @@
+{
+  "hooks": {
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "name": "prompt-optimizer",
+            "owner": "universal-prompt-optimizer",
+            "type": "command",
+            "command": "python -B -c \"import os,runpy;runpy.run_path(os.path.join(os.environ.get('GEMINI_PROJECT_DIR') or os.getcwd(),'.gemini','hooks','prompt-preflight.py'),run_name='__main__')\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ],
+    "BeforeModel": [
+      {
+        "hooks": [
+          {
+            "name": "prompt-optimizer",
+            "owner": "universal-prompt-optimizer",
+            "type": "command",
+            "command": "python -B -c \"import os,runpy;runpy.run_path(os.path.join(os.environ.get('GEMINI_PROJECT_DIR') or os.getcwd(),'.gemini','hooks','prompt-preflight.py'),run_name='__main__')\"",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
+  }
+}

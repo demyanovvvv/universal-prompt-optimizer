@@ -1,0 +1,4 @@
+<!-- prompt-optimizer:auto:start -->
+## Prompt Optimizer v5.4
+Use the canonical `.agents/skills/prompt-optimizer/SKILL.md` (or `.claude/skills/prompt-optimizer/SKILL.md`) as an adaptive preflight. Apply the exact current Claude model profile when known, plus conditional shared Claude practices. When `qualityGate=true`, use PASS/LIGHT/FULL and do not expand a good short request. When `qualityGate=false`, normalize every in-scope request into the leanest model-appropriate execution brief. Preserve user/project requirements and keep runtime effort/thinking separate from prompt text. If configured PREVIEW, use Claude Code's available user-question UI before mutating/external work and execute only after approval; AUTO executes silently; OFF skips auto optimization. User instructions override this block.
+<!-- prompt-optimizer:auto:end -->

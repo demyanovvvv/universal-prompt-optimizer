@@ -1,0 +1,181 @@
+{
+  "version": "5.4",
+  "checked": "2026-09-06",
+  "profiles": [
+    {
+      "id": "astra",
+      "aliases": [
+        "gpt-6-astra",
+        "astra"
+      ],
+      "file": "gpt-6-astra.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "sol",
+      "aliases": [
+        "gpt-5.6",
+        "gpt-5.6-sol",
+        "sol"
+      ],
+      "file": "gpt-5.6-sol.md",
+      "provenance": "official-family+official-tier"
+    },
+    {
+      "id": "terra",
+      "aliases": [
+        "gpt-5.6-terra",
+        "terra"
+      ],
+      "file": "gpt-5.6-terra.md",
+      "provenance": "official-family+derived-density"
+    },
+    {
+      "id": "luna",
+      "aliases": [
+        "gpt-5.6-luna",
+        "luna"
+      ],
+      "file": "gpt-5.6-luna.md",
+      "provenance": "official-family+derived-density"
+    },
+    {
+      "id": "glm-5.2",
+      "aliases": [
+        "glm-5.2",
+        "glm-5-2"
+      ],
+      "file": "glm-5.2.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "glm-5.3",
+      "aliases": [
+        "glm-5.3",
+        "glm-5-3"
+      ],
+      "file": "glm-5.3.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "glm-5.3-flash",
+      "aliases": [
+        "glm-5.3-flash",
+        "glm-5-3-flash"
+      ],
+      "file": "glm-5.3-flash.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "deepseek-v4-flash",
+      "aliases": [
+        "deepseek-v4-flash",
+        "deepseek-v4-flash-0731"
+      ],
+      "file": "deepseek-v4-flash.md",
+      "provenance": "official-api+derived-prompt"
+    },
+    {
+      "id": "deepseek-v4-pro",
+      "aliases": [
+        "deepseek-v4-pro"
+      ],
+      "file": "deepseek-v4-pro.md",
+      "provenance": "official-api+derived-prompt"
+    },
+    {
+      "id": "claude-fable-5.1",
+      "aliases": [
+        "claude-fable-5.1",
+        "claude-fable-5-1"
+      ],
+      "file": "claude-fable-5.1.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "claude-fable-5",
+      "aliases": [
+        "claude-fable-5"
+      ],
+      "file": "claude-fable-5.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "claude-opus-5",
+      "aliases": [
+        "claude-opus-5"
+      ],
+      "file": "claude-opus-5.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "claude-opus-4.8",
+      "aliases": [
+        "claude-opus-4.8",
+        "claude-opus-4-8"
+      ],
+      "file": "claude-opus-4.8.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "claude-sonnet-5",
+      "aliases": [
+        "claude-sonnet-5"
+      ],
+      "file": "claude-sonnet-5.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "kimi-k3",
+      "aliases": [
+        "kimi-k3"
+      ],
+      "file": "kimi-k3.md",
+      "provenance": "official-model-card"
+    },
+    {
+      "id": "muse-spark-1.3",
+      "aliases": [
+        "muse-spark-1.3",
+        "muse-spark-1-3"
+      ],
+      "file": "muse-spark-1.3.md",
+      "provenance": "official-release"
+    },
+    {
+      "id": "hy4-preview",
+      "aliases": [
+        "hy4-preview",
+        "hy-4-preview"
+      ],
+      "file": "hy4-preview.md",
+      "provenance": "official-model-card"
+    },
+    {
+      "id": "qwen3.8-max",
+      "aliases": [
+        "qwen3.8-max",
+        "qwen3.8-max-0902",
+        "qwen3.8-max-2026-09-02"
+      ],
+      "file": "qwen3.8-max.md",
+      "provenance": "official-model+api"
+    },
+    {
+      "id": "gemini-3.8-flash",
+      "aliases": [
+        "gemini-3.8-flash"
+      ],
+      "file": "gemini-3.8-flash.md",
+      "provenance": "official-model"
+    },
+    {
+      "id": "grok-4.6",
+      "aliases": [
+        "grok-4.6"
+      ],
+      "file": "grok-4.6.md",
+      "provenance": "official-model+api"
+    }
+  ]
+}
