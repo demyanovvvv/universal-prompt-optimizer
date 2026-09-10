@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/prompt-optimizer.schema.json",
+  "title": "Universal Prompt Optimizer configuration",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "const": 1,
+      "description": "Managed configuration schema version."
+    },
+    "behavior": {
+      "enum": ["auto", "preview", "off"]
+    },
+    "scope": {
+      "enum": ["first", "all"]
+    },
+    "qualityGate": {
+      "type": "boolean"
+    },
+    "unsupportedModel": {
+      "enum": ["skip", "generic"]
+    },
+    "mode": {
+      "enum": ["first", "all", "off"],
+      "deprecated": true,
+      "description": "Legacy v4 OpenCode setting. Use behavior and scope."
+    }
+  },
+  "additionalProperties": true
+}

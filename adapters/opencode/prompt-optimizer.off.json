@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 1,
   "behavior": "off",
   "scope": "all",
   "unsupportedModel": "skip",

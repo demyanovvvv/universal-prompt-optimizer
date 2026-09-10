@@ -16,3 +16,15 @@ Measure **task-level** efficiency, not just first-prompt length:
 Quality gates must be tested explicitly: PASS must leave an already-good prompt essentially unchanged; LIGHT may add only missing high-value structure; FULL is reserved for genuinely complex/ambiguous work. PREVIEW must never execute before approval and must not preview twice in the same turn.
 
 Developer guidance is a constraint on the optimizer, not an excuse to override the user's/project's explicit rules.
+
+## Deterministic CI check
+
+```bash
+python -B evals/run.py
+python -B evals/run.py --output evals/results/latest.json
+```
+
+The runner validates the fixture schema, model registry membership, unique IDs,
+and required adversarial cases without making provider calls. It is not a
+substitute for measured OFF/AUTO/PREVIEW runs; it provides a stable contract that
+a future provider runner can consume without changing `cases.jsonl`.

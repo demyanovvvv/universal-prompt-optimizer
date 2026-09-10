@@ -80,6 +80,10 @@ extra=router_ids-set(ids)
 if missing or extra: raise SystemExit(f'OpenCode profile mismatch missing={sorted(missing)} extra={sorted(extra)}')
 # Core package version alignment
 ver=(root/'VERSION').read_text().strip()
+package=json.loads((root/'package.json').read_text(encoding='utf-8'))
+lock=json.loads((root/'package-lock.json').read_text(encoding='utf-8'))
+if package.get('version') != f'{ver}.0' or lock.get('version') != f'{ver}.0':
+    raise SystemExit(f'npm version mismatch for VERSION={ver}')
 checks=[
     root/'.agents/skills/prompt-optimizer/SKILL.md',
     root/'adapters/opencode/plugin/index.ts',
@@ -96,7 +100,7 @@ for p in checks:
 for p in list((root/'adapters').rglob('*')) + list((root/'auto').rglob('*')):
     if p.is_file():
         t=p.read_text(encoding='utf-8',errors='ignore')
-        if 'prompt-optimizer-v5-2' in t or 'prompt-optimizer-v5-3' in t:
+        if any(stale in t for stale in ('prompt-optimizer-v5-2', 'prompt-optimizer-v5-3', 'prompt-optimizer-v5-4')):
             raise SystemExit(f'stale hook/plugin id in {p}')
 # Archive hygiene
 bad=[p for p in root.rglob('*') if p.name=='__pycache__' or p.suffix=='.pyc']
@@ -105,9 +109,23 @@ print('OK')
 PY
 ok "JSON, registry, 20 профилей/override skills, версии и чистота пакета" "JSON, registry, 20 profiles/override skills, version alignment and package hygiene"
 
+"$PYTHON_BIN" -B tests/registry_conformance.py
+ok "Согласованность registry и адаптеров" "Registry and adapter conformance"
+
+"$PYTHON_BIN" -B evals/run.py >/dev/null
+ok "Статическая матрица evals" "Static evaluation matrix"
+
+PYTHONDONTWRITEBYTECODE=1 "$PYTHON_BIN" -B -m unittest discover -s tests >/dev/null
+ok "Unit-тесты installer, registry и evals" "Installer, registry and eval unit tests"
+
+TSC_BIN=""
 if command -v tsc >/dev/null 2>&1; then
-  tsc --noEmit --noCheck --target ES2022 --module ESNext \
-    adapters/opencode/plugin/index.ts adapters/pi/extensions/prompt-optimizer.ts
+  TSC_BIN="$(command -v tsc)"
+elif [[ -x node_modules/.bin/tsc ]]; then
+  TSC_BIN="node_modules/.bin/tsc"
+fi
+if [[ -n "$TSC_BIN" ]]; then
+  "$TSC_BIN" -p tsconfig.verify.json
   ok "Синтаксис TypeScript" "TypeScript syntax"
 else
   warn "tsc не найден — синтаксис TypeScript не проверен локально" "tsc not found — TypeScript syntax check skipped"
@@ -157,7 +175,8 @@ printf '%s\n' '{"session_id":"gs1","cwd":"'"$TMP_WIN"'/gemini","hook_event_name"
 import json,sys
 o=json.load(open(sys.argv[1])); st=json.load(open(sys.argv[2]))
 assert 'hookSpecificOutput' not in o or 'llm_request' not in o.get('hookSpecificOutput',{})
-assert st['gs1']=='gemini-3.8-flash'
+assert st['gs1']['model']=='gemini-3.8-flash'
+assert isinstance(st['gs1']['updatedAt'], int)
 PY
 # Later turn in same session sees the exact supported profile.
 printf '%s\n' '{"session_id":"gs1","cwd":"'"$TMP_WIN"'/gemini","hook_event_name":"BeforeAgent","prompt":"Fix it"}' \
@@ -253,9 +272,11 @@ PY
 ok "Реальная установка всех 8 агентов и сохранение JSON-полей" "Real all-eight-agent install and JSON-field preservation"
 
 # Safety and idempotence regressions.
-if "$PYTHON_BIN" -B install.py --agents all --scope project --project "$ROOT" --auto --yes >/dev/null 2>&1; then
+PACKAGE_ROOT_ERROR="$TMP/package-root-error.txt"
+if "$PYTHON_BIN" -B install.py --agents all --scope project --project "$ROOT" --auto > /dev/null 2> "$PACKAGE_ROOT_ERROR"; then
   fail "Установка в исходный каталог не была отклонена" "Package-root installation was not rejected"
 fi
+grep -q 'package source tree\|исходного каталога пакета' "$PACKAGE_ROOT_ERROR" || fail "Package-root тест завершился не из-за защиты пути" "Package-root test did not fail because of the path guard"
 [[ -z "$(find . -type f -name '*.prompt-optimizer.bak' -print -quit)" ]] || fail "Проверка package root создала backup" "Package-root check created a backup"
 mkdir -p "$TMP/safety/.agents/skills/custom" "$TMP/safety/.opencode/commands"
 printf '%s\n' 'user skill must survive' > "$TMP/safety/.agents/skills/custom/SKILL.md"
@@ -318,5 +339,22 @@ fi
 [[ ! -e "$TMP/rollback/.prompt-optimizer-install.lock" ]] || fail "Rollback оставил install lock" "Rollback left install lock"
 [[ "$(cat "$TMP/rollback/.gemini/settings.json")" == '{broken' ]] || fail "Rollback изменил исходный JSON" "Rollback changed original JSON"
 ok "Rollback после частичной установки" "Rollback after partial installation"
+
+# Doctor is read-only and uninstall removes only package-owned material.
+LIFECYCLE="$TMP/lifecycle"
+mkdir -p "$LIFECYCLE"
+printf '%s\n' '# user content' > "$LIFECYCLE/AGENTS.md"
+./install.sh --agents opencode,cursor,gemini --scope project --project "$LIFECYCLE" --auto --yes --python-bin "$PYTHON_BIN" >/dev/null
+./install.sh --scope project --project "$LIFECYCLE" --doctor >/dev/null
+if ./install.sh --scope project --project "$LIFECYCLE" --doctor --uninstall >/dev/null 2>&1; then
+  fail "Doctor accepted --uninstall вместе" "Doctor accepted --uninstall together"
+fi
+./install.sh --agents all --scope project --project "$LIFECYCLE" --uninstall --dry-run --yes >/dev/null
+./install.sh --agents all --scope project --project "$LIFECYCLE" --uninstall --yes >/dev/null
+./install.sh --agents all --scope project --project "$LIFECYCLE" --uninstall --yes >/dev/null
+grep -q '^# user content$' "$LIFECYCLE/AGENTS.md" || fail "Uninstall удалил пользовательский текст" "Uninstall removed user text"
+[[ ! -e "$LIFECYCLE/.agents/skills/prompt-optimizer/SKILL.md" ]] || fail "Uninstall оставил shared skill" "Uninstall left shared skill"
+[[ ! -e "$LIFECYCLE/.opencode/plugins/prompt-optimizer/index.ts" ]] || fail "Uninstall оставил OpenCode plugin" "Uninstall left OpenCode plugin"
+ok "Doctor, uninstall и dry-run" "Doctor, uninstall and dry-run"
 
 if [[ "$LANG_UI" == ru ]]; then say "Все проверки завершены успешно."; else say "All checks passed."; fi

@@ -1,0 +1,8 @@
+* text=auto
+VERSION text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
+*.md text eol=lf

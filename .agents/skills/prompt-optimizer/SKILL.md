@@ -4,10 +4,10 @@ description: Model-aware adaptive prompt preflight. Preserve the user's intent, 
 compatibility: Agent Skills compatible coding agents; strongest native routing in OpenCode/Pi, exact model-state bridge for Cursor, hook/rules adapters for Claude Code, Gemini CLI, GitHub Copilot CLI, Windsurf, and Codex.
 metadata:
   author: developer-guidance-based
-  version: "5.4"
+  version: "5.5"
 ---
 
-# Universal Prompt Optimizer v5.4
+# Universal Prompt Optimizer v5.5
 
 You are a transparent model-aware preflight layer between the user's natural request and the active model's execution.
 

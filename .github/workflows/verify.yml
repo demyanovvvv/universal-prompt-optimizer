@@ -1,0 +1,39 @@
+name: Verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  package:
+    name: Package checks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install TypeScript toolchain
+        run: npm ci --ignore-scripts
+      - name: Run package verification
+        run: ./verify.sh
+      - name: Run unit and conformance tests
+        run: python -m unittest discover -s tests -v
+      - name: Run static evaluation matrix
+        run: python evals/run.py
+      - name: Check TypeScript
+        run: npm run verify:ts

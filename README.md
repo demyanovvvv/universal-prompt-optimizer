@@ -1,12 +1,28 @@
-# Universal Prompt Optimizer v5.4
+# Universal Prompt Optimizer v5.5
 
 Model-aware adaptive Agent Skill that lets you write normal short human prompts while the active agent silently converts them **only when useful** into the prompt shape recommended for the selected model.
 
 Primary goals: higher first-pass success, fewer misunderstandings/scope errors, fewer repair iterations and lower total tokens per completed task — not merely fewer tokens in the first prompt.
 
-## v5.4 — final consolidated build
+## v5.5 — verified lifecycle build
 
-This release consolidates every v5.0–v5.3 change and adds a full consistency/runtime audit.
+This release keeps the v5.4 runtime behavior and adds reproducible CI, lifecycle
+management, schema validation, conformance tests, and deterministic eval checks.
+
+- `./install.sh --doctor` / `--status` performs a read-only installation,
+  configuration, lock, and runtime-state diagnostic.
+- `./install.sh --uninstall` removes unchanged package-owned files and managed
+  blocks/hooks while preserving user text, custom JSON fields, hooks, commands,
+  and modified files. `--dry-run` previews the removal.
+- Managed configuration now carries `schemaVersion: 1`; the formal contract is
+  `prompt-optimizer.schema.json`. Unknown fields remain supported and preserved.
+- GitHub Actions verifies Linux and Windows, unit/conformance/eval suites, and
+  the OpenCode/Pi TypeScript adapters using the pinned npm toolchain.
+- Cursor and Gemini runtime state is bounded and entries expire after 30 days.
+- `evals/run.py` validates 35 deterministic fixtures, including ambiguous model,
+  prompt-injection, destructive-action, and secret-preservation cases.
+
+The v5.4 installer/runtime hardening remains included:
 
 - `./install.sh` remains the only normal human-facing installer. English is default; `./install.sh --ru` / `./install.sh ru` runs the complete Russian wizard.
 - Auto-detection runs first, with **detected / ALL / manual multi-select / re-scan** and a no-detection fallback. Windows/Git Bash detection now also checks common Cursor/Windsurf locations.
@@ -54,6 +70,7 @@ Shared config (project):
 ### AUTO — recommended
 ```json
 {
+  "schemaVersion": 1,
   "behavior": "auto",
   "scope": "all",
   "qualityGate": true,
@@ -64,6 +81,7 @@ Shared config (project):
 ### PREVIEW
 ```json
 {
+  "schemaVersion": 1,
   "behavior": "preview",
   "scope": "all",
   "qualityGate": true,
@@ -74,6 +92,7 @@ Shared config (project):
 ### OFF
 ```json
 {
+  "schemaVersion": 1,
   "behavior": "off",
   "scope": "all",
   "qualityGate": true,
@@ -191,6 +210,30 @@ Normal users do not need these. They are retained for repeatable automation and 
 Run `./install.sh --help` for the automation interface.
 
 `install.py` is an internal backend; the supported human-facing entry point is `install.sh`.
+
+### Diagnose and uninstall
+
+```bash
+./install.sh --scope project --project . --doctor
+./install.sh --scope project --project . --uninstall --dry-run --yes
+./install.sh --scope project --project . --uninstall --yes
+```
+
+Uninstall is conservative. A copied package file is removed only while its
+content still matches the package version. User-modified files are reported and
+preserved. Managed Markdown blocks and hook entries can be removed independently
+without deleting surrounding user content. Ambiguous pre-existing config
+containers such as a version-only `settings.json` are retained.
+
+### Development checks
+
+```bash
+npm install
+./verify.sh
+npm test
+npm run verify:ts
+python -B evals/run.py
+```
 
 ## Manual model override skills
 

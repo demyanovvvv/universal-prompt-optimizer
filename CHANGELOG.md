@@ -1,5 +1,21 @@
 # Changelog
 
+## 5.5 — 2026-09-11
+
+- Added Linux/Windows GitHub Actions verification and a pinned npm/TypeScript
+  development toolchain.
+- Added safe `--doctor`/`--status` diagnostics and conservative `--uninstall`
+  with dry-run, managed-hook cleanup, user-field preservation, and transactional
+  rollback.
+- Added configuration `schemaVersion: 1` and a public JSON Schema while keeping
+  unrelated future/user fields intact.
+- Added registry conformance, installer unit tests, and a deterministic 35-case
+  eval runner with ambiguous-model, injection, destructive-action, and secret
+  handling cases.
+- Bounded Cursor and Gemini runtime state and added 30-day stale-session cleanup.
+- Added MIT license, security/contribution guidance, and structured GitHub issue
+  templates.
+
 ## 5.4 — 2026-09-06
 
 - Consolidated all v5.0–v5.3 functionality into one fully audited release.

@@ -8,6 +8,8 @@ import time
 from contextlib import contextmanager
 from pathlib import Path
 
+STATE_TTL_SECONDS = 30 * 24 * 60 * 60
+STATE_LIMIT = 200
 
 def read_json(path: Path, default):
     try:
@@ -34,7 +36,8 @@ def config(cwd: Path):
             invalid_config = True
             continue
         if (
-            ("behavior" in value and value["behavior"] not in {"auto", "preview", "off"})
+            ("schemaVersion" in value and (not isinstance(value["schemaVersion"], int) or isinstance(value["schemaVersion"], bool) or value["schemaVersion"] != 1))
+            or ("behavior" in value and value["behavior"] not in {"auto", "preview", "off"})
             or ("scope" in value and value["scope"] not in {"first", "all"})
             or ("qualityGate" in value and not isinstance(value["qualityGate"], bool))
             or ("unsupportedModel" in value and value["unsupportedModel"] not in {"skip", "generic"})
@@ -109,18 +112,33 @@ def read_model_state(cwd: Path) -> dict:
     return read_json(state_path(cwd), {})
 
 
+def prune_state(state: dict) -> dict:
+    cutoff = time.time() - STATE_TTL_SECONDS
+    fresh = {}
+    for key, value in state.items():
+        if isinstance(value, dict):
+            updated_at = value.get("updatedAt")
+            if isinstance(updated_at, (int, float)) and updated_at < cutoff:
+                continue
+        fresh[key] = value
+    if len(fresh) > STATE_LIMIT:
+        ranked = sorted(
+            fresh.items(),
+            key=lambda item: item[1].get("updatedAt", 0) if isinstance(item[1], dict) else 0,
+            reverse=True,
+        )
+        fresh = dict(ranked[: STATE_LIMIT // 2])
+    return fresh
+
+
 def remember_model(cwd: Path, session: str | None, model: str | None) -> None:
     if not session or not model:
         return
     try:
         path = state_path(cwd)
         with state_lock(path):
-            state = read_model_state(cwd)
-            state[str(session)] = str(model)
-            # Bound growth if many short-lived sessions are created in one workspace.
-            if len(state) > 200:
-                for key in list(state)[:-100]:
-                    state.pop(key, None)
+            state = prune_state(read_model_state(cwd))
+            state[str(session)] = {"model": str(model), "updatedAt": int(time.time())}
             write_json_atomic(path, state)
     except Exception:
         pass
@@ -130,6 +148,11 @@ def observed_model(cwd: Path, session: str | None) -> str | None:
     if not session:
         return None
     value = read_model_state(cwd).get(str(session))
+    if isinstance(value, dict):
+        updated_at = value.get("updatedAt")
+        if isinstance(updated_at, (int, float)) and updated_at < time.time() - STATE_TTL_SECONDS:
+            return None
+        value = value.get("model")
     return str(value) if isinstance(value, str) and value.strip() else None
 
 
@@ -176,10 +199,10 @@ def first_scope_active(inp: dict, cwd: Path, cfg: dict) -> bool:
     key = str(session)
     try:
         with state_lock(turn_state_path):
-            state = read_json(turn_state_path, {})
+            state = prune_state(read_json(turn_state_path, {}))
             if key in state:
                 return False
-            state[key] = True
+            state[key] = {"updatedAt": int(time.time())}
             write_json_atomic(turn_state_path, state)
     except Exception:
         # If state cannot be locked or persisted, do not silently suppress the
@@ -223,9 +246,9 @@ common = (
     "never request hidden chain-of-thought or add generic think-step-by-step scaffolding. User instructions override this preflight. "
 )
 if cfg.get("qualityGate", True):
-    base = "Prompt Optimizer v5.4. Apply PASS/LIGHT/FULL quality gating before acting. " + common
+    base = "Prompt Optimizer v5.5. Apply PASS/LIGHT/FULL quality gating before acting. " + common
 else:
-    base = "Prompt Optimizer v5.4. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
+    base = "Prompt Optimizer v5.5. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
 
 # Prefer the exact model observed by BeforeModel in this session. Before the first
 # model call, use only explicit configuration visible to the hook. Never assume a

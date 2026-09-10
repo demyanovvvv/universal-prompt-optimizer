@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.4
+# Source provenance — Universal Prompt Optimizer v5.5
 
 Checked: **2026-09-06**.
 

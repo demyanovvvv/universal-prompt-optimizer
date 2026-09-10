@@ -1,5 +1,5 @@
 ---
-description: Model-aware Prompt Optimizer v5.4. Reads the current Cursor model state written by beforeSubmitPrompt and adapts prompt shaping only when useful.
+description: Model-aware Prompt Optimizer v5.5. Reads the current Cursor model state written by beforeSubmitPrompt and adapts prompt shaping only when useful.
 alwaysApply: true
 ---
 

@@ -11,8 +11,8 @@ const sessionTurns = new Map<string, number>()
 const previewedTurns = new Map<string, number>()
 
 const BASE_COMMON = `Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; do not invent requirements. Keep prompts as lean as the task/model permits. Native Reasoning First: no hidden-CoT requests or generic 'think step by step'. User instructions override this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.4: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.4: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
+const BASE_GATE = `Prompt Optimizer v5.5: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
+const BASE_ALWAYS = `Prompt Optimizer v5.5: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
 const PREVIEW = `PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call prompt_optimizer_preview exactly once for this user-turn. Read-only context resolution may happen first. After tool approval, execute the returned approved/edited prompt; do not preview again in the same user-turn.`
 
 const hints: Array<[RegExp,string]> = [
@@ -48,6 +48,7 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: boolean
       const parsed = JSON.parse(readFileSync(p,'utf8'))
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { invalidConfig = true; continue }
       if (("behavior" in parsed && !["auto","preview","off"].includes(parsed.behavior))
+        || ("schemaVersion" in parsed && (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion !== 1))
         || ("scope" in parsed && !["first","all"].includes(parsed.scope))
         || ("qualityGate" in parsed && typeof parsed.qualityGate !== 'boolean')
         || ("unsupportedModel" in parsed && !["skip","generic"].includes(parsed.unsupportedModel))) {

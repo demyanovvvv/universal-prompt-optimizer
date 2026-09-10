@@ -1,5 +1,5 @@
 <!-- prompt-optimizer:auto:start -->
-## Prompt Optimizer v5.4 preflight
+## Prompt Optimizer v5.5 preflight
 
 For each user task, use `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight when automatic optimization is enabled for this agent. If the current agent already has a native Prompt Optimizer adapter/plugin active for this turn (notably OpenCode), do not run a second independent preflight or PREVIEW from this AGENTS block; the native adapter wins. The goal is not to make prompts longer. When `qualityGate=true`, use PASS/LIGHT/FULL and rewrite only when positive value is expected. When `qualityGate=false`, normalize every in-scope request into the leanest model-appropriate execution brief.
 

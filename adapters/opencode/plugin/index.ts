@@ -19,8 +19,8 @@ type SessionState = { userPromptCount: number; candidateUserPromptCount?: number
 const DEFAULT_SETTINGS: Settings = { behavior: "auto", scope: "all", qualityGate: true, unsupportedModel: "skip" }
 
 const BASE_COMMON = `Preserve the user's intent, language, exact literals, hard constraints, requested output, project rules, required verification and approval boundaries. Do not invent requirements. Resolve shorthand from relevant conversation/repository context without copying irrelevant history. State instructions once and keep the final execution brief as short as the task/model permits. For implementation, do authorized in-scope local work and proportionate non-destructive validation; confirm destructive, irreversible, external, costly, credential/security-sensitive or materially scope-expanding actions unless already authorized. Native Reasoning First: never request hidden chain-of-thought or inject generic 'think step by step/think harder/show reasoning' scaffolding. User instructions outrank this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.4 preflight. Apply a positive-value quality gate before acting: PASS if the user's request is already precise; LIGHT if only scope/constraint/done criteria need normalization; FULL only for genuinely complex/ambiguous work. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.4 preflight. Quality gate is disabled: normalize every in-scope user request into the leanest model-appropriate execution brief before acting, without adding requirements or unnecessary structure. ${BASE_COMMON}`
+const BASE_GATE = `Prompt Optimizer v5.5 preflight. Apply a positive-value quality gate before acting: PASS if the user's request is already precise; LIGHT if only scope/constraint/done criteria need normalization; FULL only for genuinely complex/ambiguous work. ${BASE_COMMON}`
+const BASE_ALWAYS = `Prompt Optimizer v5.5 preflight. Quality gate is disabled: normalize every in-scope user request into the leanest model-appropriate execution brief before acting, without adding requirements or unnecessary structure. ${BASE_COMMON}`
 
 const PREVIEW = `PREVIEW MODE. Before any mutating or external action, build the exact optimized execution prompt for this user-turn. Read-only inspection is allowed only when necessary to resolve references. If the OpenCode question tool is available and this user-turn does not already contain an approved Prompt preview, call it exactly once with header "Prompt preview". Put the exact optimized prompt in the question text. Put option "Выполнить" first/default and option "Изменить" second; custom input is allowed. If approved, execute the previewed brief without asking again. If the user edits/customizes it, treat the edited version as source of truth. If the question tool is unavailable, print the optimized prompt and stop for explicit confirmation. Never pretend approval occurred.`
 const AUTO_GATE = `AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn.`
@@ -71,7 +71,8 @@ function hasInvalidJson(path: string): boolean {
 function hasInvalidManagedFields(value: Record<string, unknown> | undefined): boolean {
   if (!value) return false
   return (
-    ("behavior" in value && !["auto", "preview", "off"].includes(String(value.behavior)))
+    ("schemaVersion" in value && (typeof value.schemaVersion !== "number" || value.schemaVersion !== 1))
+    || ("behavior" in value && !["auto", "preview", "off"].includes(String(value.behavior)))
     || ("scope" in value && !["first", "all"].includes(String(value.scope)))
     || ("qualityGate" in value && typeof value.qualityGate !== "boolean")
     || ("unsupportedModel" in value && !["skip", "generic"].includes(String(value.unsupportedModel)))
@@ -115,7 +116,7 @@ function countPriorUserMessages(messages: readonly unknown[]): number {
 }
 
 export default Plugin.define({
-  id: "prompt-optimizer-v5-4",
+  id: "prompt-optimizer-v5-5",
   async setup(ctx) {
     const projectRoot = ctx.location.project?.directory ?? ctx.location.directory
     const sharedProject = join(projectRoot, ".prompt-optimizer.json")

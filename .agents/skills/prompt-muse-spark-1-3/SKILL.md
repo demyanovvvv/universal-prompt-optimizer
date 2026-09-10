@@ -3,7 +3,7 @@ name: prompt-muse-spark-1-3
 description: Optimize the user's raw task specifically for Muse Spark 1.3, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
-  version: "5.4"
+  version: "5.5"
 ---
 
 Apply target profile `muse-spark-1.3`.

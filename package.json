@@ -1,0 +1,20 @@
+{
+  "name": "universal-prompt-optimizer",
+  "private": true,
+  "version": "5.5.0",
+  "description": "Model-aware adaptive prompt preflight for coding agents",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "verify": "bash ./verify.sh",
+    "verify:ts": "tsc -p tsconfig.verify.json",
+    "test:registry": "python -B tests/registry_conformance.py",
+    "test:evals": "python -B evals/run.py",
+    "test": "python -B -m unittest discover -s tests -v"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

@@ -15,6 +15,7 @@ from pathlib import Path
 PACKAGE_ROOT = Path(__file__).resolve().parent
 UI_LANG = 'en'
 VERSION = (PACKAGE_ROOT / 'VERSION').read_text(encoding='utf-8').strip()
+CONFIG_SCHEMA_VERSION = 1
 
 def L(en: str, ru: str) -> str:
     return ru if UI_LANG == 'ru' else en
@@ -156,6 +157,7 @@ def validate_managed_config(data: dict, path: Path, label: str) -> None:
         return isinstance(value, str) and value in choices
 
     validators = {
+        'schemaVersion': lambda value: isinstance(value, int) and not isinstance(value, bool) and value == CONFIG_SCHEMA_VERSION,
         'behavior': lambda value: one_of(value, {'auto', 'preview', 'off'}),
         'scope': lambda value: one_of(value, {'first', 'all'}),
         'qualityGate': lambda value: isinstance(value, bool),
@@ -165,6 +167,39 @@ def validate_managed_config(data: dict, path: Path, label: str) -> None:
     for key, validator in validators.items():
         if key in data and not validator(data[key]):
             fail(L(f"Invalid {key} in {label}: {path}", f"Некорректное поле {key} в {label}: {path}"))
+
+def is_managed_hook(item) -> bool:
+    if not isinstance(item, dict):
+        return False
+    if item.get('owner') == MANAGED_HOOK_OWNER:
+        return True
+    name = item.get('name')
+    command = str(item.get('command', ''))
+    return (
+        isinstance(name, str) and name.startswith('prompt-optimizer-v') and 'prompt-preflight.py' in command
+        or command.endswith('.cursor/hooks/prompt-optimizer-state.py')
+    )
+
+def clean_managed_hooks(items: list) -> tuple[list, bool]:
+    cleaned = []
+    changed = False
+    for item in items:
+        if is_managed_hook(item):
+            changed = True
+            continue
+        nested = item.get('hooks') if isinstance(item, dict) else None
+        if not isinstance(nested, list):
+            cleaned.append(item)
+            continue
+        remaining, nested_changed = clean_managed_hooks(nested)
+        if nested_changed:
+            changed = True
+            if not remaining:
+                continue
+            item = dict(item)
+            item['hooks'] = remaining
+        cleaned.append(item)
+    return cleaned, changed
 
 def hook_command(python_bin: str, script: str) -> str:
     args = [python_bin, '-B', script]
@@ -263,6 +298,291 @@ def merge_runtime_ignores(path: Path, entries: list[str], *, backup=True, dry_ru
         atomic_write_text(path, new)
     return f'{action}: {path}'
 
+def remove_managed_block(path: Path, *, dry_run=False) -> str:
+    """Remove only the package-owned block and keep surrounding user text."""
+    reject_symlink_components(path)
+    if not path.exists():
+        return L(f'absent: {path}', f'отсутствует: {path}')
+    current = path.read_text(encoding='utf-8')
+    has_start, has_end = START in current, END in current
+    if not has_start and not has_end:
+        return L(f'unchanged (no managed block): {path}', f'без изменений (управляемый блок не найден): {path}')
+    if has_start != has_end:
+        fail(L(f'Incomplete managed block in {path}', f'Неполный управляемый блок в {path}'))
+    before, rest = current.split(START, 1)
+    _, after = rest.split(END, 1)
+    before, after = before.rstrip(), after.lstrip('\n')
+    new = before + ('\n\n' if before and after else '') + after
+    if not dry_run:
+        record_path(path)
+        if new:
+            atomic_write_text(path, new)
+        else:
+            path.unlink()
+    return L(f'removed managed block: {path}', f'удален управляемый блок: {path}')
+
+def remove_runtime_ignores(path: Path, *, dry_run=False) -> str:
+    reject_symlink_components(path)
+    if not path.exists():
+        return L(f'absent: {path}', f'отсутствует: {path}')
+    current = path.read_text(encoding='utf-8')
+    has_start, has_end = IGNORE_START in current, IGNORE_END in current
+    if not has_start and not has_end:
+        return L(f'unchanged (no runtime ignore block): {path}', f'без изменений (runtime ignore блок не найден): {path}')
+    if has_start != has_end:
+        fail(L(f'Incomplete runtime ignore block in {path}', f'Неполный блок runtime ignore в {path}'))
+    before, rest = current.split(IGNORE_START, 1)
+    _, after = rest.split(IGNORE_END, 1)
+    before, after = before.rstrip(), after.lstrip('\n')
+    new = before + ('\n\n' if before and after else '') + after
+    if not dry_run:
+        record_path(path)
+        if new:
+            atomic_write_text(path, new)
+        else:
+            path.unlink()
+    return L(f'removed runtime ignore block: {path}', f'удален runtime ignore блок: {path}')
+
+def remove_owned_file(path: Path, *, dry_run=False) -> str:
+    reject_symlink_components(path)
+    if not path.exists():
+        return L(f'absent: {path}', f'отсутствует: {path}')
+    if not path.is_file():
+        fail(L(f'Expected a file destination: {path}', f'Ожидался файл назначения: {path}'))
+    if not dry_run:
+        record_path(path)
+        path.unlink()
+    return L(f'removed: {path}', f'удален: {path}')
+
+def remove_file_if_matches(src: Path, dst: Path, *, dry_run=False) -> str:
+    reject_symlink_components(dst)
+    if not dst.exists():
+        return L(f'absent: {dst}', f'отсутствует: {dst}')
+    if not dst.is_file():
+        fail(L(f'Expected a file destination: {dst}', f'Ожидался файл назначения: {dst}'))
+    if dst.read_bytes() != src.read_bytes():
+        return L(f'preserved user-modified file: {dst}', f'сохранен измененный пользователем файл: {dst}')
+    return remove_owned_file(dst, dry_run=dry_run)
+
+def remove_tree_if_matches(src: Path, dst: Path, *, dry_run=False) -> list[str]:
+    """Remove only unchanged package files from a copied tree."""
+    if not dst.exists():
+        return [L(f'absent: {dst}', f'отсутствует: {dst}')]
+    if not dst.is_dir():
+        fail(L(f'Destination is not a directory: {dst}', f'Назначение не является каталогом: {dst}'))
+    out = []
+    for source_file in sorted(src.rglob('*')):
+        if not source_file.is_file():
+            continue
+        relative = source_file.relative_to(src)
+        out.append(remove_file_if_matches(source_file, dst / relative, dry_run=dry_run))
+    if not dry_run:
+        for directory in sorted([p for p in dst.rglob('*') if p.is_dir()], reverse=True):
+            try:
+                directory.rmdir()
+            except OSError:
+                pass
+        try:
+            dst.rmdir()
+        except OSError:
+            pass
+    return out
+
+def remove_json_fields(path: Path, fields: set[str], *, dry_run=False) -> str:
+    if not path.exists():
+        return L(f'absent: {path}', f'отсутствует: {path}')
+    current = load_json_object(path, 'Prompt Optimizer config')
+    changed = False
+    for field in fields:
+        if field in current:
+            current.pop(field)
+            changed = True
+    if not changed:
+        return L(f'unchanged: {path}', f'без изменений: {path}')
+    if not current:
+        return remove_owned_file(path, dry_run=dry_run)
+    return write_json(path, current, backup=False, dry_run=dry_run, label='Prompt Optimizer config')
+
+def remove_json_hooks(path: Path, events: set[str], *, dry_run=False) -> list[str]:
+    if not path.exists():
+        return [L(f'absent: {path}', f'отсутствует: {path}')]
+    current = load_json_object(path, 'hook config')
+    hooks = current.get('hooks')
+    if not isinstance(hooks, dict):
+        return [L(f'unchanged (no hooks object): {path}', f'без изменений (нет объекта hooks): {path}')]
+    changed = False
+    for event in events:
+        entries = hooks.get(event)
+        if not isinstance(entries, list):
+            continue
+        remaining, event_changed = clean_managed_hooks(entries)
+        if event_changed:
+            hooks[event] = remaining
+            changed = True
+    if not changed:
+        return [L(f'unchanged (no managed hooks): {path}', f'без изменений (управляемые hooks не найдены): {path}')]
+    for event in list(hooks):
+        if hooks[event] == []:
+            hooks.pop(event)
+    if not hooks:
+        current.pop('hooks', None)
+    if not current:
+        return [remove_owned_file(path, dry_run=dry_run)]
+    return [write_json(path, current, backup=False, dry_run=dry_run, label='hook config')]
+
+def installed_file_map(root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
+    """Return logical managed files and their package source counterparts."""
+    if scope == 'project':
+        return {
+            'shared-skills': (SKILLS_SRC, root / '.agents/skills'),
+            'claude-skills': (SKILLS_SRC, root / '.claude/skills'),
+            'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.opencode/commands'),
+            'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.prompt-optimizer.json'),
+            'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.opencode/plugins/prompt-optimizer'),
+            'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.opencode/prompt-optimizer.json'),
+            'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/extensions/prompt-optimizer.ts'),
+            'cursor-hook': (PACKAGE_ROOT / 'adapters/cursor/hooks/prompt-optimizer-state.py', root / '.cursor/hooks/prompt-optimizer-state.py'),
+            'cursor-rule': (PACKAGE_ROOT / 'adapters/cursor/rules/prompt-optimizer.mdc', root / '.cursor/rules/prompt-optimizer.mdc'),
+            'gemini-hook': (PACKAGE_ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py', root / '.gemini/hooks/prompt-preflight.py'),
+            'claude-block': (PACKAGE_ROOT / 'auto/CLAUDE.snippet.md', root / 'CLAUDE.md'),
+            'gemini-block': (PACKAGE_ROOT / 'auto/GEMINI.snippet.md', root / 'GEMINI.md'),
+            'copilot-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.github/copilot-instructions.md'),
+            'codex-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / 'AGENTS.md'),
+            'windsurf-rule': (PACKAGE_ROOT / 'adapters/windsurf/prompt-optimizer-rule.md', root / '.windsurf/rules/prompt-optimizer.md'),
+        }
+    return {
+        'shared-skills': (SKILLS_SRC, root / '.agents/skills'),
+        'claude-skills': (SKILLS_SRC, root / '.claude/skills'),
+        'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.config/opencode/commands'),
+        'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/prompt-optimizer/config.json'),
+        'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.config/opencode/plugins/prompt-optimizer'),
+        'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/opencode/prompt-optimizer.json'),
+        'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/agent/extensions/prompt-optimizer.ts'),
+        'gemini-hook': (PACKAGE_ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py', root / '.gemini/hooks/prompt-preflight.py'),
+        'claude-block': (PACKAGE_ROOT / 'auto/CLAUDE.snippet.md', root / '.claude/CLAUDE.md'),
+        'gemini-block': (PACKAGE_ROOT / 'auto/GEMINI.snippet.md', root / '.gemini/GEMINI.md'),
+        'copilot-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.copilot/copilot-instructions.md'),
+        'codex-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.codex/AGENTS.md'),
+        'windsurf-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.codeium/windsurf/memories/global_rules.md'),
+    }
+
+def doctor(root: Path, scope: str) -> int:
+    """Print a read-only installation diagnostic; return non-zero on errors."""
+    print(f'Universal Prompt Optimizer v{VERSION} doctor')
+    print(f'scope: {scope}')
+    print(f'root: {root}')
+    errors = []
+    found = 0
+    config_paths = [root / '.prompt-optimizer.json'] if scope == 'project' else [root / '.config/prompt-optimizer/config.json']
+    config_paths += [destination for logical, (_, destination) in installed_file_map(root, scope).items() if logical in {'opencode-config'}]
+    for path in config_paths:
+        if not path.exists():
+            print(f'config: absent ({path})')
+            continue
+        try:
+            value = load_json_object(path, 'Prompt Optimizer config')
+            validate_managed_config(value, path, 'Prompt Optimizer config')
+            print(f'config: valid ({path})')
+            if {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'} & set(value):
+                found += 1
+        except SystemExit as exc:
+            errors.append(str(exc))
+            print(f'config: invalid ({path})')
+    hook_specs = []
+    if scope == 'project':
+        hook_specs.append((root / '.cursor/hooks.json', {'beforeSubmitPrompt'}))
+    hook_specs.append((root / '.gemini/settings.json', {'BeforeAgent', 'BeforeModel'}))
+    for path, events in hook_specs:
+        if not path.exists():
+            continue
+        try:
+            value = load_json_object(path, 'hook config')
+            hooks = value.get('hooks')
+            if hooks is not None and not isinstance(hooks, dict):
+                raise ValueError('hooks must be an object')
+            owned = 0
+            if isinstance(hooks, dict):
+                for event in events:
+                    entries = hooks.get(event, [])
+                    if not isinstance(entries, list):
+                        raise ValueError(f'{event} hooks must be an array')
+                    _, changed = clean_managed_hooks(entries)
+                    owned += 1 if changed else 0
+            print(f'hooks: valid, {owned} managed event(s) ({path})')
+            found += owned
+        except (SystemExit, ValueError) as exc:
+            errors.append(f'invalid hook config {path}: {exc}')
+            print(f'hooks: invalid ({path})')
+    lock = root / '.prompt-optimizer-install.lock'
+    print(f'installer lock: {"present" if lock.exists() else "clear"}')
+    if lock.exists():
+        errors.append(f'stale or active installer lock: {lock}')
+    for logical, (source, destination) in installed_file_map(root, scope).items():
+        if logical in {'shared-config', 'opencode-config'}:
+            continue
+        if destination.is_dir():
+            package_files = list(source.rglob('*')) if source.is_dir() else []
+            present = sum(1 for item in package_files if item.is_file() and (destination / item.relative_to(source)).exists())
+            current = sum(1 for item in package_files if item.is_file() and (destination / item.relative_to(source)).is_file() and (destination / item.relative_to(source)).read_bytes() == item.read_bytes())
+            total = sum(1 for item in package_files if item.is_file())
+            print(f'{logical}: {present}/{total} present, {current}/{total} current ({destination})')
+            found += present
+        elif destination.exists():
+            if logical.endswith('-block'):
+                text_value = destination.read_text(encoding='utf-8')
+                managed = START in text_value and END in text_value
+                print(f'{logical}: {"managed block present" if managed else "no managed block"} ({destination})')
+                found += 1 if managed else 0
+            else:
+                current = source.is_file() and destination.is_file() and source.read_bytes() == destination.read_bytes()
+                print(f'{logical}: {"current" if current else "present but modified/outdated"} ({destination})')
+                found += 1
+        else:
+            print(f'{logical}: absent ({destination})')
+    runtime = [root / '.cursor/.prompt-optimizer-runtime.json', root / '.gemini/.prompt-optimizer-model-state.json']
+    for path in runtime:
+        if path.exists():
+            try:
+                json.loads(path.read_text(encoding='utf-8'))
+                print(f'runtime state: valid ({path})')
+            except (OSError, UnicodeError, json.JSONDecodeError):
+                errors.append(f'invalid runtime state: {path}')
+                print(f'runtime state: invalid ({path})')
+    print(f'managed entries found: {found}')
+    if errors:
+        for error in errors:
+            print(f'ERROR: {error}', file=sys.stderr)
+        return 1
+    print('status: healthy' if found else 'status: not installed')
+    return 0
+
+def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
+    """Remove package-owned files/blocks without touching user modifications."""
+    out: list[str] = []
+    mapping = installed_file_map(root, scope)
+    for logical, (source, destination) in mapping.items():
+        if logical.endswith('-block') or logical == 'windsurf-block':
+            out.append(remove_managed_block(destination, dry_run=dry_run))
+        elif logical in {'shared-config', 'opencode-config'}:
+            out.append(remove_json_fields(destination, {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'}, dry_run=dry_run))
+        elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin'}:
+            out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
+        else:
+            out.append(remove_file_if_matches(source, destination, dry_run=dry_run))
+    if scope == 'project':
+        if (root / '.cursor/hooks.json').exists():
+            out.extend(remove_json_hooks(root / '.cursor/hooks.json', {'beforeSubmitPrompt'}, dry_run=dry_run))
+        if (root / '.gemini/settings.json').exists():
+            out.extend(remove_json_hooks(root / '.gemini/settings.json', {'BeforeAgent', 'BeforeModel'}, dry_run=dry_run))
+    else:
+        if (root / '.gemini/settings.json').exists():
+            out.extend(remove_json_hooks(root / '.gemini/settings.json', {'BeforeAgent', 'BeforeModel'}, dry_run=dry_run))
+    out.append(remove_runtime_ignores(root / '.gitignore', dry_run=dry_run))
+    for runtime in [root / '.cursor/.prompt-optimizer-runtime.json', root / '.cursor/.prompt-optimizer-session-state.json', root / '.gemini/.prompt-optimizer-model-state.json', root / '.gemini/.prompt-optimizer-session-state.json']:
+        if runtime.exists():
+            out.append(remove_owned_file(runtime, dry_run=dry_run))
+    return out
+
 def copy_file(src: Path, dst: Path, *, backup=True, dry_run=False, executable=False, label='file') -> str:
     if dry_run: return L(f"would install {label}: {dst}", f"будет установлено {label}: {dst}")
     if src.is_symlink() or not src.is_file():
@@ -350,40 +670,16 @@ def merge_json_hook(path: Path, event: str, hook: dict, *, backup=True, dry_run=
         fail(L(f"{event} hooks must be an array in {path}", f"Hooks {event} должны быть массивом в {path}"))
     # Remove only entries owned by this package, not arbitrary user hooks whose
     # command or display text happens to contain a similar string.
-    def managed_item(item):
-        if not isinstance(item,dict): return False
-        if item.get('owner') == MANAGED_HOOK_OWNER:
-            return True
-        name=item.get('name')
-        command=str(item.get('command',''))
-        return (
-            isinstance(name,str) and name.startswith('prompt-optimizer-v') and 'prompt-preflight.py' in command
-            or command.endswith('.cursor/hooks/prompt-optimizer-state.py')
-        )
-    cleaned=[]
-    for item in arr:
-        if managed_item(item):
-            continue
-        nested=item.get('hooks') if isinstance(item,dict) else None
-        if not isinstance(nested,list):
-            cleaned.append(item)
-            continue
-        remaining=[child for child in nested if not managed_item(child)]
-        if remaining:
-            if len(remaining) != len(nested):
-                item=dict(item)
-                item['hooks']=remaining
-            cleaned.append(item)
-    arr[:]=cleaned
+    arr[:], _ = clean_managed_hooks(arr)
     arr.append(hook)
     return write_json(path,current,backup=backup,dry_run=dry_run,label=f'{event} hook config')
 
 def write_shared_config(path: Path, behavior: str, scope: str, unsupported: str, quality_gate: bool, *, backup=True, dry_run=False) -> str:
-    return merge_json_object(path,{'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='shared prompt-optimizer config')
+    return merge_json_object(path,{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='shared prompt-optimizer config')
 
 def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, quality_gate: bool, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_tree(PACKAGE_ROOT/'adapters/opencode/plugin',base/'plugins/prompt-optimizer',backup=backup,dry_run=dry_run,label='OpenCode native plugin')]
-    out.append(merge_json_object(base/'prompt-optimizer.json',{'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='OpenCode prompt-optimizer config'))
+    out.append(merge_json_object(base/'prompt-optimizer.json',{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='OpenCode prompt-optimizer config'))
     return out
 
 def install_pi(base: Path, *, backup=True, dry_run=False) -> list[str]:
@@ -455,7 +751,7 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
     return out
 
 def main():
-    ap=argparse.ArgumentParser(description='Install Universal Prompt Optimizer v5.4')
+    ap=argparse.ArgumentParser(description=f'Install Universal Prompt Optimizer v{VERSION}')
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
     ap.add_argument('--scope',choices=['project','global'],default='project')
     ap.add_argument('--project',default='.')
@@ -469,6 +765,8 @@ def main():
     ap.add_argument('--opencode-mode',choices=['first','all','off'],help='Deprecated v4 compatibility: first/all map to behavior=auto and corresponding scope; off maps to behavior=off')
     ap.add_argument('--no-backup',action='store_true')
     ap.add_argument('--dry-run',action='store_true')
+    ap.add_argument('--doctor',action='store_true',help='Read-only installation and configuration diagnostic')
+    ap.add_argument('--uninstall',action='store_true',help='Remove only unchanged package-owned files and managed blocks')
     args=ap.parse_args()
     global UI_LANG
     UI_LANG=args.lang
@@ -479,9 +777,18 @@ def main():
     selected=parse_agents(args.agents); backup=not args.no_backup; quality_gate=args.quality_gate=='on'
     if args.scope == 'project':
         root = Path(args.project).expanduser().resolve()
-        validate_project_root(root)
+        if not args.doctor:
+            validate_project_root(root)
     else:
         root = Path.home()
+    if args.doctor and args.uninstall:
+        fail(L('Choose either --doctor or --uninstall, not both', 'Выберите либо --doctor, либо --uninstall, но не оба параметра'))
+    if args.doctor:
+        raise SystemExit(doctor(root, args.scope))
+    if args.uninstall:
+        validate_project_root(root)
+        if selected != AGENTS:
+            fail(L('Uninstall removes the complete Prompt Optimizer installation; omit --agents or use --agents all', 'Uninstall удаляет всю установку Prompt Optimizer; не указывайте --agents или используйте --agents all'))
     lock = InstallLock(root / '.prompt-optimizer-install.lock')
     transaction = None if args.dry_run else InstallTransaction()
     global ACTIVE_TRANSACTION
@@ -489,7 +796,9 @@ def main():
         with (nullcontext() if args.dry_run else lock):
             ACTIVE_TRANSACTION = transaction
             try:
-                if args.scope=='project':
+                if args.uninstall:
+                    results=uninstall(root,args.scope,dry_run=args.dry_run)
+                elif args.scope=='project':
                     results=install_project(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)
                 else:
                     results=install_global(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)

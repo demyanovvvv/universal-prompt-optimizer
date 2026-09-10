@@ -6,3 +6,9 @@
 .gemini/.prompt-optimizer-model-state.json
 .gemini/.prompt-optimizer-session-state.json
 .gemini/*.prompt-optimizer-*.json.lock
+
+# Local Python/Node tooling artifacts.
+__pycache__/
+*.py[cod]
+node_modules/
+npm-debug.log*

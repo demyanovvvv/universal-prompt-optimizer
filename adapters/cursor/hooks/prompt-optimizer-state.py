@@ -3,6 +3,9 @@ import json, os, sys, tempfile, time
 from contextlib import contextmanager
 from pathlib import Path
 
+STATE_TTL_SECONDS = 30 * 24 * 60 * 60
+STATE_LIMIT = 200
+
 def read_json(path: Path, default):
     try:
         if path.exists():
@@ -72,7 +75,8 @@ def config_has_invalid_managed_fields(value):
     if not isinstance(value, dict):
         return True
     return (
-        ('behavior' in value and value['behavior'] not in {'auto', 'preview', 'off'})
+        ('schemaVersion' in value and (not isinstance(value['schemaVersion'], int) or isinstance(value['schemaVersion'], bool) or value['schemaVersion'] != 1))
+        or ('behavior' in value and value['behavior'] not in {'auto', 'preview', 'off'})
         or ('scope' in value and value['scope'] not in {'first', 'all'})
         or ('qualityGate' in value and not isinstance(value['qualityGate'], bool))
         or ('unsupportedModel' in value and value['unsupportedModel'] not in {'skip', 'generic'})
@@ -115,9 +119,13 @@ if conversation:
     try:
         with state_lock(state_path):
             sessions=read_json(state_path,{})
+            cutoff=time.time()-STATE_TTL_SECONDS
+            sessions={key:value for key,value in sessions.items() if not isinstance(value,dict) or not isinstance(value.get('updated_at'),(int,float)) or value['updated_at']>=cutoff}
             entry=sessions.get(conversation) if isinstance(sessions.get(conversation),dict) else {}
             first_generation=entry.get('first_generation') or generation or '__first__'
-            sessions[conversation]={'first_generation':first_generation}
+            sessions[conversation]={'first_generation':first_generation,'updated_at':int(time.time())}
+            if len(sessions)>STATE_LIMIT:
+                sessions=dict(sorted(sessions.items(),key=lambda item:item[1].get('updated_at',0) if isinstance(item[1],dict) else 0,reverse=True)[:STATE_LIMIT//2])
             write_json_atomic(state_path, sessions)
     except Exception:
         pass
@@ -135,6 +143,7 @@ state={
   'model_params': inp.get('model_params') or [],
   **cfg,
   'active': active,
+  'updated_at': int(time.time()),
 }
 out=root/'.cursor/.prompt-optimizer-runtime.json'
 with state_lock(out):
@@ -142,9 +151,10 @@ with state_lock(out):
     runtime_sessions=previous.get('sessions') if isinstance(previous.get('sessions'),dict) else {}
     if conversation:
         runtime_sessions[conversation]=state
-        if len(runtime_sessions) > 200:
-            for key in list(runtime_sessions)[:-100]:
-                runtime_sessions.pop(key, None)
+        cutoff=time.time()-STATE_TTL_SECONDS
+        runtime_sessions={key:value for key,value in runtime_sessions.items() if not isinstance(value,dict) or not isinstance(value.get('updated_at'),(int,float)) or value['updated_at']>=cutoff}
+        if len(runtime_sessions)>STATE_LIMIT:
+            runtime_sessions=dict(sorted(runtime_sessions.items(),key=lambda item:item[1].get('updated_at',0) if isinstance(item[1],dict) else 0,reverse=True)[:STATE_LIMIT//2])
     payload={**state, 'schema': 1, 'sessions': runtime_sessions}
     write_json_atomic(out, payload)
 print(json.dumps({'continue': True}))

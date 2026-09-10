@@ -22,6 +22,8 @@ unsupported_model="skip"
 backup="on"
 dry_run=0
 assume_yes=0
+doctor_mode=0
+uninstall_mode=0
 UI_LANG="en"
 APPDATA_DIR="${APPDATA:-}"
 LOCALAPPDATA_DIR="${LOCALAPPDATA:-}"
@@ -152,6 +154,8 @@ Universal Prompt Optimizer v${VERSION} — установщик
   --python-bin PATH|COMMAND
   --backup | --no-backup
   --dry-run
+  --doctor, --status       Только проверить состояние установки
+  --uninstall              Безопасно удалить управляемые файлы/блоки
   -y, --yes
   --list-agents
   -h, --help
@@ -188,6 +192,8 @@ Optional flags:
   --python-bin PATH|COMMAND
   --backup | --no-backup
   --dry-run
+  --doctor, --status
+  --uninstall
   -y, --yes
   --list-agents
   -h, --help
@@ -675,6 +681,8 @@ while [[ $# -gt 0 ]]; do
     --backup) backup=on; shift ;;
     --no-backup) backup=off; shift ;;
     --dry-run) dry_run=1; shift ;;
+    --doctor|--status) doctor_mode=1; shift ;;
+    --uninstall) uninstall_mode=1; shift ;;
     -y|--yes) assume_yes=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) if [[ "$UI_LANG" == "ru" ]]; then echo "Неизвестный параметр: $1" >&2; else echo "Unknown option: $1" >&2; fi; usage >&2; exit 2 ;;
@@ -688,6 +696,10 @@ case "$behavior" in auto|preview|off) ;; *) if [[ "$UI_LANG" == ru ]]; then echo
 case "$prompt_scope" in all|first) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимый scope запросов: $prompt_scope" >&2; else echo "Invalid prompt scope: $prompt_scope" >&2; fi; exit 2;; esac
 case "$quality_gate" in on|off) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимое значение Quality Gate: $quality_gate" >&2; else echo "Invalid quality gate: $quality_gate" >&2; fi; exit 2;; esac
 case "$unsupported_model" in skip|generic) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимая политика неизвестной модели: $unsupported_model" >&2; else echo "Invalid unknown-model policy: $unsupported_model" >&2; fi; exit 2;; esac
+if [[ $doctor_mode -eq 1 && $uninstall_mode -eq 1 ]]; then
+  if [[ "$UI_LANG" == ru ]]; then echo "Выберите либо --doctor, либо --uninstall, но не оба параметра." >&2; else echo "Choose either --doctor or --uninstall, not both." >&2; fi
+  exit 2
+fi
 
 if [[ $detect_requested -eq 1 ]]; then
   if [[ -n "$agents_arg" ]]; then
@@ -698,13 +710,35 @@ if [[ $detect_requested -eq 1 ]]; then
   if [[ -z "$agents_arg" ]]; then if [[ "$UI_LANG" == ru ]]; then echo "Поддерживаемые агенты не обнаружены." >&2; else echo "No supported agents detected." >&2; fi; exit 1; fi
 fi
 [[ -z "$agents_arg" ]] && { agents_arg=all; agent_selection_mode="all"; }
+if [[ $uninstall_mode -eq 1 && "$agents_arg" != all ]]; then
+  if [[ "$UI_LANG" == ru ]]; then echo "Uninstall удаляет всю установку; не указывайте --agents или используйте --agents all." >&2; else echo "Uninstall removes the complete installation; omit --agents or use --agents all." >&2; fi
+  exit 2
+fi
 
 if ! resolve_python; then
   if [[ "$UI_LANG" == ru ]]; then echo "Требуется Python 3. Если он установлен под другим именем, задайте PYTHON_BIN." >&2; else echo "Python 3 is required. Set PYTHON_BIN if it is installed under another name." >&2; fi
   exit 1
 fi
 
-if [[ $interactive -eq 0 && $assume_yes -eq 0 && is_tty ]]; then
+if [[ $doctor_mode -eq 1 ]]; then
+  exec "$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --doctor
+fi
+
+if [[ $uninstall_mode -eq 1 && $assume_yes -eq 0 && is_tty ]]; then
+  header
+  if [[ "$UI_LANG" == ru ]]; then
+    echo "Будет удалена вся управляемая установка Prompt Optimizer. Пользовательские и измененные файлы будут сохранены."
+    echo "Область: $scope"
+    [[ "$scope" == project ]] && echo "Путь: $project"
+    read -r -p "Введите uninstall для продолжения: " answer || true
+  else
+    echo "The complete managed Prompt Optimizer installation will be removed. User-owned and modified files will be preserved."
+    echo "Scope: $scope"
+    [[ "$scope" == project ]] && echo "Path: $project"
+    read -r -p "Type uninstall to continue: " answer || true
+  fi
+  [[ "$(lower "$answer")" == uninstall ]] || { echo "$(tr_ui cancelled)"; exit 0; }
+elif [[ $interactive -eq 0 && $assume_yes -eq 0 && is_tty ]]; then
   header; show_summary
   if [[ "$UI_LANG" == ru ]]; then read -r -p "Нажмите Enter для продолжения или q для отмены: " answer || true; else read -r -p "Press Enter to continue, or q to cancel: " answer || true; fi
   if [[ "$(lower "$answer")" == q ]]; then echo "$(tr_ui cancelled)"; exit 0; fi
@@ -714,5 +748,6 @@ cmd=("$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope
 [[ $auto_integration -eq 1 ]] && cmd+=(--auto)
 [[ "$backup" == off ]] && cmd+=(--no-backup)
 [[ $dry_run -eq 1 ]] && cmd+=(--dry-run)
+[[ $uninstall_mode -eq 1 ]] && cmd+=(--uninstall)
 
 exec "${cmd[@]}"

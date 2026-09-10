@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": false,
+    "noEmit": true,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "types/host-modules.d.ts",
+    "adapters/opencode/plugin/index.ts",
+    "adapters/pi/extensions/prompt-optimizer.ts"
+  ]
+}
