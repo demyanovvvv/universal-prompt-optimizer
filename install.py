@@ -593,10 +593,13 @@ def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
         elif logical in {'shared-config', 'opencode-config'}:
             out.append(remove_json_fields(destination, {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'}, dry_run=dry_run))
         elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin', 'opencode-tui-plugin'}:
-            out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
             if logical == 'opencode-tui-plugin':
+                # The registration is managed, but the plugin path may be a
+                # user-owned OpenCode TUI plugin with the same conventional name.
                 tui_config = root / ('.opencode/tui.json' if scope == 'project' else '.config/opencode/tui.json')
                 out.append(remove_json_plugin_specs(tui_config, {'./plugins/prompt-optimizer-tui/prompt-optimizer.tsx'}, dry_run=dry_run))
+            else:
+                out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
         else:
             out.append(remove_file_if_matches(source, destination, dry_run=dry_run))
     if scope == 'project':
