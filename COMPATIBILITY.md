@@ -2,7 +2,7 @@
 
 | Agent | Shared skills | Exact active model routing | AUTO | PREVIEW | OFF | Mechanism |
 |---|---:|---:|---:|---:|---:|---|
-| OpenCode | Yes | **Yes** | **Native** | **Native question-tool flow** | **Yes** | v1 chat/system-transform plugin + native TUI plugin |
+| OpenCode | Yes | **Yes** | **Native** | **Advisory native question-tool flow** | **Yes** | v1 chat/system-transform plugin + native TUI plugin |
 | Pi | Yes | **Yes** (`ctx.model`) | **Native** | **Native confirm/editor tool** | **Yes** | Pi extension |
 | Cursor | Yes | **Yes** (`model`/`model_id` hook payload) | Yes | Ask Question / fallback | Yes | beforeSubmitPrompt state bridge + always rule |
 | Gemini CLI | Yes | **Exact after BeforeModel observation; explicit configured model before first call when visible** | Yes | **ask_user** / fallback | Yes | BeforeAgent + observation-only BeforeModel hook + GEMINI.md |
@@ -19,5 +19,9 @@
 - GitHub Copilot CLI's config-file `userPromptSubmitted` hook cannot rewrite the prompt; GitHub documents `modifiedPrompt` as SDK-programmatic only. v5 uses Agent Skills/custom instructions rather than claiming otherwise.
 - For agents without a reliable model-ID hook, “automatic” means use exact runtime identity if the agent exposes it to its own context; otherwise configured profile/neutral fallback. Never guess a materially different variant.
 - PREVIEW is advisory for every adapter unless the host itself blocks mutating/external tools until approval. A model instruction to call a question tool is not equivalent to a host-enforced barrier.
+
+- OpenCode v1 session counters and decisions are bounded process-local state. They are
+  intentionally not persisted across plugin reloads or OpenCode restarts; status
+  output identifies the model match source and PREVIEW enforcement level.
 
 - Windsurf project automation is isolated in `.windsurf/rules/prompt-optimizer.md`; Codex keeps its documented `AGENTS.md` path. The shared AGENTS block explicitly yields to a native Prompt Optimizer adapter when one is active, avoiding a second OpenCode preflight.

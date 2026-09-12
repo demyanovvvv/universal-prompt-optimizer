@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import type { SessionMetrics, SessionOverride, SessionState } from "./types"
 
 export const STATE_TTL_MS = 30 * 24 * 60 * 60 * 1000
+export const MAX_SESSIONS = 200
 
 export function hashPrompt(prompt: string): string {
   return createHash("sha256").update(prompt).digest("hex").slice(0, 16)
@@ -15,8 +16,10 @@ export function normalizeState(value: unknown): SessionState | undefined {
     userPromptCount: Math.max(0, Math.floor(input.userPromptCount)),
     candidateUserPromptCount: typeof input.candidateUserPromptCount === "number" ? Math.max(0, Math.floor(input.candidateUserPromptCount)) : undefined,
     active: input.active,
+    lastSeenAt: typeof input.lastSeenAt === "number" ? Math.max(0, input.lastSeenAt) : undefined,
     override: normalizeOverride(input.override),
     lastModel: normalizeModel(input.lastModel),
+    lastResolution: normalizeResolution(input.lastResolution),
     lastTaskType: normalizeTaskType(input.lastTaskType),
     metrics: normalizeMetrics(input.metrics),
     lastProcessedEventId: typeof input.lastProcessedEventId === "string" ? input.lastProcessedEventId.slice(0, 128) : undefined,
@@ -31,6 +34,22 @@ function normalizeModel(value: unknown): SessionState["lastModel"] {
   const input = value as Record<string, unknown>
   if (typeof input.providerID !== "string" || typeof input.modelID !== "string") return undefined
   return { providerID: input.providerID.slice(0, 128), modelID: input.modelID.slice(0, 128) }
+}
+
+function normalizeResolution(value: unknown): SessionState["lastResolution"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  const input = value as Record<string, unknown>
+  if (input.confidence !== "high" && input.confidence !== "low") return undefined
+  if (input.source !== "exact-id" && input.source !== "pattern" && input.source !== "unsupported") return undefined
+  if (typeof input.modelID !== "string") return undefined
+  const profiles = ["astra", "sol", "terra", "luna", "glm-5.2", "glm-5.3", "glm-5.3-flash", "deepseek-v4-flash", "deepseek-v4-pro", "claude-fable-5.1", "claude-fable-5", "claude-opus-5", "claude-opus-4.8", "claude-sonnet-5", "kimi-k3", "muse-spark-1.3", "hy4-preview", "qwen3.8-max", "gemini-3.8-flash", "grok-4.6"] as const
+  return {
+    profile: typeof input.profile === "string" && profiles.includes(input.profile as typeof profiles[number]) ? input.profile as NonNullable<SessionState["lastResolution"]>["profile"] : undefined,
+    confidence: input.confidence,
+    source: input.source,
+    modelID: input.modelID.slice(0, 128),
+    matchedAlias: typeof input.matchedAlias === "string" ? input.matchedAlias.slice(0, 128) : undefined,
+  }
 }
 
 function normalizeTaskType(value: unknown): SessionState["lastTaskType"] {
@@ -101,4 +120,18 @@ export function incrementMetrics(state: SessionState, action: "apply" | "preview
   metrics.lastGate = gate
   metrics.lastAction = action
   return metrics
+}
+
+export function pruneSessions<T extends { state: SessionState }>(sessions: Map<string, T>, now = Date.now()): void {
+  const cutoff = now - STATE_TTL_MS
+  for (const [key, value] of sessions) {
+    if ((value.state.lastSeenAt ?? now) < cutoff) sessions.delete(key)
+  }
+  if (sessions.size <= MAX_SESSIONS) return
+  const ranked = [...sessions.entries()].sort(([, left], [, right]) => (right.state.lastSeenAt ?? 0) - (left.state.lastSeenAt ?? 0))
+  for (const [key] of ranked.slice(MAX_SESSIONS)) sessions.delete(key)
+}
+
+export function isSessionExpired(state: SessionState, now = Date.now()): boolean {
+  return typeof state.lastSeenAt === "number" && state.lastSeenAt < now - STATE_TTL_MS
 }

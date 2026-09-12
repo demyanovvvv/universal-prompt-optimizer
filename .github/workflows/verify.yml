@@ -37,3 +37,5 @@ jobs:
         run: python evals/run.py
       - name: Check TypeScript
         run: npm run verify:ts
+      - name: Run OpenCode runtime tests
+        run: npm run test:runtime

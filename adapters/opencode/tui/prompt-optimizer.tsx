@@ -24,6 +24,16 @@ function statusFromConfig(api: any, sessionID?: string): { status: Status; label
   return { status: "enabled", label: "PO + AUTO" }
 }
 
+function statusDetails(api: any, sessionID?: string): string {
+  const current = statusFromConfig(api, sessionID)
+  const decision = sessionDecision(api, sessionID)
+  const parts = [current.label, "PREVIEW advisory"]
+  if (decision?.profile) parts.push(`profile=${decision.profile}`)
+  if (decision?.gate) parts.push(`gate=${decision.gate}`)
+  if (decision?.reason) parts.push(`reason=${decision.reason}`)
+  return parts.join("; ")
+}
+
 function StatusWidget(props: { api: any; sessionID?: string }) {
   const current = statusFromConfig(props.api, props.sessionID)
   const theme = props.api.theme.current
@@ -81,7 +91,7 @@ const tui: TuiPlugin = async (api) => {
           api.ui.toast({
             variant: current.status === "error" ? "error" : current.status === "generic" ? "warning" : "info",
             title: "Prompt Optimizer",
-            message: `${current.label}. Use /prompt-optimizer status for detailed session state.`,
+             message: `${statusDetails(api, sessionID)}. Use /prompt-optimizer status for detailed session state.`,
             duration: 3500,
           })
         },

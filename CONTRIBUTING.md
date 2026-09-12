@@ -10,6 +10,7 @@ export PYTHONDONTWRITEBYTECODE=1
 python -m unittest discover -s tests -v
 python evals/run.py
 npm run verify:ts
+npm run test:runtime
 ```
 
 The TypeScript command requires Node.js and TypeScript. The shell and Python

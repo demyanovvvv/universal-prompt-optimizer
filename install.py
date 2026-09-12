@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shlex
@@ -598,6 +599,18 @@ def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
                 # user-owned OpenCode TUI plugin with the same conventional name.
                 tui_config = root / ('.opencode/tui.json' if scope == 'project' else '.config/opencode/tui.json')
                 out.append(remove_json_plugin_specs(tui_config, {'./plugins/prompt-optimizer-tui/prompt-optimizer.tsx'}, dry_run=dry_run))
+                owner = destination / '.prompt-optimizer-owner.json'
+                owned = False
+                if owner.is_file():
+                    try:
+                        marker = load_json_object(owner, 'OpenCode TUI ownership marker')
+                        expected = hashlib.sha256(source.joinpath('prompt-optimizer.tsx').read_bytes()).hexdigest()
+                        owned = marker.get('schema') == 1 and marker.get('owned') is True and marker.get('sourceSha256') == expected
+                    except SystemExit:
+                        owned = False
+                if owned:
+                    out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
+                    out.append(remove_owned_file(owner, dry_run=dry_run))
             else:
                 out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
         else:
@@ -676,7 +689,25 @@ def install_opencode_tui(base: Path, *, backup=True, dry_run=False) -> list[str]
     """Install the separate OpenCode TUI target and register it in tui.json."""
     source = PACKAGE_ROOT / 'adapters/opencode/tui/prompt-optimizer.tsx'
     destination = base / 'plugins/prompt-optimizer-tui/prompt-optimizer.tsx'
+    owner = destination.parent / '.prompt-optimizer-owner.json'
+    had_destination = destination.exists()
+    owned_destination = False
+    if owner.exists():
+        marker = load_json_object(owner, 'OpenCode TUI ownership marker')
+        owned_destination = marker.get('schema') == 1 and marker.get('owned') is True and marker.get('path') == destination.name
+    if had_destination and not owned_destination and destination.read_bytes() != source.read_bytes():
+        fail(L(
+            f'Refusing to overwrite a user-owned OpenCode TUI plugin: {destination}',
+            f'Отказано: пользовательский OpenCode TUI plugin не будет перезаписан: {destination}',
+        ))
     out = [copy_file(source, destination, backup=backup, dry_run=dry_run, label='OpenCode TUI plugin')]
+    if not dry_run and (not had_destination or owned_destination):
+        write_json(owner, {
+            'schema': 1,
+            'owned': True,
+            'path': destination.name,
+            'sourceSha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+        }, backup=backup, dry_run=dry_run, label='OpenCode TUI ownership marker')
     tui_config = base / 'tui.json'
     current = load_json_object(tui_config, 'OpenCode TUI config')
     plugins = current.get('plugin', [])

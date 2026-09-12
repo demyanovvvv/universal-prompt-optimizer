@@ -2,8 +2,8 @@ import { classifyTask } from "./task-classifier"
 import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA } from "./prompt-builder"
 import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
-import { emptyMetrics, hashPrompt, incrementMetrics, isDuplicate } from "./session-state"
-import type { SessionOverride, SessionState } from "./types"
+import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
+import type { ModelResolution, SessionOverride, SessionState } from "./types"
 
 // Universal Prompt Optimizer v5.5
 
@@ -44,6 +44,48 @@ const PROFILE_HINTS: Record<Profile, string> = {
 const AUTO_GATE = "AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 
+const EXACT_MODEL_ALIASES: Record<string, Profile> = {
+  "gpt-6-astra": "astra",
+  astra: "astra",
+  "gpt-5.6": "sol",
+  "gpt-5.6-sol": "sol",
+  sol: "sol",
+  "gpt-5.6-terra": "terra",
+  terra: "terra",
+  "gpt-5.6-luna": "luna",
+  luna: "luna",
+  "glm-5.2": "glm-5.2",
+  "glm-5-2": "glm-5.2",
+  "glm-5.3": "glm-5.3",
+  "glm-5-3": "glm-5.3",
+  "glm-5.3-flash": "glm-5.3-flash",
+  "glm-5-3-flash": "glm-5.3-flash",
+  "deepseek-v4-flash": "deepseek-v4-flash",
+  "deepseek-v4-flash-0731": "deepseek-v4-flash",
+  "deepseek-v4-pro": "deepseek-v4-pro",
+  "claude-fable-5.1": "claude-fable-5.1",
+  "claude-fable-5-1": "claude-fable-5.1",
+  "claude-fable-5": "claude-fable-5",
+  "claude-opus-5": "claude-opus-5",
+  "claude-opus-4.8": "claude-opus-4.8",
+  "claude-opus-4-8": "claude-opus-4.8",
+  "claude-sonnet-5": "claude-sonnet-5",
+  "kimi-k3": "kimi-k3",
+  "muse-spark-1.3": "muse-spark-1.3",
+  "muse-spark-1-3": "muse-spark-1.3",
+  "hy4-preview": "hy4-preview",
+  "hy-4-preview": "hy4-preview",
+  "qwen3.8-max": "qwen3.8-max",
+  "qwen3.8-max-0902": "qwen3.8-max",
+  "qwen3.8-max-2026-09-02": "qwen3.8-max",
+  "gemini-3.8-flash": "gemini-3.8-flash",
+  "grok-4.6": "grok-4.6",
+}
+
+function normalizeModelID(value: string): string {
+  return value.trim().toLowerCase().replace(/_/g, "-")
+}
+
 export function detectProfile(providerID: string, modelID: string): Profile | undefined {
   const id = `${providerID}/${modelID}`.toLowerCase().replace(/_/g, "-")
   if (/claude.*fable[^a-z0-9]*5[.-]1(?:$|[^a-z0-9])/.test(id) || id.includes("claude-fable-5.1") || id.includes("claude-fable-5-1")) return "claude-fable-5.1"
@@ -70,8 +112,46 @@ export function detectProfile(providerID: string, modelID: string): Profile | un
   return undefined
 }
 
+export function resolveModel(providerID: string, modelID: string): ModelResolution {
+  const normalizedModelID = normalizeModelID(modelID)
+  const exactProfile = EXACT_MODEL_ALIASES[normalizedModelID]
+  if (exactProfile) {
+    return {
+      profile: exactProfile,
+      confidence: "high",
+      source: "exact-id",
+      modelID: normalizedModelID,
+      matchedAlias: normalizedModelID,
+    }
+  }
+  const profile = detectProfile(providerID, modelID)
+  if (profile) {
+    return {
+      profile,
+      confidence: "high",
+      source: "pattern",
+      modelID: normalizedModelID,
+    }
+  }
+  return {
+    confidence: "low",
+    source: "unsupported",
+    modelID: normalizedModelID,
+  }
+}
+
+export function formatModelResolution(resolution: ModelResolution): string {
+  const profile = resolution.profile ?? "none"
+  const alias = resolution.matchedAlias ? `, alias=${resolution.matchedAlias}` : ""
+  return `${profile} (${resolution.source}, confidence=${resolution.confidence}${alias})`
+}
+
 function stateKey(sessionID: string): string {
   return `prompt-optimizer/session/${sessionID}`
+}
+
+function sessionIDOf(value: unknown): string {
+  return typeof value === "string" && value.trim() ? value : "__default__"
 }
 
 function promptText(event: any): string | undefined {
@@ -91,6 +171,8 @@ function mergeState(previous: SessionState | undefined, patch: Partial<SessionSt
     userPromptCount: previous?.userPromptCount ?? 0,
     candidateUserPromptCount: previous?.candidateUserPromptCount,
     active: previous?.active ?? false,
+    lastSeenAt: previous?.lastSeenAt,
+    lastResolution: previous?.lastResolution,
     metrics: previous?.metrics ?? emptyMetrics(),
     ...previous,
     ...patch,
@@ -109,7 +191,8 @@ function settingLine(name: string, value: string, source: string): string {
 
 function statusText(settings: ReturnType<typeof resolveSettings>, state: SessionState | undefined, model?: { providerID?: string; id?: string }): string {
   const metrics = state?.metrics ?? emptyMetrics()
-  const profile = model?.providerID && model.id ? detectProfile(model.providerID, model.id) : undefined
+  const resolution = model?.providerID && model.id ? resolveModel(model.providerID, model.id) : state?.lastResolution
+  const profile = resolution?.profile
   return [
     "Prompt Optimizer",
     "",
@@ -118,7 +201,9 @@ function statusText(settings: ReturnType<typeof resolveSettings>, state: Session
     settingLine("Scope", settings.scope.toUpperCase(), configSourceLabel(settings.sources.scope)),
     settingLine("Quality gate", settings.qualityGate.toUpperCase(), configSourceLabel(settings.sources.qualityGate)),
     settingLine("Model", model?.providerID && model.id ? `${model.providerID}/${model.id}` : "not resolved", "OpenCode"),
-    settingLine("Profile", profile ?? (settings.unsupportedModel === "generic" ? "GENERIC" : "NONE"), profile ? "registry" : "fallback"),
+    settingLine("Profile", profile ?? (settings.unsupportedModel === "generic" ? "GENERIC" : "NONE"), profile ? `${resolution?.source ?? "registry"}${resolution?.matchedAlias ? `:${resolution.matchedAlias}` : ""}` : "fallback"),
+    settingLine("Preview", "advisory (model-guided)", "OpenCode v1"),
+    resolution ? settingLine("Resolution", formatModelResolution(resolution), "diagnostic") : "",
     "",
     `Session: ${metrics.processed} processed · ${metrics.optimized} optimized · ${metrics.skipped} skipped`,
     `Gates: PASS ${metrics.pass} · LIGHT ${metrics.light} · FULL ${metrics.full}`,
@@ -138,6 +223,8 @@ export function formatDecision(decision: ReturnType<typeof decide>, settings: Re
     `Quality gate: ${(decision.gate ?? decision.qualityGate).toUpperCase()}`,
     `Confidence: ${decision.profileConfidence}`,
     `Reason: ${decision.reason}`,
+    state?.lastResolution ? `Model resolution: ${formatModelResolution(state.lastResolution)}` : "",
+    "Preview enforcement: advisory (OpenCode v1 model-guided flow)",
     decision.warning ? `Warning: ${decision.warning}` : "",
     `Session totals: ${metrics.processed} processed, ${metrics.optimized} optimized, ${metrics.skipped} skipped`,
     settings.invalidConfig ? "Config status: invalid; safe OFF fallback is active." : "Config status: valid",
@@ -148,13 +235,20 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
   const projectRoot = typeof ctx?.directory === "string" ? ctx.directory : process.cwd()
   const sessions = new Map<string, RuntimeSession>()
   const loadSettings = () => resolveSettings(projectRoot, options)
-  const getSession = (sessionID: string): RuntimeSession => sessions.get(sessionID) ?? {
-    state: { userPromptCount: 0, active: false, metrics: emptyMetrics() },
+  const getSession = (sessionID: string): RuntimeSession => {
+    const current = sessions.get(sessionID)
+    if (current) return current
+    return { state: { userPromptCount: 0, active: false, metrics: emptyMetrics() } }
+  }
+  const touchSession = (key: string, session: RuntimeSession): void => {
+    session.state.lastSeenAt = Date.now()
+    sessions.set(key, session)
+    pruneSessions(sessions)
   }
 
   return {
     "chat.message": async (input: any, output: any) => {
-      const key = stateKey(input.sessionID)
+      const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
       const stored = current.state
       const priorCount = stored.userPromptCount
@@ -167,13 +261,14 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         userPromptCount: priorCount + 1,
         candidateUserPromptCount: priorCount + 1,
         active: effectiveBehavior !== "off" && inScope,
+        lastSeenAt: Date.now(),
         pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
       })
-      sessions.set(key, { state: next, pendingPrompt: prompt, pendingMessageId: input.messageID })
+      touchSession(key, { state: next, pendingPrompt: prompt, pendingMessageId: input.messageID })
     },
 
     "experimental.chat.system.transform": async (input: any, output: any) => {
-      const key = stateKey(input.sessionID ?? "__default__")
+      const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
       const stored = current.state
       const prompt = current.pendingPrompt
@@ -193,11 +288,11 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         providerID: String(input.model?.providerID ?? ""),
         modelID: String(input.model?.id ?? input.model?.modelID ?? ""),
       }
-      const profile = stored.override?.profile && stored.override.profile !== "auto" && stored.override.profile !== "generic"
-        ? stored.override.profile
-        : detectProfile(model.providerID, model.modelID)
+      const resolution = stored.override?.profile && stored.override.profile !== "auto" && stored.override.profile !== "generic"
+        ? { profile: stored.override.profile, confidence: "high" as const, source: "exact-id" as const, modelID: model.modelID }
+        : resolveModel(model.providerID, model.modelID)
+      const profile = resolution.profile
       const task = classifyTask(prompt)
-      const duplicate = !current.pendingPrompt && isDuplicate(stored, current.pendingMessageId, prompt)
       const decision = !profile && effectiveSettings.unsupportedModel === "skip"
         ? { action: "skip" as const, behavior: effectiveSettings.behavior, scope: effectiveSettings.scope, qualityGate: effectiveSettings.qualityGate, taskType: task.type, profile: "none" as const, profileConfidence: "low" as const, reason: "model is not in the registry" }
         : decide({
@@ -206,13 +301,13 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
           model,
           profile,
           sessionOverride: stored.override,
-          duplicate,
           taskType: task.type,
         }, prompt)
       const nextMetrics = incrementMetrics(stored, decision.action, decision.profile, decision.gate)
       const nextState = mergeState(stored, {
         active: decision.action !== "skip" || effectiveSettings.scope === "all",
         lastModel: model,
+        lastResolution: resolution,
         lastTaskType: task.type,
         metrics: nextMetrics,
         lastProcessedEventId: current.pendingMessageId ?? stored.lastProcessedEventId,
@@ -220,7 +315,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         pendingPromptHash: undefined,
         lastDecision: decision,
       })
-      sessions.set(key, { state: nextState })
+      touchSession(key, { state: nextState })
       if (decision.action === "skip") return
 
       const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile as Profile]
@@ -232,7 +327,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
     "command.execute.before": async (input: any, output: any) => {
       const command = String(input.command ?? "").replace(/^\/+/, "").toLowerCase()
       if (command !== "prompt-optimizer" && command !== "po" && command !== "po-status") return
-      const key = stateKey(input.sessionID)
+      const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
       const settings = loadSettings()
       const argument = String(input.arguments ?? "").trim().toLowerCase()

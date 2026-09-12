@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.verify.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "outDir": ".tmp-tests/opencode",
+    "noEmit": false,
+    "rootDir": "."
+  },
+  "include": [
+    "types/host-modules.d.ts",
+    "adapters/opencode/plugin/*.ts",
+    "tests/opencode-runtime.test.ts"
+  ]
+}

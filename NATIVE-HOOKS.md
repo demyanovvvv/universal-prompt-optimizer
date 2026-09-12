@@ -3,9 +3,10 @@
 ## OpenCode
 Use the v1 `chat.message` hook to admit and count a user turn, then
 `experimental.chat.system.transform` for model-specific preflight because it
-contains the resolved model. PREVIEW is implemented as a model instruction to
-call OpenCode's `question` tool once with the exact optimized prompt; it is
-advisory unless the host exposes a blocking approval hook.
+contains the resolved model. The plugin keeps bounded process-local state only;
+it does not claim persistence across plugin reloads. PREVIEW is implemented as a
+model instruction to call OpenCode's `question` tool once with the exact optimized
+prompt; it is advisory, not a host-enforced execution barrier.
 
 ## Pi
 `before_agent_start` has `ctx.model`, so routing is exact. PREVIEW registers a custom `prompt_optimizer_preview` tool backed by `ctx.ui.confirm` and `ctx.ui.editor`. Pi session commands can toggle behavior without reinstalling.

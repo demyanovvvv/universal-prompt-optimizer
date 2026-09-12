@@ -41,8 +41,10 @@ export type SessionState = {
   userPromptCount: number
   candidateUserPromptCount?: number
   active: boolean
+  lastSeenAt?: number
   override?: SessionOverride
   lastModel?: ModelIdentity
+  lastResolution?: ModelResolution
   lastTaskType?: TaskType
   metrics?: SessionMetrics
   lastProcessedEventId?: string
@@ -74,6 +76,14 @@ export type ResolvedSettings = Settings & {
 export type ModelIdentity = {
   providerID: string
   modelID: string
+}
+
+export type ModelResolution = {
+  profile?: Profile
+  confidence: "high" | "low"
+  source: "exact-id" | "pattern" | "unsupported"
+  modelID: string
+  matchedAlias?: string
 }
 
 export type DecisionInput = {

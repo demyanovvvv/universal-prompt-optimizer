@@ -144,6 +144,28 @@ class InstallerTests(unittest.TestCase):
             value = json.loads(config.read_text(encoding="utf-8"))
             self.assertEqual(value["plugin"], ["./plugins/user.tsx"])
 
+    def test_opencode_tui_uninstall_removes_installer_owned_plugin(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            installer.install_opencode_tui(home / ".config/opencode", backup=False)
+            destination = home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
+            owner = destination.parent / ".prompt-optimizer-owner.json"
+            self.assertTrue(destination.exists())
+            self.assertTrue(owner.exists())
+            installer.uninstall(home, "global")
+            self.assertFalse(destination.exists())
+            self.assertFalse(owner.exists())
+
+    def test_opencode_tui_install_refuses_modified_user_plugin(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            destination = home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
+            destination.parent.mkdir(parents=True)
+            destination.write_text("user plugin\n", encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                installer.install_opencode_tui(home / ".config/opencode", backup=False)
+            self.assertEqual(destination.read_text(encoding="utf-8"), "user plugin\n")
+
     def test_opencode_tui_uninstall_dry_run_does_not_change_config(self):
         with tempfile.TemporaryDirectory() as raw:
             home = Path(raw)

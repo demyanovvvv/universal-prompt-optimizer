@@ -10,6 +10,11 @@
   event protection, explain/status output, and ephemeral session overrides.
 - Hardened installer TUI lifecycle cleanup and preserved legacy adapter boolean
   configuration while OpenCode receives the richer quality gate value.
+- Added executable OpenCode runtime behavior tests for model resolution, task and
+  quality-gate decisions, idempotent hook execution, scope, and bounded state.
+- Added exact/pattern/unsupported model-resolution diagnostics, capped OpenCode
+  process-local session state, explicit advisory PREVIEW reporting, and a TUI
+  ownership marker for safe uninstall.
 
 ## 5.5 — 2026-09-11
 

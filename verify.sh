@@ -127,6 +127,9 @@ fi
 if [[ -n "$TSC_BIN" ]]; then
   "$TSC_BIN" -p tsconfig.verify.json
   ok "Синтаксис TypeScript" "TypeScript syntax"
+  "$TSC_BIN" -p tsconfig.test.json
+  node --test .tmp-tests/opencode/tests/opencode-runtime.test.js >/dev/null
+  ok "Поведенческие тесты OpenCode runtime" "OpenCode runtime behavior tests"
 else
   warn "tsc не найден — синтаксис TypeScript не проверен локально" "tsc not found — TypeScript syntax check skipped"
 fi

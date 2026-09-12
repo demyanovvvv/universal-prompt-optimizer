@@ -27,8 +27,9 @@ management, schema validation, conformance tests, and deterministic eval checks.
 - OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
   and `full`. Legacy boolean values remain readable; non-OpenCode adapters receive
   the compatible boolean form so their existing runtime contracts are unchanged.
-- OpenCode session overrides are ephemeral and privacy-safe aggregate metrics never
-  store prompt content. Use `/prompt-optimizer reset` to return to persistent config.
+- OpenCode session overrides are ephemeral, bounded process-local state expires after
+  30 days and is capped at 200 sessions; privacy-safe aggregate metrics never store
+  prompt content. Use `/prompt-optimizer reset` to return to persistent config.
 
 The v5.4 installer/runtime hardening remains included:
 
@@ -233,7 +234,7 @@ The final review screen shows the complete configuration and lets you return to 
 ### AUTO / PREVIEW / OFF
 
 - **AUTO** — adapt silently only when useful, then execute.
-- **PREVIEW** — show the optimized prompt first and request confirmation where the agent exposes a confirmation UI. This is a host-enforced execution barrier only when the selected agent explicitly provides one; otherwise it is model-guided and must be treated as advisory.
+- **PREVIEW** — show the optimized prompt first and request confirmation where the agent exposes a confirmation UI. This is a host-enforced execution barrier only when the selected agent explicitly provides one; otherwise it is model-guided and must be treated as advisory. OpenCode v1 currently uses the advisory form.
 - **OFF** — keep the adapter installed but disable automatic optimization.
 
 This is separate from **Automatic/native integration = OFF**, which installs only the shared skills/commands and does not install automatic hooks/plugins/rules at all.
@@ -264,7 +265,9 @@ Uninstall is conservative. A copied package file is removed only while its
 content still matches the package version. User-modified files are reported and
 preserved. Managed Markdown blocks and hook entries can be removed independently
 without deleting surrounding user content. Ambiguous pre-existing config
-containers such as a version-only `settings.json` are retained.
+containers such as a version-only `settings.json` are retained. The OpenCode TUI
+copy carries a local ownership marker so uninstall removes installer-owned files
+without claiming a pre-existing plugin at the same conventional path.
 
 ### Development checks
 
@@ -273,6 +276,7 @@ npm install
 ./verify.sh
 npm test
 npm run verify:ts
+npm run test:runtime
 python -B evals/run.py
 ```
 
