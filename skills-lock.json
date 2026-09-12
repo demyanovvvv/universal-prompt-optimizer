@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "evaluation-harness": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "ai-engineering/evaluation-harness/SKILL.md",
+      "computedHash": "4a074681dd1a41cd92ab2c75eb0558d3033bccfbf23eaa82b5b8373325884bd1"
+    },
+    "github-actions-pipeline-creator": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "ci-cd/github-actions-pipeline-creator/SKILL.md",
+      "computedHash": "c359766d9644d1a2cc8fa80019643fac6b87c5740e6a14e8c4e99d490ed2b97e"
+    },
+    "llm-debugger": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "ai-engineering/llm-debugger/SKILL.md",
+      "computedHash": "93583d64bfeb0ef77126569a89069639e5d38526d74a6938b610fc44c010f471"
+    },
+    "prompt-regression-tester": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "ai-engineering/prompt-regression-tester/SKILL.md",
+      "computedHash": "c6e69028d8b319e9eed9bdcb4749bf634a744693386a9d7330ffe41457be1c3d"
+    },
+    "security-pr-checklist-skill": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "security/security-pr-checklist-skill/SKILL.md",
+      "computedHash": "c496983e1eeb9846b8dc72c00ba7d87157499c3eade0bc922173662a1693d87a"
+    },
+    "tool-function-schema-designer": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "ai-engineering/tool-function-schema-designer/SKILL.md",
+      "computedHash": "fcdd8797df6cb2d90914a7a15b18abdeb98f7ad1666abca42350666e53021122"
+    },
+    "unit-test-generator": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "skillPath": "testing/unit-test-generator/SKILL.md",
+      "computedHash": "6bb3f6804b00dcb9e574ab8e8830bdd31bf584625e3a50ac794f9c3da48f4234"
+    }
+  }
+}

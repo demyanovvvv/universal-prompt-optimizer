@@ -65,12 +65,14 @@ for x in profiles:
     text=ref.read_text(encoding='utf-8')
     if 'Provenance' not in text or ('Official source' not in text and 'Official sources' not in text):
         raise SystemExit(f"profile missing provenance/source: {x['file']}")
-# manual override skills
+# manual model override skills are the registry-derived names. Other project
+# skills may also start with prompt- and must not be mistaken for model profiles.
 skill_root=root/'.agents/skills'
-overrides=[p for p in skill_root.iterdir() if p.is_dir() and p.name.startswith('prompt-') and p.name!='prompt-optimizer']
+expected_overrides={f"prompt-{item['id'].replace('.', '-')}" for item in profiles}
+overrides=[p for p in skill_root.iterdir() if p.is_dir() and p.name in expected_overrides]
 if len(overrides)!=20: raise SystemExit(f'expected 20 override skills, got {len(overrides)}')
-for p in overrides:
-    if not (p/'SKILL.md').is_file(): raise SystemExit(f'missing {p}/SKILL.md')
+for name in expected_overrides:
+    if not (skill_root/name/'SKILL.md').is_file(): raise SystemExit(f'missing {skill_root/name}/SKILL.md')
 # OpenCode profile type must cover registry IDs
 text=(root/'adapters/opencode/plugin/index.ts').read_text(encoding='utf-8')
 block=text.split('type Profile =',1)[1].split('type Settings',1)[0]
