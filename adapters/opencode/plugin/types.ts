@@ -42,9 +42,12 @@ export type SessionState = {
   candidateUserPromptCount?: number
   active: boolean
   override?: SessionOverride
+  lastModel?: ModelIdentity
+  lastTaskType?: TaskType
   metrics?: SessionMetrics
   lastProcessedEventId?: string
   lastPromptHash?: string
+  pendingPromptHash?: string
   lastDecision?: DecisionSummary
 }
 

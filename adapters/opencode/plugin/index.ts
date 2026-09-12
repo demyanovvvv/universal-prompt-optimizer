@@ -1,10 +1,9 @@
-import { Plugin } from "@opencode-ai/plugin"
 import { classifyTask } from "./task-classifier"
 import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA } from "./prompt-builder"
 import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
-import { emptyMetrics, hashPrompt, incrementMetrics, isDuplicate, normalizeState } from "./session-state"
-import type { SessionState } from "./types"
+import { emptyMetrics, hashPrompt, incrementMetrics, isDuplicate } from "./session-state"
+import type { SessionOverride, SessionState } from "./types"
 
 // Keep the registry-facing union in this entrypoint so the existing conformance
 // check can detect missing OpenCode profile routing without importing TypeScript.
@@ -43,15 +42,6 @@ const PROFILE_HINTS: Record<Profile, string> = {
 const AUTO_GATE = "AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 
-function countPriorUserMessages(messages: readonly unknown[]): number {
-  let count = 0
-  for (const entry of messages as readonly any[]) {
-    const role = entry?.role ?? entry?.message?.role ?? entry?.info?.role
-    if (role === "user") count++
-  }
-  return count
-}
-
 export function detectProfile(providerID: string, modelID: string): Profile | undefined {
   const id = `${providerID}/${modelID}`.toLowerCase().replace(/_/g, "-")
   if (/claude.*fable[^a-z0-9]*5[.-]1(?:$|[^a-z0-9])/.test(id) || id.includes("claude-fable-5.1") || id.includes("claude-fable-5-1")) return "claude-fable-5.1"
@@ -83,14 +73,15 @@ function stateKey(sessionID: string): string {
 }
 
 function promptText(event: any): string | undefined {
-  const candidates = [event?.prompt, event?.text, event?.message?.content, event?.message?.text]
+  const candidates = [
+    event?.prompt,
+    event?.text,
+    event?.message?.content,
+    event?.message?.text,
+    ...(Array.isArray(event?.parts) ? event.parts.map((part: any) => part?.type === "text" ? part.text : undefined) : []),
+  ]
   const value = candidates.find(item => typeof item === "string" && item.trim())
   return typeof value === "string" ? value : undefined
-}
-
-function eventID(event: any): string | undefined {
-  const value = event?.eventID ?? event?.eventId ?? event?.id ?? event?.messageID ?? event?.messageId
-  return typeof value === "string" && value.trim() ? value : undefined
 }
 
 function mergeState(previous: SessionState | undefined, patch: Partial<SessionState>): SessionState {
@@ -102,6 +93,12 @@ function mergeState(previous: SessionState | undefined, patch: Partial<SessionSt
     ...previous,
     ...patch,
   }
+}
+
+type RuntimeSession = {
+  state: SessionState
+  pendingPrompt?: string
+  pendingMessageId?: string
 }
 
 function settingLine(name: string, value: string, source: string): string {
@@ -145,39 +142,42 @@ export function formatDecision(decision: ReturnType<typeof decide>, settings: Re
   ].filter(Boolean).join("\n")
 }
 
-export default Plugin.define({
-  id: "prompt-optimizer-v5-5",
-  async setup(ctx) {
-    const projectRoot = ctx.location.project?.directory ?? ctx.location.directory
-    const loadSettings = () => resolveSettings(projectRoot, (ctx.options ?? {}) as Record<string, unknown>)
+const server = async (ctx: any, options?: Record<string, unknown>) => {
+  const projectRoot = typeof ctx?.directory === "string" ? ctx.directory : process.cwd()
+  const sessions = new Map<string, RuntimeSession>()
+  const loadSettings = () => resolveSettings(projectRoot, options)
+  const getSession = (sessionID: string): RuntimeSession => sessions.get(sessionID) ?? {
+    state: { userPromptCount: 0, active: false, metrics: emptyMetrics() },
+  }
 
-    await ctx.session.hook("prompt", async (event: any) => {
+  return {
+    "chat.message": async (input: any, output: any) => {
+      const key = stateKey(input.sessionID)
+      const current = getSession(key)
+      const stored = current.state
+      const priorCount = stored.userPromptCount
+      const prompt = promptText({ message: output?.message, parts: output?.parts })
       const settings = loadSettings()
-      const key = stateKey(event.sessionID)
-      const stored = normalizeState(await ctx.storage.get(key))
-      let priorCount = stored?.userPromptCount
-      if (priorCount === undefined) {
-        try { priorCount = countPriorUserMessages(await ctx.session.context({ sessionID: event.sessionID })) } catch { priorCount = 0 }
-      }
-      const candidateUserPromptCount = priorCount + 1
-      const effectiveBehavior = stored?.override?.behavior ?? settings.behavior
-      const effectiveScope = stored?.override?.scope ?? settings.scope
+      const effectiveBehavior = stored.override?.behavior ?? settings.behavior
+      const effectiveScope = stored.override?.scope ?? settings.scope
       const inScope = effectiveScope === "all" || (effectiveScope === "first" && priorCount === 0)
-      const prompt = promptText(event)
-      await ctx.storage.set(key, mergeState(stored, {
-        userPromptCount: priorCount,
-        candidateUserPromptCount,
+      const next = mergeState(stored, {
+        userPromptCount: priorCount + 1,
+        candidateUserPromptCount: priorCount + 1,
         active: effectiveBehavior !== "off" && inScope,
-        lastProcessedEventId: eventID(event),
-        lastPromptHash: prompt ? hashPrompt(prompt) : stored?.lastPromptHash,
-      }))
-    })
+        pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
+      })
+      sessions.set(key, { state: next, pendingPrompt: prompt, pendingMessageId: input.messageID })
+    },
 
-    await ctx.session.hook("context", async (event: any) => {
-      if (event.agent === "compaction") return
-      const key = stateKey(event.sessionID)
-      const stored = normalizeState(await ctx.storage.get(key))
-      if (!stored?.active) return
+    "experimental.chat.system.transform": async (input: any, output: any) => {
+      const key = stateKey(input.sessionID ?? "__default__")
+      const current = getSession(key)
+      const stored = current.state
+      const prompt = current.pendingPrompt
+      if (!stored.active || !prompt) return
+      if (current.pendingMessageId && stored.lastProcessedEventId === current.pendingMessageId) return
+
       const settings = loadSettings()
       const effectiveSettings: Settings = {
         ...settings,
@@ -187,44 +187,76 @@ export default Plugin.define({
         qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
       }
       if (effectiveSettings.behavior === "off") return
-      const model = { providerID: String(event.model?.providerID ?? ""), modelID: String(event.model?.id ?? "") }
+      const model = {
+        providerID: String(input.model?.providerID ?? ""),
+        modelID: String(input.model?.id ?? input.model?.modelID ?? ""),
+      }
       const profile = stored.override?.profile && stored.override.profile !== "auto" && stored.override.profile !== "generic"
         ? stored.override.profile
         : detectProfile(model.providerID, model.modelID)
-      if (!profile && effectiveSettings.unsupportedModel === "skip") {
-        await ctx.storage.set(key, mergeState(stored, { active: false, lastDecision: { action: "skip", profile: "none", reason: "model is not in the registry" } }))
-        return
-      }
-      const prompt = promptText(event) ?? ""
-      const duplicate = isDuplicate(stored, eventID(event), prompt)
       const task = classifyTask(prompt)
-      const decision = decide({
-        settings: effectiveSettings,
-        scopeEligible: true,
-        model,
-        profile,
-        sessionOverride: stored.override,
-        duplicate,
-        taskType: task.type,
-      }, prompt)
+      const duplicate = !current.pendingPrompt && isDuplicate(stored, current.pendingMessageId, prompt)
+      const decision = !profile && effectiveSettings.unsupportedModel === "skip"
+        ? { action: "skip" as const, behavior: effectiveSettings.behavior, scope: effectiveSettings.scope, qualityGate: effectiveSettings.qualityGate, taskType: task.type, profile: "none" as const, profileConfidence: "low" as const, reason: "model is not in the registry" }
+        : decide({
+          settings: effectiveSettings,
+          scopeEligible: true,
+          model,
+          profile,
+          sessionOverride: stored.override,
+          duplicate,
+          taskType: task.type,
+        }, prompt)
       const nextMetrics = incrementMetrics(stored, decision.action, decision.profile, decision.gate)
-      await ctx.storage.set(key, mergeState(stored, {
-        userPromptCount: stored.candidateUserPromptCount ?? stored.userPromptCount,
+      const nextState = mergeState(stored, {
         active: decision.action !== "skip" || effectiveSettings.scope === "all",
+        lastModel: model,
+        lastTaskType: task.type,
         metrics: nextMetrics,
-        lastProcessedEventId: eventID(event) ?? stored.lastProcessedEventId,
-        lastPromptHash: prompt ? hashPrompt(prompt) : stored.lastPromptHash,
+        lastProcessedEventId: current.pendingMessageId ?? stored.lastProcessedEventId,
+        lastPromptHash: hashPrompt(prompt),
+        pendingPromptHash: undefined,
         lastDecision: decision,
-      }))
-      if (decision.action === "skip") {
-        if (effectiveSettings.scope === "first") return
-        return
-      }
+      })
+      sessions.set(key, { state: nextState })
+      if (decision.action === "skip") return
+
       const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile as Profile]
       const base = effectiveSettings.qualityGate === "pass" ? BASE_ALWAYS : BASE_GATE
       const behaviorText = decision.behavior === "preview" ? PREVIEW : (effectiveSettings.qualityGate === "pass" ? AUTO_ALWAYS : AUTO_GATE)
-      event.system.push({ text: `${base}\n${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}\n${formatDecision(decision, settings, stored)}` })
-    })
+      output.system.push(`${base}\n${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}\n${formatDecision(decision, settings, stored)}`)
+    },
 
-  },
-})
+    "command.execute.before": async (input: any, output: any) => {
+      const command = String(input.command ?? "").replace(/^\/+/, "").toLowerCase()
+      if (command !== "prompt-optimizer" && command !== "po" && command !== "po-status") return
+      const key = stateKey(input.sessionID)
+      const current = getSession(key)
+      const settings = loadSettings()
+      const argument = String(input.arguments ?? "").trim().toLowerCase()
+      const tokens = argument.split(/\s+/).filter(Boolean)
+      const operation = command === "po-status" ? "status" : tokens[0] ?? "status"
+      const override: SessionOverride = { ...(current.state.override ?? {}) }
+      if (operation === "reset") current.state.override = undefined
+      else if (operation === "on" || operation === "auto") override.behavior = "auto"
+      else if (operation === "off") override.behavior = "off"
+      else if (operation === "preview") override.behavior = "preview"
+      else if (operation === "first" || operation === "all") override.scope = operation
+      else if (operation === "pass" || operation === "light" || operation === "full" || operation === "adaptive") override.qualityGate = operation
+      else if (!["status", "explain"].includes(operation)) return
+      if (operation !== "status" && operation !== "explain" && operation !== "reset") current.state.override = override
+      if (operation === "status") {
+        const model = current.state.lastModel ? { providerID: current.state.lastModel.providerID, id: current.state.lastModel.modelID } : undefined
+        output.parts.push({ type: "text", text: statusText(resolveSettings(projectRoot, { ...options, ...current.state.override }), current.state, model) })
+      } else if (operation === "explain") {
+        const decision = current.state.lastDecision
+        output.parts.push({ type: "text", text: decision ? `Prompt Optimizer decision\n\nAction: ${decision.action.toUpperCase()}\nProfile: ${decision.profile.toUpperCase()}\nGate: ${(decision.gate ?? "not selected").toUpperCase()}\nReason: ${decision.reason}` : "Prompt Optimizer has no decision for this session yet." })
+      } else {
+        sessions.set(key, current)
+        output.parts.push({ type: "text", text: `Prompt Optimizer session override: ${operation}. Persistent configuration was not changed.` })
+      }
+    },
+  }
+}
+
+export default { id: "prompt-optimizer-v5-5", server }

@@ -3,18 +3,29 @@ import type { TuiPlugin, TuiPluginModule, TuiSlotPlugin } from "@opencode-ai/plu
 
 type Status = "enabled" | "preview" | "off" | "generic" | "error"
 
-function statusFromConfig(api: any): { status: Status; label: string } {
+function sessionDecision(api: any, sessionID?: string): any {
+  if (!sessionID) return api.kv?.get?.("prompt-optimizer/decision", undefined)
+  return api.kv?.get?.(`prompt-optimizer/decision/${sessionID}`, undefined)
+}
+
+function statusFromConfig(api: any, sessionID?: string): { status: Status; label: string } {
   const config = api.tuiConfig ?? {}
   const override = api.kv?.get?.("prompt-optimizer/tui", {}) ?? {}
+  // The server plugin stores session state in server storage, not in the TUI
+  // session object. Keep the widget config-level by default; use only explicit
+  // TUI KV state when another integration publishes a decision summary.
+  const decision = sessionDecision(api, sessionID)
   if (override?.behavior === "off") return { status: "off", label: "PO x OFF" }
   if (override?.behavior === "preview") return { status: "preview", label: "PO o PREVIEW" }
   if (override?.profile === "generic") return { status: "generic", label: "PO ? GENERIC" }
   if (config?.plugin_enabled?.["prompt-optimizer-v5-5"] === false || config?.plugin_enabled?.["prompt-optimizer-v5-5.tui"] === false) return { status: "off", label: "PO x OFF" }
+  if (decision?.action === "preview") return { status: "preview", label: "PO o PREVIEW" }
+  if (decision?.profile === "generic") return { status: "generic", label: "PO ? GENERIC" }
   return { status: "enabled", label: "PO + AUTO" }
 }
 
-function StatusWidget(props: { api: any }) {
-  const current = statusFromConfig(props.api)
+function StatusWidget(props: { api: any; sessionID?: string }) {
+  const current = statusFromConfig(props.api, props.sessionID)
   const theme = props.api.theme.current
   const color = current.status === "error" ? theme.error : current.status === "off" ? theme.textMuted : current.status === "generic" ? theme.warning : current.status === "preview" ? theme.info : theme.success
   const override = props.api.kv?.get?.("prompt-optimizer/tui", {}) ?? {}
@@ -28,8 +39,8 @@ const tui: TuiPlugin = async (api) => {
       home_prompt_right() {
         return <StatusWidget api={api} />
       },
-      session_prompt_right() {
-        return <StatusWidget api={api} />
+      session_prompt_right(_ctx: any, value: { session_id: string }) {
+        return <StatusWidget api={api} sessionID={value.session_id} />
       },
     },
   }
@@ -64,7 +75,9 @@ const tui: TuiPlugin = async (api) => {
         namespace: "palette",
         slashName: "po-status",
         run() {
-          const current = statusFromConfig(api)
+           const route = api.route?.current as { name?: string; params?: Record<string, unknown> } | undefined
+           const sessionID = route?.name === "session" ? String(route.params?.sessionID ?? "") : undefined
+           const current = statusFromConfig(api, sessionID)
           api.ui.toast({
             variant: current.status === "error" ? "error" : current.status === "generic" ? "warning" : "info",
             title: "Prompt Optimizer",

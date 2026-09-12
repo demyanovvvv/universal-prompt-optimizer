@@ -144,6 +144,33 @@ class InstallerTests(unittest.TestCase):
             value = json.loads(config.read_text(encoding="utf-8"))
             self.assertEqual(value["plugin"], ["./plugins/user.tsx"])
 
+    def test_opencode_tui_uninstall_dry_run_does_not_change_config(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            config = home / ".config/opencode/tui.json"
+            config.parent.mkdir(parents=True)
+            original = {"theme": "user-theme", "plugin": ["./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}
+            config.write_text(json.dumps(original), encoding="utf-8")
+            destination = home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
+            destination.parent.mkdir(parents=True)
+            destination.write_text((ROOT / "adapters/opencode/tui/prompt-optimizer.tsx").read_text(encoding="utf-8"), encoding="utf-8")
+            results = installer.uninstall(home, "global", dry_run=True)
+            self.assertEqual(json.loads(config.read_text(encoding="utf-8")), original)
+            self.assertTrue(destination.exists())
+            self.assertTrue(any(str(config) in result and "write" in result for result in results))
+
+    def test_legacy_quality_gate_mapping(self):
+        self.assertTrue(installer.legacy_quality_gate_enabled("adaptive"))
+        self.assertTrue(installer.legacy_quality_gate_enabled("light"))
+        self.assertTrue(installer.legacy_quality_gate_enabled("full"))
+        self.assertFalse(installer.legacy_quality_gate_enabled("pass"))
+        self.assertFalse(installer.legacy_quality_gate_enabled(False))
+
+    def test_opencode_duplicate_guard_distinguishes_pending_turn(self):
+        source = (ROOT / "adapters/opencode/plugin/session-state.ts").read_text(encoding="utf-8")
+        self.assertIn("if (state.pendingPromptHash) return false", source)
+        self.assertIn("lastProcessedEventId", source)
+
     def test_remove_file_preserves_modified_copy(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

@@ -21,6 +21,14 @@ management, schema validation, conformance tests, and deterministic eval checks.
 - Cursor and Gemini runtime state is bounded and entries expire after 30 days.
 - `evals/run.py` validates 35 deterministic fixtures, including ambiguous model,
   prompt-injection, destructive-action, and secret-preservation cases.
+- OpenCode now has a separate native TUI plugin. It is invisible by default apart
+  from a compact `PO + AUTO` indicator, with `/prompt-optimizer`, `/po-status`,
+  and `Ctrl+Shift+P` available for on-demand controls.
+- OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
+  and `full`. Legacy boolean values remain readable; non-OpenCode adapters receive
+  the compatible boolean form so their existing runtime contracts are unchanged.
+- OpenCode session overrides are ephemeral and privacy-safe aggregate metrics never
+  store prompt content. Use `/prompt-optimizer reset` to return to persistent config.
 
 The v5.4 installer/runtime hardening remains included:
 
@@ -101,6 +109,39 @@ Shared config (project):
 ```
 
 `scope: "first"` restores first-user-turn-only behavior from v4.
+
+The shared `.prompt-optimizer.json` keeps the legacy boolean `qualityGate` form
+because Cursor, Gemini CLI, Pi, and shared instruction adapters consume that
+contract. Boolean `true` enables adaptive PASS/LIGHT/FULL gating and `false`
+maps to the legacy always-normalize behavior. OpenCode's own
+`.opencode/prompt-optimizer.json` may use the richer `adaptive`, `pass`, `light`,
+or `full` values; the installer writes the compatible boolean to shared config
+and the richer value to OpenCode config.
+
+For OpenCode, `adaptive` selects PASS for precise prompts, LIGHT for incomplete
+or planning/research work, and FULL for complex, security-sensitive, migration,
+or consequential work. `pass` is the legacy always-normalize mode; `light` and
+`full` select those exact gate levels.
+
+### OpenCode TUI controls
+
+When automatic integration is enabled for OpenCode, the installer adds the
+server plugin under `.opencode/plugins/prompt-optimizer/`, the native TUI plugin
+under `.opencode/plugins/prompt-optimizer-tui/`, and registers the latter in
+`.opencode/tui.json`. Global installation uses the corresponding paths under
+`~/.config/opencode/`.
+
+- `PO + AUTO` is the default compact indicator.
+- `PO o PREVIEW`, `PO x OFF`, and `PO ? GENERIC` show the active persistent or
+  session-level mode when known.
+- `/prompt-optimizer status` shows resolved settings and privacy-safe counters.
+- `/prompt-optimizer explain` shows the latest action and reason without prompt
+  text or hidden reasoning.
+- `/prompt-optimizer on|off|preview|first|all|pass|light|full|adaptive|reset`
+  changes only the current OpenCode session; edit JSON explicitly for persistent
+  configuration.
+- `Ctrl+Shift+P` opens the same command-palette entry. The widget does not claim
+  to expose server session state that the TUI API cannot read directly.
 
 ## How AUTO behaves
 
@@ -204,7 +245,7 @@ Normal users do not need these. They are retained for repeatable automation and 
 ```bash
 ./install.sh --detect-agents --auto --behavior auto --yes
 ./install.sh --agents opencode,cursor,pi --behavior preview --yes
-./install.sh --agents all --quality-gate on --yes
+./install.sh --agents all --quality-gate adaptive --yes
 ```
 
 Run `./install.sh --help` for the automation interface.

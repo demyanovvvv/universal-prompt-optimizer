@@ -2,10 +2,14 @@ declare module "@opencode-ai/plugin" {
   export const Plugin: any
 }
 
+declare module "@opencode-ai/plugin/v2/promise" {
+  export function define<T>(plugin: T): T
+}
+
 declare module "@opencode-ai/plugin/tui" {
-  export type TuiPlugin = any
-  export type TuiPluginModule = any
-  export type TuiSlotPlugin = any
+  export type TuiPlugin = (api: any, options?: Record<string, unknown>, meta?: Record<string, unknown>) => Promise<void> | void
+  export type TuiPluginModule = { id?: string; tui: TuiPlugin; server?: never }
+  export type TuiSlotPlugin = { slots: Record<string, (...args: any[]) => unknown>; order?: number }
 }
 
 declare namespace JSX {

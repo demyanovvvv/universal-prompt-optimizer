@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Added a separate native OpenCode TUI plugin with compact status indicators,
+  command-palette/slash controls, and `Ctrl+Shift+P` on-demand access.
+- Added OpenCode task-aware `adaptive`, `pass`, `light`, and `full` quality gates
+  with legacy boolean compatibility.
+- Added privacy-safe bounded OpenCode session state, aggregate metrics, duplicate
+  event protection, explain/status output, and ephemeral session overrides.
+- Hardened installer TUI lifecycle cleanup and preserved legacy adapter boolean
+  configuration while OpenCode receives the richer quality gate value.
+
 ## 5.5 — 2026-09-11
 
 - Added Linux/Windows GitHub Actions verification and a pinned npm/TypeScript

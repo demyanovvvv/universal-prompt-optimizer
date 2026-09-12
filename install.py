@@ -270,10 +270,14 @@ def merge_block(path: Path, block: str, *, backup=True, dry_run=False) -> str:
         atomic_write_text(path, new)
     return f"{action}: {path}"
 
-def configured_block(rel: str, behavior: str, scope: str, quality_gate: bool, unsupported: str) -> str:
+def legacy_quality_gate_enabled(quality_gate: str | bool) -> bool:
+    """Map the richer gate setting to the legacy adapters' boolean contract."""
+    return quality_gate is not False and quality_gate != 'pass'
+
+def configured_block(rel: str, behavior: str, scope: str, quality_gate: str | bool, unsupported: str) -> str:
     block=text(rel).rstrip()
     marker=END
-    q='on' if quality_gate else 'off'
+    q='on' if legacy_quality_gate_enabled(quality_gate) else 'off'
     line=f"\nConfigured by installer: `behavior={behavior}`, `scope={scope}`, `qualityGate={q}`, `unsupportedModel={unsupported}`. If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
     return block.replace(marker, line+marker)
 
@@ -590,7 +594,7 @@ def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
             out.append(remove_json_fields(destination, {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'}, dry_run=dry_run))
         elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin', 'opencode-tui-plugin'}:
             out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
-            if logical == 'opencode-tui-plugin' and not dry_run:
+            if logical == 'opencode-tui-plugin':
                 tui_config = root / ('.opencode/tui.json' if scope == 'project' else '.config/opencode/tui.json')
                 out.append(remove_json_plugin_specs(tui_config, {'./plugins/prompt-optimizer-tui/prompt-optimizer.tsx'}, dry_run=dry_run))
         else:
@@ -743,7 +747,7 @@ def install_gemini(root: Path, python_bin: str, *, backup=True, dry_run=False) -
     out.append(merge_json_hook(root/'.gemini/settings.json','BeforeModel',hook,backup=backup,dry_run=dry_run))
     return out
 
-def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
+def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     validate_project_root(root)
     out=[copy_skills(root/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(root/'.claude/skills',backup=backup,dry_run=dry_run))
@@ -751,7 +755,8 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',root/'.opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(root/'.opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
-    out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
+    legacy_gate = legacy_quality_gate_enabled(quality_gate)
+    out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,legacy_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(root/'.opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(root/'.pi',backup=backup,dry_run=dry_run))
     if 'cursor' in selected: out.extend(install_cursor(root,python_bin,backup=backup,dry_run=dry_run))
@@ -773,14 +778,15 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
         out.append(merge_block(root/'AGENTS.md',configured_block('auto/AGENTS.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))
     return out
 
-def install_global(home: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
+def install_global(home: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     out=[copy_skills(home/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(home/'.claude/skills',backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',home/'.config/opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(home/'.config/opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
-    out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
+    legacy_gate = legacy_quality_gate_enabled(quality_gate)
+    out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,legacy_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(home/'.config/opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(home/'.pi/agent',backup=backup,dry_run=dry_run))
     if 'claude' in selected: out.append(merge_block(home/'.claude/CLAUDE.md',configured_block('auto/CLAUDE.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))

@@ -149,7 +149,7 @@ Universal Prompt Optimizer v${VERSION} — установщик
   --auto | --no-auto
   --behavior auto|preview|off
   --prompt-scope all|first
-  --quality-gate on|off
+  --quality-gate on|off|pass|light|full|adaptive
   --unsupported-model skip|generic
   --python-bin PATH|COMMAND
   --backup | --no-backup
@@ -187,7 +187,7 @@ Optional flags:
   --auto | --no-auto
   --behavior auto|preview|off
   --prompt-scope all|first
-  --quality-gate on|off
+  --quality-gate on|off|pass|light|full|adaptive
   --unsupported-model skip|generic
   --python-bin PATH|COMMAND
   --backup | --no-backup
@@ -499,15 +499,19 @@ configure_behavior_interactive() {
 
     echo
     if [[ "$UI_LANG" == "ru" ]]; then
-      echo "Адаптивный Quality Gate:"
-      printf '%b\n' "  1) ВКЛ  - PASS для точных промптов, LIGHT для неполных, FULL только для сложных/неоднозначных ${DIM}[рекомендуется]${RESET}"
-      echo "  2) ВЫКЛ - нормализовать каждый подходящий запрос"
+      echo "Quality Gate:"
+      printf '%b\n' "  1) АДАПТИВНЫЙ - PASS для точных, LIGHT для неполных, FULL для сложных ${DIM}[рекомендуется]${RESET}"
+      echo "  2) PASS - пропускать точные запросы без нормализации"
+      echo "  3) LIGHT - только легкая нормализация"
+      echo "  4) FULL - полная нормализация каждого запроса"
     else
-      echo "Adaptive quality gate:"
-      printf '%b\n' "  1) ON  - PASS precise prompts, LIGHT-normalize incomplete ones, FULL-rewrite only complex/ambiguous ones ${DIM}[recommended]${RESET}"
-      echo "  2) OFF - normalize every eligible prompt"
+      echo "Quality gate:"
+      printf '%b\n' "  1) ADAPTIVE - PASS precise, LIGHT incomplete, FULL complex ${DIM}[recommended]${RESET}"
+      echo "  2) PASS - skip precise requests without normalization"
+      echo "  3) LIGHT - light normalization only"
+      echo "  4) FULL - full normalization for every request"
     fi
-    read -r -p "> " choice || true; choice="${choice:-1}"; case "$choice" in 2) quality_gate=off ;; *) quality_gate=on ;; esac
+    read -r -p "> " choice || true; choice="${choice:-1}"; case "$choice" in 2) quality_gate=pass ;; 3) quality_gate=light ;; 4) quality_gate=full ;; *) quality_gate=adaptive ;; esac
 
     echo
     if [[ "$UI_LANG" == "ru" ]]; then
@@ -558,7 +562,12 @@ show_summary() {
       local b_ru s_ru q_ru u_ru
       case "$behavior" in auto) b_ru="AUTO" ;; preview) b_ru="PREVIEW" ;; off) b_ru="OFF" ;; esac
       [[ "$prompt_scope" == all ]] && s_ru="все запросы" || s_ru="только первый"
-      [[ "$quality_gate" == on ]] && q_ru="ВКЛ" || q_ru="ВЫКЛ"
+      case "$quality_gate" in
+        on|adaptive) q_ru="ADAPTIVE" ;;
+        off|pass) q_ru="PASS" ;;
+        light) q_ru="LIGHT" ;;
+        full) q_ru="FULL" ;;
+      esac
       [[ "$unsupported_model" == skip ]] && u_ru="SKIP" || u_ru="GENERIC"
       printf '  %-28s %s\n' "Режим:" "$b_ru"
       printf '  %-28s %s\n' "Обрабатываемые запросы:" "$s_ru"
@@ -694,7 +703,7 @@ if [[ $interactive -eq 1 ]]; then interactive_wizard; fi
 case "$scope" in project|global) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимая область установки: $scope" >&2; else echo "Invalid scope: $scope" >&2; fi; exit 2;; esac
 case "$behavior" in auto|preview|off) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимый режим: $behavior" >&2; else echo "Invalid behavior: $behavior" >&2; fi; exit 2;; esac
 case "$prompt_scope" in all|first) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимый scope запросов: $prompt_scope" >&2; else echo "Invalid prompt scope: $prompt_scope" >&2; fi; exit 2;; esac
-case "$quality_gate" in on|off) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимое значение Quality Gate: $quality_gate" >&2; else echo "Invalid quality gate: $quality_gate" >&2; fi; exit 2;; esac
+case "$quality_gate" in on|off|pass|light|full|adaptive) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимое значение Quality Gate: $quality_gate" >&2; else echo "Invalid quality gate: $quality_gate" >&2; fi; exit 2;; esac
 case "$unsupported_model" in skip|generic) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимая политика неизвестной модели: $unsupported_model" >&2; else echo "Invalid unknown-model policy: $unsupported_model" >&2; fi; exit 2;; esac
 if [[ $doctor_mode -eq 1 && $uninstall_mode -eq 1 ]]; then
   if [[ "$UI_LANG" == ru ]]; then echo "Выберите либо --doctor, либо --uninstall, но не оба параметра." >&2; else echo "Choose either --doctor or --uninstall, not both." >&2; fi

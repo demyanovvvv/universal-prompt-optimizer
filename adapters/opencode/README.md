@@ -1,22 +1,39 @@
-# OpenCode adapter — v5
+# OpenCode adapter — v5.5
 
-Strongest integration. OpenCode v2 `context` hook exposes the resolved `{providerID,id,variant}` immediately before dispatch, so the profile is selected from the real active model without relying on provider prefixes.
+Strongest integration. The server plugin uses OpenCode v1 `chat.message` and
+`experimental.chat.system.transform` hooks, so the profile is selected from the
+resolved model immediately before dispatch without relying on provider prefixes.
+The plugin also keeps a separate native TUI target for compact status and
+on-demand controls.
 
 Config precedence includes project `.opencode/prompt-optimizer.json`, shared project `.prompt-optimizer.json`, global configs and environment overrides.
 
 Recommended:
 ```json
-{"behavior":"auto","scope":"all","unsupportedModel":"skip"}
+{"schemaVersion":1,"behavior":"auto","scope":"all","qualityGate":"adaptive","unsupportedModel":"skip"}
 ```
 
 Preview:
 ```json
-{"behavior":"preview","scope":"all","unsupportedModel":"skip"}
+{"schemaVersion":1,"behavior":"preview","scope":"all","qualityGate":"adaptive","unsupportedModel":"skip"}
 ```
 
 Off:
 ```json
-{"behavior":"off","scope":"all","unsupportedModel":"skip"}
+{"schemaVersion":1,"behavior":"off","scope":"all","qualityGate":"adaptive","unsupportedModel":"skip"}
 ```
 
 Legacy `mode: first|all|off` remains accepted. PREVIEW instructs the active model to use OpenCode's `question` tool with `Выполнить` first/default; if the tool is unavailable it falls back to textual confirmation. No extra optimizer LLM call is made.
+
+`qualityGate` accepts `adaptive`, `pass`, `light`, `full`, and legacy booleans.
+The server stores only bounded session state and aggregate counters; prompt text is
+hashed for duplicate protection and is not persisted as metrics.
+
+The TUI plugin is registered in `tui.json` as:
+
+```json
+{"plugin":["./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}
+```
+
+It exposes `/prompt-optimizer`, `/po-status`, and `Ctrl+Shift+P`. Session control
+commands are ephemeral and do not rewrite JSON configuration.

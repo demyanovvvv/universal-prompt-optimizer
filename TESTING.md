@@ -41,6 +41,14 @@ Verified on **2026-09-11** after the lifecycle, CI, schema, conformance, and eva
 - `--doctor` is read-only; uninstall and uninstall dry-run are exercised after a
   real multi-agent installation and preserve surrounding user content.
 - Cursor/Gemini runtime session maps are bounded and expire stale entries.
+- OpenCode TUI install/uninstall preserves user plugins and unrelated `tui.json`
+  fields; uninstall dry-run leaves the config and managed tree unchanged while
+  reporting the planned cleanup.
+- OpenCode quality gates preserve exact `adaptive/pass/light/full` values while
+  shared/legacy adapter config remains boolean-compatible.
+- OpenCode session duplicate protection does not discard a new turn merely because
+  its text matches the previous turn; the current prompt is reserved before the
+  context hook and only committed as processed after the decision.
 
 ## One-command self-check
 
@@ -55,8 +63,8 @@ Verified on **2026-09-11** after the lifecycle, CI, schema, conformance, and eva
 ./install.sh --help
 ./install.sh --list-agents
 ./install.sh --detect-agents --dry-run --yes
-./install.sh --agents opencode,cursor,pi --behavior preview --quality-gate on --dry-run --yes
-./install.sh --agents all --behavior auto --prompt-scope all --quality-gate on --dry-run --yes
+./install.sh --agents opencode,cursor,pi --behavior preview --quality-gate adaptive --dry-run --yes
+./install.sh --agents all --behavior auto --prompt-scope all --quality-gate adaptive --dry-run --yes
 ./install.sh --scope project --project . --doctor
 ./install.sh --scope project --project /tmp/upo-test --uninstall --dry-run --yes
 npm test

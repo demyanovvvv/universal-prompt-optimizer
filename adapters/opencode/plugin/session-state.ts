@@ -16,11 +16,26 @@ export function normalizeState(value: unknown): SessionState | undefined {
     candidateUserPromptCount: typeof input.candidateUserPromptCount === "number" ? Math.max(0, Math.floor(input.candidateUserPromptCount)) : undefined,
     active: input.active,
     override: normalizeOverride(input.override),
+    lastModel: normalizeModel(input.lastModel),
+    lastTaskType: normalizeTaskType(input.lastTaskType),
     metrics: normalizeMetrics(input.metrics),
     lastProcessedEventId: typeof input.lastProcessedEventId === "string" ? input.lastProcessedEventId.slice(0, 128) : undefined,
     lastPromptHash: typeof input.lastPromptHash === "string" ? input.lastPromptHash.slice(0, 64) : undefined,
+    pendingPromptHash: typeof input.pendingPromptHash === "string" ? input.pendingPromptHash.slice(0, 64) : undefined,
     lastDecision: normalizeDecision(input.lastDecision),
   }
+}
+
+function normalizeModel(value: unknown): SessionState["lastModel"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
+  const input = value as Record<string, unknown>
+  if (typeof input.providerID !== "string" || typeof input.modelID !== "string") return undefined
+  return { providerID: input.providerID.slice(0, 128), modelID: input.modelID.slice(0, 128) }
+}
+
+function normalizeTaskType(value: unknown): SessionState["lastTaskType"] {
+  const values = ["implementation", "bugfix", "refactor", "review", "research", "documentation", "testing", "planning", "security", "migration", "unknown"] as const
+  return typeof value === "string" && values.includes(value as typeof values[number]) ? value as SessionState["lastTaskType"] : undefined
 }
 
 function normalizeDecision(value: unknown): SessionState["lastDecision"] {
@@ -67,6 +82,10 @@ export function emptyMetrics(): SessionMetrics {
 export function isDuplicate(state: SessionState | undefined, eventId: string | undefined, prompt: string | undefined): boolean {
   if (!state) return false
   if (eventId && state.lastProcessedEventId === eventId) return true
+  // The prompt hook reserves the current user turn before the context hook runs.
+  // Do not compare that turn with the previous turn's hash, otherwise repeating
+  // the same user text is incorrectly discarded as a duplicate.
+  if (state.pendingPromptHash) return false
   return Boolean(prompt && state.lastPromptHash === hashPrompt(prompt))
 }
 

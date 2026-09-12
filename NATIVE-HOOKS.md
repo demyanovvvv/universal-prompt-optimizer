@@ -1,7 +1,11 @@
 # Native integration notes — v5
 
 ## OpenCode
-Use the v2 `context` hook for model-specific preflight because it contains resolved `model.providerID` and `model.id`. The earlier prompt hook is used only to track user-turn scope. PREVIEW is implemented as a model instruction to call OpenCode's `question` tool once with the exact optimized prompt; it is advisory unless the host exposes a blocking approval hook.
+Use the v1 `chat.message` hook to admit and count a user turn, then
+`experimental.chat.system.transform` for model-specific preflight because it
+contains the resolved model. PREVIEW is implemented as a model instruction to
+call OpenCode's `question` tool once with the exact optimized prompt; it is
+advisory unless the host exposes a blocking approval hook.
 
 ## Pi
 `before_agent_start` has `ctx.model`, so routing is exact. PREVIEW registers a custom `prompt_optimizer_preview` tool backed by `ctx.ui.confirm` and `ctx.ui.editor`. Pi session commands can toggle behavior without reinstalling.
