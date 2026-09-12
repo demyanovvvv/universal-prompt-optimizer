@@ -15,7 +15,16 @@
       "enum": ["first", "all"]
     },
     "qualityGate": {
-      "type": "boolean"
+      "oneOf": [
+        {
+          "type": "boolean",
+          "deprecated": true,
+          "description": "Legacy setting. true maps to adaptive; false maps to pass."
+        },
+        {
+          "enum": ["pass", "light", "full", "adaptive"]
+        }
+      ]
     },
     "unsupportedModel": {
       "enum": ["skip", "generic"]

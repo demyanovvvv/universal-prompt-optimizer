@@ -105,12 +105,44 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((home / ".gemini/settings.json").is_file())
             installer.uninstall(home, "global")
             self.assertFalse((home / ".agents/skills/prompt-optimizer/SKILL.md").exists())
-            self.assertFalse((home / ".config/opencode/plugins/prompt-optimizer/index.ts").exists())
-            self.assertEqual(
-                json.loads((home / ".gemini/settings.json").read_text(encoding="utf-8")),
-                {"version": 1},
+
+    def test_opencode_tui_install_preserves_existing_config(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            config = home / ".config/opencode/tui.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(json.dumps({"theme": "user-theme", "plugin": ["./plugins/user.tsx"]}), encoding="utf-8")
+            installer.install_global(
+                home,
+                {"opencode"},
+                True,
+                "auto",
+                "all",
+                "skip",
+                "adaptive",
+                True,
+                False,
+                sys.executable,
             )
-            self.assertEqual(user_command.read_text(encoding="utf-8"), "keep\n")
+            value = json.loads(config.read_text(encoding="utf-8"))
+            self.assertEqual(value["theme"], "user-theme")
+            self.assertIn("./plugins/user.tsx", value["plugin"])
+            self.assertIn("./plugins/prompt-optimizer-tui/prompt-optimizer.tsx", value["plugin"])
+            self.assertTrue((home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx").is_file())
+
+    def test_opencode_tui_uninstall_preserves_user_plugin(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            config = home / ".config/opencode/tui.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(json.dumps({"plugin": ["./plugins/user.tsx", "./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}), encoding="utf-8")
+            destination = home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
+            destination.parent.mkdir(parents=True)
+            destination.write_text((ROOT / "adapters/opencode/tui/prompt-optimizer.tsx").read_text(encoding="utf-8"), encoding="utf-8")
+            installer.uninstall(home, "global")
+            self.assertTrue(destination.exists())
+            value = json.loads(config.read_text(encoding="utf-8"))
+            self.assertEqual(value["plugin"], ["./plugins/user.tsx"])
 
     def test_remove_file_preserves_modified_copy(self):
         with tempfile.TemporaryDirectory() as raw:

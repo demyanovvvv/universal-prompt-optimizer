@@ -1,11 +1,13 @@
 import { Plugin } from "@opencode-ai/plugin"
-import { existsSync, readFileSync } from "node:fs"
-import { homedir } from "node:os"
-import { join } from "node:path"
+import { classifyTask } from "./task-classifier"
+import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA } from "./prompt-builder"
+import { resolveSettings, configSourceLabel } from "./config"
+import { decide } from "./decision-engine"
+import { emptyMetrics, hashPrompt, incrementMetrics, isDuplicate, normalizeState } from "./session-state"
+import type { SessionState } from "./types"
 
-type Behavior = "auto" | "preview" | "off"
-type Scope = "first" | "all"
-type LegacyMode = "first" | "all" | "off"
+// Keep the registry-facing union in this entrypoint so the existing conformance
+// check can detect missing OpenCode profile routing without importing TypeScript.
 type Profile =
   | "astra" | "sol" | "terra" | "luna"
   | "glm-5.2" | "glm-5.3" | "glm-5.3-flash"
@@ -13,71 +15,41 @@ type Profile =
   | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
   | "kimi-k3" | "muse-spark-1.3" | "hy4-preview" | "qwen3.8-max" | "gemini-3.8-flash" | "grok-4.6"
 
-type Settings = { behavior: Behavior; scope: Scope; qualityGate: boolean; unsupportedModel: "skip" | "generic" }
-type SessionState = { userPromptCount: number; candidateUserPromptCount?: number; active: boolean }
-
-const DEFAULT_SETTINGS: Settings = { behavior: "auto", scope: "all", qualityGate: true, unsupportedModel: "skip" }
-
-const BASE_COMMON = `Preserve the user's intent, language, exact literals, hard constraints, requested output, project rules, required verification and approval boundaries. Do not invent requirements. Resolve shorthand from relevant conversation/repository context without copying irrelevant history. State instructions once and keep the final execution brief as short as the task/model permits. For implementation, do authorized in-scope local work and proportionate non-destructive validation; confirm destructive, irreversible, external, costly, credential/security-sensitive or materially scope-expanding actions unless already authorized. Native Reasoning First: never request hidden chain-of-thought or inject generic 'think step by step/think harder/show reasoning' scaffolding. User instructions outrank this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.5 preflight. Apply a positive-value quality gate before acting: PASS if the user's request is already precise; LIGHT if only scope/constraint/done criteria need normalization; FULL only for genuinely complex/ambiguous work. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.5 preflight. Quality gate is disabled: normalize every in-scope user request into the leanest model-appropriate execution brief before acting, without adding requirements or unnecessary structure. ${BASE_COMMON}`
-
-const PREVIEW = `PREVIEW MODE. Before any mutating or external action, build the exact optimized execution prompt for this user-turn. Read-only inspection is allowed only when necessary to resolve references. If the OpenCode question tool is available and this user-turn does not already contain an approved Prompt preview, call it exactly once with header "Prompt preview". Put the exact optimized prompt in the question text. Put option "Выполнить" first/default and option "Изменить" second; custom input is allowed. If approved, execute the previewed brief without asking again. If the user edits/customizes it, treat the edited version as source of truth. If the question tool is unavailable, print the optimized prompt and stop for explicit confirmation. Never pretend approval occurred.`
-const AUTO_GATE = `AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn.`
-const AUTO_ALWAYS = `AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn.`
-const GENERIC = `Neutral fallback profile. Use only model/provider-neutral shaping; do not assume provider-specific reasoning, sampling, tool-history or cache behavior.`
+type Settings = import("./types").Settings
 
 const PROFILE_HINTS: Record<Profile, string> = {
-  astra: "GPT-6 Astra: emphasize initiative/follow-through, explicit instruction priority and authorization boundaries; avoid unnecessary approval pauses and exhaustive generic testing; specify output style only when needed.",
-  sol: "GPT-5.6 Sol: lean prompt, decisive context, hard constraints, autonomy/approval boundaries and success criteria; state each instruction once, focused tools, proportionate verification.",
-  terra: "GPT-5.6 Terra: same official GPT-5.6 lean rules; compact complete brief and balanced context density. Tier-specific compactness is heuristic, never drop correctness-critical context.",
-  luna: "GPT-5.6 Luna: same official GPT-5.6 lean rules; prefer the leanest bounded brief for high-volume efficiency without removing decisive constraints/context.",
-  "glm-5.2": "GLM-5.2: for substantial engineering inspect architecture/dependencies/interfaces/affected scope, use a short execution-validation plan when useful, then implement and run relevant checks; apply GLM delimiters/examples/reference-output practices only when useful.",
-  "glm-5.3": "GLM-5.3: goal + relevant context + hard constraints + acceptance criteria + autonomous end-to-end execution; avoid rigid microstep lists and manual CoT triggers.",
-  "glm-5.3-flash": "GLM-5.3-Flash: GLM-5.3 framing; for visual/multimodal tasks use inspect/reference -> implement -> run/render -> compare actual output -> refine -> verify, and map multiple references to roles.",
-  "deepseek-v4-flash": "DeepSeek V4 Flash: compact direct task/context/constraints/required verification/done criteria; no role-play/tool narration or manual CoT; reasoning history belongs to harness.",
-  "deepseek-v4-pro": "DeepSeek V4 Pro: complete hard-task objective/context/requirements/scope/non-negotiable constraints/acceptance criteria; autonomous investigation/debugging/validation; avoid unrelated changes and manual CoT.",
-  "claude-fable-5.1": "Claude Fable 5.1: Fable end-to-end framing plus targeted edits over whole-file rewrites, batch independent tool calls, explicit search trigger at low effort when evidence matters, scope/test guardrails, progress-update cadence only when useful; use Claude XML/examples/long-context ordering conditionally.",
-  "claude-fable-5": "Claude Fable 5: objective/why/context/boundaries/acceptance with strong autonomy; ground progress in tool evidence; on genuinely long runs add periodic spec-based verification/fresh-context verifier when useful; prevent unrelated scope; remove legacy microsteps/reasoning extraction.",
-  "claude-opus-5": "Claude Opus 5: complete substantial task spec upfront and precise scope; preserve required checks but suppress added generic double-check/final-review/verifier-agent scaffolding; delegate only genuinely independent sizeable work.",
-  "claude-opus-4.8": "Claude Opus 4.8: literal explicit propagation across all affected components/routes/states/variants/breakpoints; explicitly require tool evidence when needed; frontend gets concrete design tokens/reference direction, not vague aesthetics.",
-  "claude-sonnet-5": "Claude Sonnet 5: direct task + explicit affected scope/constraints/acceptance; literal propagation when needed; concrete frontend direction; no legacy manual thinking-budget/CoT scaffolding.",
-  "kimi-k3": "Kimi K3: compact objective/context/requirements/constraints/acceptance, end-to-end autonomy; no manufactured reasoning plan; preserved reasoning history is harness-only.",
-  "muse-spark-1.3": "Muse Spark 1.3: specify why/inputs/objective/deliverable/structure/audience/quality, not tool choreography; allow genuine ambiguity questions and consequential-action confirmation; max reasoning is capability-gated.",
-  "hy4-preview": "Hy4-preview: direct goal/context/boundaries/done/stop; suppress think-deeply, exhaustive exploration and repeated generic verification; do not reopen settled decisions without new evidence.",
-  "qwen3.8-max": "Qwen3.8-Max: objective/context/requirements/hard constraints/acceptance with autonomous tool-feedback loops; no repeated manual decomposition/CoT; clear tool descriptions, parallelize independent calls; history/tool-choice belongs to harness.",
-  "gemini-3.8-flash": "Gemini 3.8 Flash: especially concise/direct; aggressively PASS/LIGHT; for long context put data first and specific task at end; avoid verbose legacy prompt frameworks and manual CoT.",
-  "grok-4.6": "Grok 4.6: direct objective/context/constraints/evidence-tool policy/acceptance; native reasoning handles depth; avoid repeated restatement in long loops.",
+  astra: PROFILE_HINTS_DATA.astra,
+  sol: PROFILE_HINTS_DATA.sol,
+  terra: PROFILE_HINTS_DATA.terra,
+  luna: PROFILE_HINTS_DATA.luna,
+  "glm-5.2": PROFILE_HINTS_DATA["glm-5.2"],
+  "glm-5.3": PROFILE_HINTS_DATA["glm-5.3"],
+  "glm-5.3-flash": PROFILE_HINTS_DATA["glm-5.3-flash"],
+  "deepseek-v4-flash": PROFILE_HINTS_DATA["deepseek-v4-flash"],
+  "deepseek-v4-pro": PROFILE_HINTS_DATA["deepseek-v4-pro"],
+  "claude-fable-5.1": PROFILE_HINTS_DATA["claude-fable-5.1"],
+  "claude-fable-5": PROFILE_HINTS_DATA["claude-fable-5"],
+  "claude-opus-5": PROFILE_HINTS_DATA["claude-opus-5"],
+  "claude-opus-4.8": PROFILE_HINTS_DATA["claude-opus-4.8"],
+  "claude-sonnet-5": PROFILE_HINTS_DATA["claude-sonnet-5"],
+  "kimi-k3": PROFILE_HINTS_DATA["kimi-k3"],
+  "muse-spark-1.3": PROFILE_HINTS_DATA["muse-spark-1.3"],
+  "hy4-preview": PROFILE_HINTS_DATA["hy4-preview"],
+  "qwen3.8-max": PROFILE_HINTS_DATA["qwen3.8-max"],
+  "gemini-3.8-flash": PROFILE_HINTS_DATA["gemini-3.8-flash"],
+  "grok-4.6": PROFILE_HINTS_DATA["grok-4.6"],
 }
 
-function normalizeBehavior(v: unknown): Behavior | undefined { return v === "auto" || v === "preview" || v === "off" ? v : undefined }
-function normalizeScope(v: unknown): Scope | undefined { return v === "first" || v === "all" ? v : undefined }
-function normalizeLegacyMode(v: unknown): LegacyMode | undefined { return v === "first" || v === "all" || v === "off" ? v : undefined }
-function readJson(path: string): Record<string, unknown> | undefined {
-  if (!existsSync(path)) return undefined
-  try { const p = JSON.parse(readFileSync(path, "utf8")); return p && typeof p === "object" && !Array.isArray(p) ? p : undefined } catch { return undefined }
-}
+const AUTO_GATE = "AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn."
+const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 
-function hasInvalidJson(path: string): boolean {
-  if (!existsSync(path)) return false
-  try {
-    const value = JSON.parse(readFileSync(path, "utf8"))
-    return !value || typeof value !== "object" || Array.isArray(value)
-  } catch {
-    return true
+function countPriorUserMessages(messages: readonly unknown[]): number {
+  let count = 0
+  for (const entry of messages as readonly any[]) {
+    const role = entry?.role ?? entry?.message?.role ?? entry?.info?.role
+    if (role === "user") count++
   }
-}
-
-function hasInvalidManagedFields(value: Record<string, unknown> | undefined): boolean {
-  if (!value) return false
-  return (
-    ("schemaVersion" in value && (typeof value.schemaVersion !== "number" || value.schemaVersion !== 1))
-    || ("behavior" in value && !["auto", "preview", "off"].includes(String(value.behavior)))
-    || ("scope" in value && !["first", "all"].includes(String(value.scope)))
-    || ("qualityGate" in value && typeof value.qualityGate !== "boolean")
-    || ("unsupportedModel" in value && !["skip", "generic"].includes(String(value.unsupportedModel)))
-    || ("mode" in value && !["first", "all", "off"].includes(String(value.mode)))
-  )
+  return count
 }
 
 export function detectProfile(providerID: string, modelID: string): Profile | undefined {
@@ -106,73 +78,153 @@ export function detectProfile(providerID: string, modelID: string): Profile | un
   return undefined
 }
 
-function countPriorUserMessages(messages: readonly unknown[]): number {
-  let count = 0
-  for (const entry of messages as readonly any[]) {
-    const role = entry?.role ?? entry?.message?.role ?? entry?.info?.role
-    if (role === "user") count++
+function stateKey(sessionID: string): string {
+  return `prompt-optimizer/session/${sessionID}`
+}
+
+function promptText(event: any): string | undefined {
+  const candidates = [event?.prompt, event?.text, event?.message?.content, event?.message?.text]
+  const value = candidates.find(item => typeof item === "string" && item.trim())
+  return typeof value === "string" ? value : undefined
+}
+
+function eventID(event: any): string | undefined {
+  const value = event?.eventID ?? event?.eventId ?? event?.id ?? event?.messageID ?? event?.messageId
+  return typeof value === "string" && value.trim() ? value : undefined
+}
+
+function mergeState(previous: SessionState | undefined, patch: Partial<SessionState>): SessionState {
+  return {
+    userPromptCount: previous?.userPromptCount ?? 0,
+    candidateUserPromptCount: previous?.candidateUserPromptCount,
+    active: previous?.active ?? false,
+    metrics: previous?.metrics ?? emptyMetrics(),
+    ...previous,
+    ...patch,
   }
-  return count
+}
+
+function settingLine(name: string, value: string, source: string): string {
+  return `${name}: ${value} (${source})`
+}
+
+function statusText(settings: ReturnType<typeof resolveSettings>, state: SessionState | undefined, model?: { providerID?: string; id?: string }): string {
+  const metrics = state?.metrics ?? emptyMetrics()
+  const profile = model?.providerID && model.id ? detectProfile(model.providerID, model.id) : undefined
+  return [
+    "Prompt Optimizer",
+    "",
+    settingLine("Status", settings.behavior === "off" ? "OFF" : "ENABLED", settings.invalidConfig ? "invalid config" : "resolved"),
+    settingLine("Mode", settings.behavior.toUpperCase(), configSourceLabel(settings.sources.behavior)),
+    settingLine("Scope", settings.scope.toUpperCase(), configSourceLabel(settings.sources.scope)),
+    settingLine("Quality gate", settings.qualityGate.toUpperCase(), configSourceLabel(settings.sources.qualityGate)),
+    settingLine("Model", model?.providerID && model.id ? `${model.providerID}/${model.id}` : "not resolved", "OpenCode"),
+    settingLine("Profile", profile ?? (settings.unsupportedModel === "generic" ? "GENERIC" : "NONE"), profile ? "registry" : "fallback"),
+    "",
+    `Session: ${metrics.processed} processed · ${metrics.optimized} optimized · ${metrics.skipped} skipped`,
+    `Gates: PASS ${metrics.pass} · LIGHT ${metrics.light} · FULL ${metrics.full}`,
+    settings.invalidConfig ? "Warning: invalid managed configuration forced safe OFF mode." : "",
+  ].filter(Boolean).join("\n")
+}
+
+export function formatDecision(decision: ReturnType<typeof decide>, settings: ReturnType<typeof resolveSettings>, state?: SessionState): string {
+  const metrics = state?.metrics ?? emptyMetrics()
+  return [
+    "Prompt Optimizer decision",
+    "",
+    `Action: ${decision.action.toUpperCase()}`,
+    `Mode: ${decision.behavior.toUpperCase()}`,
+    `Profile: ${decision.profile.toUpperCase()}`,
+    `Task: ${decision.taskType}`,
+    `Quality gate: ${(decision.gate ?? decision.qualityGate).toUpperCase()}`,
+    `Confidence: ${decision.profileConfidence}`,
+    `Reason: ${decision.reason}`,
+    decision.warning ? `Warning: ${decision.warning}` : "",
+    `Session totals: ${metrics.processed} processed, ${metrics.optimized} optimized, ${metrics.skipped} skipped`,
+    settings.invalidConfig ? "Config status: invalid; safe OFF fallback is active." : "Config status: valid",
+  ].filter(Boolean).join("\n")
 }
 
 export default Plugin.define({
   id: "prompt-optimizer-v5-5",
   async setup(ctx) {
     const projectRoot = ctx.location.project?.directory ?? ctx.location.directory
-    const sharedProject = join(projectRoot, ".prompt-optimizer.json")
-    const sharedGlobal = join(homedir(), ".config", "prompt-optimizer", "config.json")
-    const projectConfig = join(projectRoot, ".opencode", "prompt-optimizer.json")
-    const globalConfig = join(homedir(), ".config", "opencode", "prompt-optimizer.json")
+    const loadSettings = () => resolveSettings(projectRoot, (ctx.options ?? {}) as Record<string, unknown>)
 
-    const loadSettings = (): Settings => {
-      const files = [readJson(sharedGlobal) ?? {}, readJson(globalConfig) ?? {}, readJson(sharedProject) ?? {}, readJson(projectConfig) ?? {}]
-      if ([sharedGlobal, globalConfig, sharedProject, projectConfig].some(path => hasInvalidJson(path) || hasInvalidManagedFields(readJson(path)))) {
-        return { ...DEFAULT_SETTINGS, behavior: "off" }
-      }
-      const merged = Object.assign({}, ...files, (ctx.options ?? {}) as Record<string, unknown>)
-      const legacy = normalizeLegacyMode(merged.mode ?? process.env.OPENCODE_PROMPT_OPTIMIZER_MODE)
-      const behavior = normalizeBehavior(process.env.PROMPT_OPTIMIZER_BEHAVIOR) ?? normalizeBehavior(merged.behavior) ?? (legacy === "off" ? "off" : DEFAULT_SETTINGS.behavior)
-      const scope = normalizeScope(process.env.PROMPT_OPTIMIZER_SCOPE) ?? normalizeScope(merged.scope) ?? (legacy === "first" || legacy === "all" ? legacy : DEFAULT_SETTINGS.scope)
-      const unsupportedRaw = process.env.PROMPT_OPTIMIZER_UNSUPPORTED_MODEL ?? merged.unsupportedModel
-      const qEnv = process.env.PROMPT_OPTIMIZER_QUALITY_GATE
-      const qualityGate = qEnv === undefined
-        ? (typeof merged.qualityGate === "boolean" ? merged.qualityGate : true)
-        : ["false", "off", "0"].includes(qEnv.toLowerCase()) ? false : true
-      return { behavior, scope, qualityGate, unsupportedModel: unsupportedRaw === "generic" ? "generic" : "skip" }
-    }
-
-    const stateKey = (sessionID: string) => `prompt-optimizer/session/${sessionID}`
-
-    await ctx.session.hook("prompt", async (event) => {
+    await ctx.session.hook("prompt", async (event: any) => {
       const settings = loadSettings()
       const key = stateKey(event.sessionID)
-      const stored = (await ctx.storage.get(key)) as SessionState | undefined
+      const stored = normalizeState(await ctx.storage.get(key))
       let priorCount = stored?.userPromptCount
       if (priorCount === undefined) {
         try { priorCount = countPriorUserMessages(await ctx.session.context({ sessionID: event.sessionID })) } catch { priorCount = 0 }
       }
-       const candidateUserPromptCount = priorCount + 1
-       const inScope = settings.scope === "all" || (settings.scope === "first" && priorCount === 0)
-       await ctx.storage.set(key, { userPromptCount: priorCount, candidateUserPromptCount, active: settings.behavior !== "off" && inScope })
+      const candidateUserPromptCount = priorCount + 1
+      const effectiveBehavior = stored?.override?.behavior ?? settings.behavior
+      const effectiveScope = stored?.override?.scope ?? settings.scope
+      const inScope = effectiveScope === "all" || (effectiveScope === "first" && priorCount === 0)
+      const prompt = promptText(event)
+      await ctx.storage.set(key, mergeState(stored, {
+        userPromptCount: priorCount,
+        candidateUserPromptCount,
+        active: effectiveBehavior !== "off" && inScope,
+        lastProcessedEventId: eventID(event),
+        lastPromptHash: prompt ? hashPrompt(prompt) : stored?.lastPromptHash,
+      }))
     })
 
-    await ctx.session.hook("context", async (event) => {
+    await ctx.session.hook("context", async (event: any) => {
       if (event.agent === "compaction") return
-      const state = (await ctx.storage.get(stateKey(event.sessionID))) as SessionState | undefined
-      if (!state?.active) return
-       const settings = loadSettings()
-       if (settings.behavior === "off") return
-       const profile = detectProfile(event.model.providerID, event.model.id)
-       if (!profile && settings.unsupportedModel === "skip") {
-         await ctx.storage.set(stateKey(event.sessionID), { userPromptCount: state.userPromptCount, active: false })
-         return
-       }
-       const admittedCount = state.candidateUserPromptCount ?? state.userPromptCount
-       await ctx.storage.set(stateKey(event.sessionID), { userPromptCount: admittedCount, active: true })
-      const hint = profile ? PROFILE_HINTS[profile] : GENERIC
-      const base = settings.qualityGate ? BASE_GATE : BASE_ALWAYS
-      const behavior = settings.behavior === "preview" ? PREVIEW : (settings.qualityGate ? AUTO_GATE : AUTO_ALWAYS)
-      event.system.push({ text: `${base}\n${hint}\n${behavior}\nLifecycle: this instruction is bound to the current admitted user-turn. scope=${settings.scope}; behavior=${settings.behavior}; qualityGate=${settings.qualityGate}. Tool continuations remain in the same turn and must not create a second preview.` })
+      const key = stateKey(event.sessionID)
+      const stored = normalizeState(await ctx.storage.get(key))
+      if (!stored?.active) return
+      const settings = loadSettings()
+      const effectiveSettings: Settings = {
+        ...settings,
+        ...stored.override,
+        behavior: stored.override?.behavior ?? settings.behavior,
+        scope: stored.override?.scope ?? settings.scope,
+        qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
+      }
+      if (effectiveSettings.behavior === "off") return
+      const model = { providerID: String(event.model?.providerID ?? ""), modelID: String(event.model?.id ?? "") }
+      const profile = stored.override?.profile && stored.override.profile !== "auto" && stored.override.profile !== "generic"
+        ? stored.override.profile
+        : detectProfile(model.providerID, model.modelID)
+      if (!profile && effectiveSettings.unsupportedModel === "skip") {
+        await ctx.storage.set(key, mergeState(stored, { active: false, lastDecision: { action: "skip", profile: "none", reason: "model is not in the registry" } }))
+        return
+      }
+      const prompt = promptText(event) ?? ""
+      const duplicate = isDuplicate(stored, eventID(event), prompt)
+      const task = classifyTask(prompt)
+      const decision = decide({
+        settings: effectiveSettings,
+        scopeEligible: true,
+        model,
+        profile,
+        sessionOverride: stored.override,
+        duplicate,
+        taskType: task.type,
+      }, prompt)
+      const nextMetrics = incrementMetrics(stored, decision.action, decision.profile, decision.gate)
+      await ctx.storage.set(key, mergeState(stored, {
+        userPromptCount: stored.candidateUserPromptCount ?? stored.userPromptCount,
+        active: decision.action !== "skip" || effectiveSettings.scope === "all",
+        metrics: nextMetrics,
+        lastProcessedEventId: eventID(event) ?? stored.lastProcessedEventId,
+        lastPromptHash: prompt ? hashPrompt(prompt) : stored.lastPromptHash,
+        lastDecision: decision,
+      }))
+      if (decision.action === "skip") {
+        if (effectiveSettings.scope === "first") return
+        return
+      }
+      const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile as Profile]
+      const base = effectiveSettings.qualityGate === "pass" ? BASE_ALWAYS : BASE_GATE
+      const behaviorText = decision.behavior === "preview" ? PREVIEW : (effectiveSettings.qualityGate === "pass" ? AUTO_ALWAYS : AUTO_GATE)
+      event.system.push({ text: `${base}\n${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}\n${formatDecision(decision, settings, stored)}` })
     })
+
   },
 })

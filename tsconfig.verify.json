@@ -12,6 +12,7 @@
   "include": [
     "types/host-modules.d.ts",
     "adapters/opencode/plugin/index.ts",
+    "adapters/opencode/plugin/*.ts",
     "adapters/pi/extensions/prompt-optimizer.ts"
   ]
 }

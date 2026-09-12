@@ -160,7 +160,7 @@ def validate_managed_config(data: dict, path: Path, label: str) -> None:
         'schemaVersion': lambda value: isinstance(value, int) and not isinstance(value, bool) and value == CONFIG_SCHEMA_VERSION,
         'behavior': lambda value: one_of(value, {'auto', 'preview', 'off'}),
         'scope': lambda value: one_of(value, {'first', 'all'}),
-        'qualityGate': lambda value: isinstance(value, bool),
+        'qualityGate': lambda value: isinstance(value, bool) or (isinstance(value, str) and value in {'pass', 'light', 'full', 'adaptive'}),
         'unsupportedModel': lambda value: one_of(value, {'skip', 'generic'}),
         'mode': lambda value: one_of(value, {'first', 'all', 'off'}),
     }
@@ -403,6 +403,27 @@ def remove_json_fields(path: Path, fields: set[str], *, dry_run=False) -> str:
         return remove_owned_file(path, dry_run=dry_run)
     return write_json(path, current, backup=False, dry_run=dry_run, label='Prompt Optimizer config')
 
+def remove_json_plugin_specs(path: Path, specs: set[str], *, dry_run=False) -> str:
+    """Remove only exact package-owned TUI plugin specs from an existing config."""
+    if not path.exists():
+        return L(f'absent: {path}', f'отсутствует: {path}')
+    current = load_json_object(path, 'OpenCode TUI config')
+    plugins = current.get('plugin')
+    if plugins is None:
+        return L(f'unchanged (no managed TUI plugin): {path}', f'без изменений (управляемый TUI plugin не найден): {path}')
+    if not isinstance(plugins, list):
+        fail(L(f'plugin must be an array in {path}', f'Поле plugin должно быть массивом в {path}'))
+    remaining = [item for item in plugins if item not in specs]
+    if remaining == plugins:
+        return L(f'unchanged (no managed TUI plugin): {path}', f'без изменений (управляемый TUI plugin не найден): {path}')
+    if remaining:
+        current['plugin'] = remaining
+    else:
+        current.pop('plugin', None)
+    if not current:
+        return remove_owned_file(path, dry_run=dry_run)
+    return write_json(path, current, backup=False, dry_run=dry_run, label='OpenCode TUI config cleanup')
+
 def remove_json_hooks(path: Path, events: set[str], *, dry_run=False) -> list[str]:
     if not path.exists():
         return [L(f'absent: {path}', f'отсутствует: {path}')]
@@ -439,6 +460,7 @@ def installed_file_map(root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
             'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.opencode/commands'),
             'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.prompt-optimizer.json'),
             'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.opencode/plugins/prompt-optimizer'),
+            'opencode-tui-plugin': (PACKAGE_ROOT / 'adapters/opencode/tui', root / '.opencode/plugins/prompt-optimizer-tui'),
             'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.opencode/prompt-optimizer.json'),
             'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/extensions/prompt-optimizer.ts'),
             'cursor-hook': (PACKAGE_ROOT / 'adapters/cursor/hooks/prompt-optimizer-state.py', root / '.cursor/hooks/prompt-optimizer-state.py'),
@@ -456,6 +478,7 @@ def installed_file_map(root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
         'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.config/opencode/commands'),
         'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/prompt-optimizer/config.json'),
         'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.config/opencode/plugins/prompt-optimizer'),
+        'opencode-tui-plugin': (PACKAGE_ROOT / 'adapters/opencode/tui', root / '.config/opencode/plugins/prompt-optimizer-tui'),
         'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/opencode/prompt-optimizer.json'),
         'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/agent/extensions/prompt-optimizer.ts'),
         'gemini-hook': (PACKAGE_ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py', root / '.gemini/hooks/prompt-preflight.py'),
@@ -565,8 +588,11 @@ def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
             out.append(remove_managed_block(destination, dry_run=dry_run))
         elif logical in {'shared-config', 'opencode-config'}:
             out.append(remove_json_fields(destination, {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'}, dry_run=dry_run))
-        elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin'}:
+        elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin', 'opencode-tui-plugin'}:
             out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
+            if logical == 'opencode-tui-plugin' and not dry_run:
+                tui_config = root / ('.opencode/tui.json' if scope == 'project' else '.config/opencode/tui.json')
+                out.append(remove_json_plugin_specs(tui_config, {'./plugins/prompt-optimizer-tui/prompt-optimizer.tsx'}, dry_run=dry_run))
         else:
             out.append(remove_file_if_matches(source, destination, dry_run=dry_run))
     if scope == 'project':
@@ -639,6 +665,24 @@ def copy_commands(src: Path, dst: Path, *, backup=True, dry_run=False) -> str:
     for p in src.glob('*.md'): copy_file(p,dst/p.name,backup=backup,label='OpenCode command')
     return L(f"installed OpenCode commands: {dst}", f"установлены команды OpenCode: {dst}")
 
+def install_opencode_tui(base: Path, *, backup=True, dry_run=False) -> list[str]:
+    """Install the separate OpenCode TUI target and register it in tui.json."""
+    source = PACKAGE_ROOT / 'adapters/opencode/tui/prompt-optimizer.tsx'
+    destination = base / 'plugins/prompt-optimizer-tui/prompt-optimizer.tsx'
+    out = [copy_file(source, destination, backup=backup, dry_run=dry_run, label='OpenCode TUI plugin')]
+    tui_config = base / 'tui.json'
+    current = load_json_object(tui_config, 'OpenCode TUI config')
+    plugins = current.get('plugin', [])
+    if not isinstance(plugins, list):
+        fail(L(f'plugin must be an array in {tui_config}', f'Поле plugin должно быть массивом в {tui_config}'))
+    spec = './plugins/prompt-optimizer-tui/prompt-optimizer.tsx'
+    if spec not in plugins:
+        plugins = [*plugins, spec]
+    current['$schema'] = current.get('$schema', 'https://opencode.ai/tui.json')
+    current['plugin'] = plugins
+    out.append(write_json(tui_config, current, backup=backup, dry_run=dry_run, label='OpenCode TUI config'))
+    return out
+
 def write_json(path: Path, obj: dict, *, backup=True, dry_run=False, label='config') -> str:
     if dry_run: return L(f"would write {label}: {path}", f"будет записано {label}: {path}")
     reject_symlink_components(path)
@@ -674,10 +718,10 @@ def merge_json_hook(path: Path, event: str, hook: dict, *, backup=True, dry_run=
     arr.append(hook)
     return write_json(path,current,backup=backup,dry_run=dry_run,label=f'{event} hook config')
 
-def write_shared_config(path: Path, behavior: str, scope: str, unsupported: str, quality_gate: bool, *, backup=True, dry_run=False) -> str:
+def write_shared_config(path: Path, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, *, backup=True, dry_run=False) -> str:
     return merge_json_object(path,{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='shared prompt-optimizer config')
 
-def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, quality_gate: bool, *, backup=True, dry_run=False) -> list[str]:
+def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_tree(PACKAGE_ROOT/'adapters/opencode/plugin',base/'plugins/prompt-optimizer',backup=backup,dry_run=dry_run,label='OpenCode native plugin')]
     out.append(merge_json_object(base/'prompt-optimizer.json',{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='OpenCode prompt-optimizer config'))
     return out
@@ -703,7 +747,9 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
     validate_project_root(root)
     out=[copy_skills(root/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(root/'.claude/skills',backup=backup,dry_run=dry_run))
-    if 'opencode' in selected: out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',root/'.opencode/commands',backup=backup,dry_run=dry_run))
+    if 'opencode' in selected:
+        out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',root/'.opencode/commands',backup=backup,dry_run=dry_run))
+        if auto: out.extend(install_opencode_tui(root/'.opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
     out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(root/'.opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
@@ -730,7 +776,9 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
 def install_global(home: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     out=[copy_skills(home/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(home/'.claude/skills',backup=backup,dry_run=dry_run))
-    if 'opencode' in selected: out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',home/'.config/opencode/commands',backup=backup,dry_run=dry_run))
+    if 'opencode' in selected:
+        out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',home/'.config/opencode/commands',backup=backup,dry_run=dry_run))
+        if auto: out.extend(install_opencode_tui(home/'.config/opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
     out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(home/'.config/opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
@@ -759,7 +807,7 @@ def main():
     ap.add_argument('--auto',action='store_true',help='Install automatic/preview/off adapter integration in addition to skills')
     ap.add_argument('--behavior',choices=['auto','preview','off'],default='auto')
     ap.add_argument('--prompt-scope',choices=['first','all'],default='all')
-    ap.add_argument('--quality-gate',choices=['on','off'],default='on',help='Enable PASS/LIGHT/FULL adaptive rewrite gate')
+    ap.add_argument('--quality-gate',choices=['on','off','pass','light','full','adaptive'],default='adaptive',help='Quality gate: adaptive, pass, light, full, or legacy on/off')
     ap.add_argument('--unsupported-model',choices=['skip','generic'],default='skip')
     ap.add_argument('--python-bin',default=sys.executable,help='Python command used by generated hooks')
     ap.add_argument('--opencode-mode',choices=['first','all','off'],help='Deprecated v4 compatibility: first/all map to behavior=auto and corresponding scope; off maps to behavior=off')
@@ -774,7 +822,8 @@ def main():
     if args.opencode_mode:
         if args.opencode_mode=='off': behavior='off'
         else: behavior='auto'; scope=args.opencode_mode
-    selected=parse_agents(args.agents); backup=not args.no_backup; quality_gate=args.quality_gate=='on'
+    selected=parse_agents(args.agents); backup=not args.no_backup
+    quality_gate = {'on': 'adaptive', 'off': 'pass'}.get(args.quality_gate, args.quality_gate)
     if args.scope == 'project':
         root = Path(args.project).expanduser().resolve()
         if not args.doctor:
