@@ -5,6 +5,8 @@ import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, isDuplicate } from "./session-state"
 import type { SessionOverride, SessionState } from "./types"
 
+// Universal Prompt Optimizer v5.5
+
 // Keep the registry-facing union in this entrypoint so the existing conformance
 // check can detect missing OpenCode profile routing without importing TypeScript.
 type Profile =
