@@ -15,6 +15,8 @@ Measure **task-level** efficiency, not just first-prompt length:
 
 Quality gates must be tested explicitly: PASS must leave an already-good prompt essentially unchanged; LIGHT may add only missing high-value structure; FULL is reserved for genuinely complex/ambiguous work. PREVIEW must never execute before approval and must not preview twice in the same turn.
 
+For GPT-6 Astra, also measure whether adaptive PASS adds zero optimizer context, authorized implementation continues through its observable completion boundary, safe local work avoids needless approval, explicit plan-only boundaries stop mutation, and skill guidance is loaded only for skill-related work.
+
 Developer guidance is a constraint on the optimizer, not an excuse to override the user's/project's explicit rules.
 
 ## Deterministic CI check

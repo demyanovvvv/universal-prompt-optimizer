@@ -1,5 +1,5 @@
 import { classifyTask } from "./task-classifier"
-import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA } from "./prompt-builder"
+import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA, qualityText } from "./prompt-builder"
 import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
@@ -318,10 +318,15 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       touchSession(key, { state: nextState })
       if (decision.action === "skip") return
 
+      // An adaptive PASS means the user's prompt is already sufficient. Keep the
+      // decision observable without spending model context restating it.
+      if (decision.behavior === "auto" && effectiveSettings.qualityGate === "adaptive" && decision.gate === "pass") return
+
       const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile as Profile]
       const base = effectiveSettings.qualityGate === "pass" ? BASE_ALWAYS : BASE_GATE
       const behaviorText = decision.behavior === "preview" ? PREVIEW : (effectiveSettings.qualityGate === "pass" ? AUTO_ALWAYS : AUTO_GATE)
-      output.system.push(`${base}\n${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}\n${formatDecision(decision, settings, stored)}`)
+      const selectedGate = decision.gate ? `${qualityText(decision.gate)}\n` : ""
+      output.system.push(`${base}\n${selectedGate}${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}`)
     },
 
     "command.execute.before": async (input: any, output: any) => {

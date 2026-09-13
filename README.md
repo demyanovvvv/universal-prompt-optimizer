@@ -19,7 +19,8 @@ management, schema validation, conformance tests, and deterministic eval checks.
 - GitHub Actions verifies Linux and Windows, unit/conformance/eval suites, and
   the OpenCode/Pi TypeScript adapters using the pinned npm toolchain.
 - Cursor and Gemini runtime state is bounded and entries expire after 30 days.
-- `evals/run.py` validates 35 deterministic fixtures, including ambiguous model,
+- `evals/run.py` validates 40 deterministic fixtures, including Astra persistence,
+  progressive-disclosure, ambiguous-model,
   prompt-injection, destructive-action, and secret-preservation cases.
 - OpenCode now has a separate native TUI plugin. It is invisible by default apart
   from a compact `PO + AUTO` indicator, with `/prompt-optimizer`, `/po-status`,

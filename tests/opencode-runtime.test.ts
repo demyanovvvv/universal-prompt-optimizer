@@ -72,14 +72,12 @@ test("hash duplicate fallback ignores the prompt reserved for the current turn",
   assert.equal(isDuplicate({ ...state, lastProcessedEventId: undefined, pendingPromptHash: "reserved" }, undefined, "same"), false)
 })
 
-test("OpenCode hook applies once per message and respects scope=first", async () => {
+test("OpenCode hook leaves adaptive PASS out of model context and respects scope=first", async () => {
   const hooks = await plugin.server({ directory: process.cwd() }, { behavior: "auto", scope: "first", qualityGate: "adaptive", unsupportedModel: "skip" })
   const first = { system: [] as string[] }
   await hooks["chat.message"]({ sessionID: "s1", messageID: "m1" }, { parts: [{ type: "text", text: "Rename foo to bar." }] })
   await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: { providerID: "openai", id: "gpt-5.6" } }, first)
-  assert.equal(first.system.length, 1)
-  assert.match(first.system[0], /Quality gate: PASS/)
-  assert.match(first.system[0], /Preview enforcement: advisory/)
+  assert.equal(first.system.length, 0)
 
   const duplicate = { system: [] as string[] }
   await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: { providerID: "openai", id: "gpt-5.6" } }, duplicate)
@@ -89,4 +87,28 @@ test("OpenCode hook applies once per message and respects scope=first", async ()
   await hooks["chat.message"]({ sessionID: "s1", messageID: "m2" }, { parts: [{ type: "text", text: "Fix another bug" }] })
   await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: { providerID: "openai", id: "gpt-5.6" } }, second)
   assert.equal(second.system.length, 0)
+})
+
+test("OpenCode injects lean LIGHT guidance without session diagnostics", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, settings)
+  const output = { system: [] as string[] }
+  await hooks["chat.message"]({ sessionID: "light", messageID: "m1" }, { parts: [{ type: "text", text: "Review this change" }] })
+  await hooks["experimental.chat.system.transform"]({ sessionID: "light", model: { providerID: "openai", id: "gpt-6-astra" } }, output)
+  assert.equal(output.system.length, 1)
+  assert.match(output.system[0], /Selected quality gate: LIGHT/)
+  assert.match(output.system[0], /GPT-6 Astra/)
+  assert.doesNotMatch(output.system[0], /Prompt Optimizer decision/)
+  assert.doesNotMatch(output.system[0], /Session totals/)
+  assert.doesNotMatch(output.system[0], /Config status/)
+  assert.ok(output.system[0].length < 1800)
+})
+
+test("explicit pass setting retains always-normalize behavior", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, { ...settings, qualityGate: "pass" })
+  const output = { system: [] as string[] }
+  await hooks["chat.message"]({ sessionID: "legacy-pass", messageID: "m1" }, { parts: [{ type: "text", text: "Rename foo to bar." }] })
+  await hooks["experimental.chat.system.transform"]({ sessionID: "legacy-pass", model: { providerID: "openai", id: "gpt-6-astra" } }, output)
+  assert.equal(output.system.length, 1)
+  assert.match(output.system[0], /Quality gate is disabled/)
+  assert.match(output.system[0], /Selected quality gate: PASS/)
 })

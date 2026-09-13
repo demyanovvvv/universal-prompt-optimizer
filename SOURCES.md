@@ -1,6 +1,6 @@
 # Source provenance — Universal Prompt Optimizer v5.5
 
-Checked: **2026-09-06**.
+Checked: **2026-09-13** for GPT-6 Astra; other profiles retain their per-file checked dates.
 
 Rule precedence inside profiles:
 
@@ -13,6 +13,7 @@ A benchmark/default runtime parameter is not silently converted into a universal
 
 ## OpenAI
 - GPT-6 Astra model/prompt guidance: https://developers.openai.com/api/docs/guides/latest-model
+- GPT-6 Astra skills, repository instructions, decision boundaries, and persistence: https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra
 - GPT-5.6 prompt guidance: https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6
 - Model tier positioning: https://developers.openai.com/api/docs/models
 

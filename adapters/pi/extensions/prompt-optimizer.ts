@@ -32,7 +32,7 @@ const hints: Array<[RegExp,string]> = [
   [/qwen.*3[.-]8.*max/, "Qwen3.8-Max: goal/context/constraints/acceptance + autonomous tool-feedback loop; no repeated manual decomposition; clear tools."],
   [/gemini.*3[.-]8.*flash/, "Gemini 3.8 Flash: very concise/direct, PASS/LIGHT aggressively; long context first, task at end; avoid verbose legacy frameworks."],
   [/grok.*4[.-]6/, "Grok 4.6: direct objective/context/constraints/evidence-tool policy/acceptance; native reasoning handles depth."],
-  [/gpt.*6.*astra|(^|[\/_-])astra($|[\/_-])/, "GPT-6 Astra: initiative/follow-through, explicit priority/boundaries, avoid unnecessary approval and exhaustive generic tests."],
+  [/gpt.*6.*astra|(^|[\/_-])astra($|[\/_-])/, "GPT-6 Astra: lean scope and explicit done boundary; for authorized implementation/bugfix work continue through implementation, inspection, fixes caused by the change, and affected validation; avoid needless approval, repo-wide reading, and generic over-testing."],
   [/gpt.*5[.-]6.*terra|(^|[\/_-])terra($|[\/_-])/, "GPT-5.6 Terra: lean complete brief, one instruction once, autonomy/approval boundaries, focused tools, proportionate validation."],
   [/gpt.*5[.-]6.*luna|(^|[\/_-])luna($|[\/_-])/, "GPT-5.6 Luna: leanest bounded GPT-5.6 brief without losing correctness-critical context."],
   [/gpt.*5[.-]6.*sol|gpt-5[.-]6|(^|[\/_-])sol($|[\/_-])/, "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools."],

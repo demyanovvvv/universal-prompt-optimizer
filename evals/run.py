@@ -72,6 +72,16 @@ def run(path: Path = CASES) -> dict:
     missing_negative = required_negative_cases - case_ids
     if missing_negative:
         errors.append(f"missing negative evaluation cases: {sorted(missing_negative)}")
+    required_astra_cases = {
+        "astra-pass-zero-context",
+        "astra-completion-boundary",
+        "astra-no-needless-approval",
+        "astra-plan-boundary",
+        "astra-skill-progressive-disclosure",
+    }
+    missing_astra = required_astra_cases - case_ids
+    if missing_astra:
+        errors.append(f"missing GPT-6 Astra evaluation cases: {sorted(missing_astra)}")
     return {"cases": len(cases), "errors": errors, "passed": not errors}
 
 
