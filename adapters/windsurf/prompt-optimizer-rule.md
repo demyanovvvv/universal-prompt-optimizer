@@ -5,7 +5,7 @@ trigger: always_on
 
 Use the installed `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight when automatic optimization is enabled. Respect the project's `.prompt-optimizer.json` settings.
 
-When `qualityGate=true`, PASS a clear request unchanged, use LIGHT for a small missing boundary, and load the conditional FULL workflow only for genuinely complex work. When `qualityGate=false`, normalize every in-scope request into the leanest model-appropriate execution brief. Preserve user intent, exact literals, hard constraints, project rules, required checks, output requirements and approval boundaries. Never invent requirements.
+When `qualityGate=pass`, normalize every in-scope request into the leanest model-appropriate execution brief. For `light`, add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape. For `full`, build a concise execution brief from task-relevant context. Only `adaptive` selects PASS/LIGHT/FULL from the request. Preserve user intent, exact literals, hard constraints, project rules, required checks, output requirements and approval boundaries. Never invent requirements.
 
 Apply an exact model profile only when the active model can be identified unambiguously; otherwise use the configured neutral fallback or skip policy rather than guessing. Keep prompt shaping separate from runtime reasoning/tool-history settings.
 

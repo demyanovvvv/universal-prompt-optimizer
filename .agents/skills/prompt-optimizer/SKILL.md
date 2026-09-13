@@ -21,7 +21,7 @@ Apply, in order: system/safety requirements; explicit user instructions and appr
 2. Respect scope `all` or `first` as supplied by the harness.
 3. Resolve the model from the first reliable source: explicit override, resolved runtime ID, exact model named by the user, configured adapter profile, then neutral fallback if enabled. Never guess between materially different variants.
 4. Read only the matching profile below. Read a family profile only when the selected model profile points to it and its conditional guidance is relevant. Runtime settings belong in the matching `harness-*.md` note and are not prompt text.
-5. Select `PASS`, `LIGHT`, or `FULL`. If `qualityGate=false`, skip selection and produce the leanest model-appropriate brief.
+5. Select `PASS`, `LIGHT`, or `FULL`. `qualityGate=pass` (or legacy `false`) forces the leanest model-appropriate normalization; the other values use adaptive selection as configured.
 
 Profiles:
 

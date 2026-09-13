@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict"
 import * as test from "node:test"
 
-import plugin, { resolveModel } from "../adapters/opencode/plugin/index"
+import plugin, { promptText, resolveModel } from "../adapters/opencode/plugin/index"
 import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
@@ -24,8 +24,24 @@ test("model resolution preserves variant precedence and reports its source", () 
     matchedAlias: "claude-fable-5.1",
   })
   assert.equal(resolveModel("proxy", "vendor/GLM_5.3_FLASH-latest").profile, "glm-5.3-flash")
+  assert.equal(resolveModel("proxy", "qwen3.8-max-2026-09-02").profile, "qwen3.8-max")
+  assert.equal(resolveModel("proxy", "hy-4-preview").profile, "hy4-preview")
   assert.equal(resolveModel("deepseek", "deepseek-v4").profile, undefined)
   assert.equal(resolveModel("unknown", "model").source, "unsupported")
+  assert.equal(resolveModel("anthropic", "claude-fable-5.10").profile, undefined)
+  assert.equal(resolveModel("proxy", "glm-5.30").profile, undefined)
+  assert.equal(resolveModel("astra", "unknown-model").profile, undefined)
+})
+
+test("prompt extraction preserves ordered text parts without duplicating message text", () => {
+  assert.equal(promptText({
+    message: { content: "Fix the auth bug." },
+    parts: [
+      { type: "text", text: "Fix the auth bug." },
+      { type: "tool", text: "ignored tool output" },
+      { type: "text", text: "Only edit src/auth and run the security tests." },
+    ],
+  }), "Fix the auth bug.\n\nOnly edit src/auth and run the security tests.")
 })
 
 test("adaptive gate chooses pass, light, and full from deterministic signals", () => {
@@ -33,12 +49,18 @@ test("adaptive gate chooses pass, light, and full from deterministic signals", (
   assert.equal(chooseQualityGate("adaptive", { prompt: "Review this change", taskType: "review" }), "light")
   assert.equal(chooseQualityGate("adaptive", { prompt: "Migrate every production schema", taskType: "migration" }), "full")
   assert.equal(chooseQualityGate("adaptive", { prompt: "Do it", risk: "consequential" }), "full")
+  assert.equal(chooseQualityGate("adaptive", { prompt: "Delete all production records" }), "full")
+  assert.equal(chooseQualityGate("adaptive", { prompt: "План миграции базы данных, ничего не менять", taskType: "planning" }), "light")
 })
 
 test("task classifier keeps security and migration precedence", () => {
   assert.deepEqual(classifyTask("Audit this OAuth permission vulnerability"), { type: "security", confidence: "medium" })
   assert.equal(classifyTask("Plan and implement the schema migration").type, "migration")
   assert.equal(classifyTask("Tell me the time").type, "unknown")
+  assert.equal(classifyTask("Migrate the credentials table").type, "migration")
+  assert.equal(classifyTask("Удалить все записи в production").risk, "consequential")
+  assert.equal(classifyTask("Plan only, do not modify files").executionIntent, "plan")
+  assert.equal(classifyTask("Do not print credentials while fixing this local bug").risk, undefined)
 })
 
 test("decision engine honors duplicate, off, scope, and generic fallback", () => {
@@ -87,6 +109,19 @@ test("OpenCode hook leaves adaptive PASS out of model context and respects scope
   await hooks["chat.message"]({ sessionID: "s1", messageID: "m2" }, { parts: [{ type: "text", text: "Fix another bug" }] })
   await hooks["experimental.chat.system.transform"]({ sessionID: "s1", model: { providerID: "openai", id: "gpt-5.6" } }, second)
   assert.equal(second.system.length, 0)
+})
+
+test("scope=first is reserved until a supported model turn is processed", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, { behavior: "auto", scope: "first", qualityGate: "adaptive", unsupportedModel: "skip" })
+  await hooks["chat.message"]({ sessionID: "scope-late", messageID: "m1" }, { parts: [{ type: "text", text: "Migrate every production schema and run the migration tests." }] })
+  const unsupported = { system: [] as string[] }
+  await hooks["experimental.chat.system.transform"]({ sessionID: "scope-late", model: { providerID: "unknown", id: "unlisted-model" } }, unsupported)
+  assert.equal(unsupported.system.length, 0)
+
+  await hooks["chat.message"]({ sessionID: "scope-late", messageID: "m2" }, { parts: [{ type: "text", text: "Migrate every production schema and run the migration tests." }] })
+  const supported = { system: [] as string[] }
+  await hooks["experimental.chat.system.transform"]({ sessionID: "scope-late", model: { providerID: "openai", id: "gpt-5.6" } }, supported)
+  assert.equal(supported.system.length, 1)
 })
 
 test("OpenCode injects lean LIGHT guidance without session diagnostics", async () => {

@@ -26,8 +26,9 @@ management, schema validation, conformance tests, and deterministic eval checks.
   from a compact `PO + AUTO` indicator, with `/prompt-optimizer`, `/po-status`,
   and `Ctrl+Shift+P` available for on-demand controls.
 - OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
-  and `full`. Legacy boolean values remain readable; non-OpenCode adapters receive
-  the compatible boolean form so their existing runtime contracts are unchanged.
+  and `full`. Legacy boolean values remain readable; adapters without a native
+  gate API preserve the richer value in runtime state and degrade only at the
+  host instruction boundary.
 - OpenCode session overrides are ephemeral, bounded process-local state expires after
   30 days and is capped at 200 sessions; privacy-safe aggregate metrics never store
   prompt content. Use `/prompt-optimizer reset` to return to persistent config.

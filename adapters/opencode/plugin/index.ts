@@ -86,51 +86,37 @@ function normalizeModelID(value: string): string {
   return value.trim().toLowerCase().replace(/_/g, "-")
 }
 
-export function detectProfile(providerID: string, modelID: string): Profile | undefined {
-  const id = `${providerID}/${modelID}`.toLowerCase().replace(/_/g, "-")
-  if (/claude.*fable[^a-z0-9]*5[.-]1(?:$|[^a-z0-9])/.test(id) || id.includes("claude-fable-5.1") || id.includes("claude-fable-5-1")) return "claude-fable-5.1"
-  if (/claude.*fable[^a-z0-9]*5(?:$|[^a-z0-9])/.test(id) || id.includes("claude-fable-5")) return "claude-fable-5"
-  if (/claude.*opus[^a-z0-9]*4[.-]8(?:$|[^a-z0-9])/.test(id) || id.includes("claude-opus-4.8") || id.includes("claude-opus-4-8")) return "claude-opus-4.8"
-  if (/claude.*opus[^a-z0-9]*5(?:$|[^a-z0-9])/.test(id) || id.includes("claude-opus-5")) return "claude-opus-5"
-  if (/claude.*sonnet[^a-z0-9]*5(?:$|[^a-z0-9])/.test(id) || id.includes("claude-sonnet-5")) return "claude-sonnet-5"
-  if (/kimi.*k[^a-z0-9]*3(?:$|[^a-z0-9])/.test(id) || id.includes("kimi-k3")) return "kimi-k3"
-  if (/muse.*spark[^a-z0-9]*1[.-]3(?:$|[^a-z0-9])/.test(id) || id.includes("muse-spark-1.3")) return "muse-spark-1.3"
-  if (/hy[^a-z0-9]*4.*preview/.test(id) || id.includes("hy4-preview")) return "hy4-preview"
-  if (/qwen[^a-z0-9]*3[.-]8.*max/.test(id) || id.includes("qwen3.8-max") || id.includes("qwen-3.8-max")) return "qwen3.8-max"
-  if (/gemini[^a-z0-9]*3[.-]8.*flash/.test(id) || id.includes("gemini-3.8-flash")) return "gemini-3.8-flash"
-  if (/grok[^a-z0-9]*4[.-]6(?:$|[^a-z0-9])/.test(id) || id.includes("grok-4.6")) return "grok-4.6"
-  if (/glm[^a-z0-9]*5[.-]3[^a-z0-9]*flash/.test(id) || id.includes("glm-5.3-flash")) return "glm-5.3-flash"
-  if (/glm[^a-z0-9]*5[.-]3(?:$|[^a-z0-9])/.test(id) || id.includes("glm-5.3")) return "glm-5.3"
-  if (/glm[^a-z0-9]*5[.-]2(?:$|[^a-z0-9])/.test(id) || id.includes("glm-5.2")) return "glm-5.2"
-  if (/deepseek.*(?:v[^a-z0-9]*)?4.*flash/.test(id)) return "deepseek-v4-flash"
-  if (/deepseek.*(?:v[^a-z0-9]*)?4.*pro/.test(id)) return "deepseek-v4-pro"
-  if (id.includes("gpt-6-astra") || /(^|[/._-])astra($|[/._-])/.test(id)) return "astra"
-  if (id.includes("gpt-5.6-terra") || id.includes("5.6-terra") || /(^|[/._-])terra($|[/._-])/.test(id)) return "terra"
-  if (id.includes("gpt-5.6-luna") || id.includes("5.6-luna") || /(^|[/._-])luna($|[/._-])/.test(id)) return "luna"
-  if (id.includes("gpt-5.6-sol") || id.includes("5.6-sol") || /(^|[/._-])sol($|[/._-])/.test(id)) return "sol"
-  if (/(^|[/._-])gpt-5\.6($|[/])/i.test(id)) return "sol"
+function modelCandidates(modelID: string): string[] {
+  const normalized = normalizeModelID(modelID)
+  const leaf = normalized.split("/").at(-1) ?? normalized
+  const candidates = [normalized, leaf]
+  if (leaf.endsWith("-latest")) candidates.push(leaf.slice(0, -"-latest".length))
+  return [...new Set(candidates)]
+}
+
+function matchedModel(modelID: string): { profile: Profile; alias: string } | undefined {
+  for (const candidate of modelCandidates(modelID)) {
+    const profile = EXACT_MODEL_ALIASES[candidate]
+    if (profile) return { profile, alias: candidate }
+  }
   return undefined
+}
+
+export function detectProfile(_providerID: string, modelID: string): Profile | undefined {
+  // Only the model ID is authoritative. Provider names are not model aliases.
+  return matchedModel(modelID)?.profile
 }
 
 export function resolveModel(providerID: string, modelID: string): ModelResolution {
   const normalizedModelID = normalizeModelID(modelID)
-  const exactProfile = EXACT_MODEL_ALIASES[normalizedModelID]
-  if (exactProfile) {
+  const exactMatch = matchedModel(modelID)
+  if (exactMatch) {
     return {
-      profile: exactProfile,
+      profile: exactMatch.profile,
       confidence: "high",
-      source: "exact-id",
+      source: exactMatch.alias === normalizedModelID ? "exact-id" : "pattern",
       modelID: normalizedModelID,
-      matchedAlias: normalizedModelID,
-    }
-  }
-  const profile = detectProfile(providerID, modelID)
-  if (profile) {
-    return {
-      profile,
-      confidence: "high",
-      source: "pattern",
-      modelID: normalizedModelID,
+      matchedAlias: exactMatch.alias,
     }
   }
   return {
@@ -154,16 +140,17 @@ function sessionIDOf(value: unknown): string {
   return typeof value === "string" && value.trim() ? value : "__default__"
 }
 
-function promptText(event: any): string | undefined {
-  const candidates = [
-    event?.prompt,
-    event?.text,
-    event?.message?.content,
-    event?.message?.text,
-    ...(Array.isArray(event?.parts) ? event.parts.map((part: any) => part?.type === "text" ? part.text : undefined) : []),
-  ]
+export function promptText(event: any): string | undefined {
+  const parts = Array.isArray(event?.parts)
+    ? event.parts
+      .filter((part: any) => part?.type === "text" && typeof part.text === "string" && part.text.trim())
+      .map((part: any) => part.text.trim())
+    : []
+  if (parts.length) return parts.join("\n\n")
+
+  const candidates = [event?.prompt, event?.text, event?.message?.content, event?.message?.text]
   const value = candidates.find(item => typeof item === "string" && item.trim())
-  return typeof value === "string" ? value : undefined
+  return typeof value === "string" ? value.trim() : undefined
 }
 
 function mergeState(previous: SessionState | undefined, patch: Partial<SessionState>): SessionState {
@@ -251,6 +238,8 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
       const stored = current.state
+      const messageID = typeof input.messageID === "string" ? input.messageID : undefined
+      if (messageID && current.pendingMessageId === messageID) return
       const priorCount = stored.userPromptCount
       const prompt = promptText({ message: output?.message, parts: output?.parts })
       const settings = loadSettings()
@@ -258,13 +247,12 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const effectiveScope = stored.override?.scope ?? settings.scope
       const inScope = effectiveScope === "all" || (effectiveScope === "first" && priorCount === 0)
       const next = mergeState(stored, {
-        userPromptCount: priorCount + 1,
         candidateUserPromptCount: priorCount + 1,
         active: effectiveBehavior !== "off" && inScope,
-        lastSeenAt: Date.now(),
-        pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
-      })
-      touchSession(key, { state: next, pendingPrompt: prompt, pendingMessageId: input.messageID })
+         lastSeenAt: Date.now(),
+         pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
+       })
+       touchSession(key, { state: next, pendingPrompt: prompt, pendingMessageId: messageID })
     },
 
     "experimental.chat.system.transform": async (input: any, output: any) => {
@@ -284,6 +272,8 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
       }
       if (effectiveSettings.behavior === "off") return
+      const scopeEligible = effectiveSettings.scope === "all" || stored.userPromptCount === 0
+      if (!scopeEligible) return
       const model = {
         providerID: String(input.model?.providerID ?? ""),
         modelID: String(input.model?.id ?? input.model?.modelID ?? ""),
@@ -297,15 +287,20 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         ? { action: "skip" as const, behavior: effectiveSettings.behavior, scope: effectiveSettings.scope, qualityGate: effectiveSettings.qualityGate, taskType: task.type, profile: "none" as const, profileConfidence: "low" as const, reason: "model is not in the registry" }
         : decide({
           settings: effectiveSettings,
-          scopeEligible: true,
+          scopeEligible,
           model,
           profile,
           sessionOverride: stored.override,
           taskType: task.type,
+          risk: task.risk,
+          executionIntent: task.executionIntent,
         }, prompt)
       const nextMetrics = incrementMetrics(stored, decision.action, decision.profile, decision.gate)
+      const processed = decision.action !== "skip"
+      const nextUserPromptCount = processed ? stored.userPromptCount + 1 : stored.userPromptCount
       const nextState = mergeState(stored, {
-        active: decision.action !== "skip" || effectiveSettings.scope === "all",
+        userPromptCount: nextUserPromptCount,
+        active: effectiveSettings.scope === "all" || nextUserPromptCount === 0,
         lastModel: model,
         lastResolution: resolution,
         lastTaskType: task.type,

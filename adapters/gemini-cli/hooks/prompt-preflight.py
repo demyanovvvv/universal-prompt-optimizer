@@ -10,6 +10,13 @@ from pathlib import Path
 
 STATE_TTL_SECONDS = 30 * 24 * 60 * 60
 STATE_LIMIT = 200
+QUALITY_GATES = {"pass", "light", "full", "adaptive"}
+
+
+def normalize_quality_gate(value):
+    if isinstance(value, bool):
+        return "adaptive" if value else "pass"
+    return value if isinstance(value, str) and value in QUALITY_GATES else None
 
 def read_json(path: Path, default):
     try:
@@ -22,7 +29,7 @@ def read_json(path: Path, default):
 
 
 def config(cwd: Path):
-    d = {"behavior": "auto", "scope": "all", "qualityGate": True, "unsupportedModel": "skip"}
+    d = {"behavior": "auto", "scope": "all", "qualityGate": "adaptive", "unsupportedModel": "skip"}
     invalid_config = False
     for p in [Path.home() / ".config/prompt-optimizer/config.json", cwd / ".prompt-optimizer.json"]:
         if not p.exists():
@@ -39,7 +46,7 @@ def config(cwd: Path):
             ("schemaVersion" in value and (not isinstance(value["schemaVersion"], int) or isinstance(value["schemaVersion"], bool) or value["schemaVersion"] != 1))
             or ("behavior" in value and value["behavior"] not in {"auto", "preview", "off"})
             or ("scope" in value and value["scope"] not in {"first", "all"})
-            or ("qualityGate" in value and not isinstance(value["qualityGate"], bool))
+            or ("qualityGate" in value and normalize_quality_gate(value["qualityGate"]) is None)
             or ("unsupportedModel" in value and value["unsupportedModel"] not in {"skip", "generic"})
         ):
             invalid_config = True
@@ -48,8 +55,9 @@ def config(cwd: Path):
             d["behavior"] = value["behavior"]
         if value.get("scope") in {"first", "all"}:
             d["scope"] = value["scope"]
-        if isinstance(value.get("qualityGate"), bool):
-            d["qualityGate"] = value["qualityGate"]
+        quality_gate = normalize_quality_gate(value.get("qualityGate"))
+        if quality_gate is not None:
+            d["qualityGate"] = quality_gate
         if value.get("unsupportedModel") in {"skip", "generic"}:
             d["unsupportedModel"] = value["unsupportedModel"]
     if invalid_config:
@@ -245,10 +253,15 @@ common = (
     "do not invent requirements. Keep the execution brief as concise as the active model permits. Native Reasoning First: "
     "never request hidden chain-of-thought or add generic think-step-by-step scaffolding. User instructions override this preflight. "
 )
-if cfg.get("qualityGate", True):
-    base = "Prompt Optimizer v5.5. Apply PASS/LIGHT/FULL quality gating before acting. " + common
-else:
+quality_gate = cfg.get("qualityGate", "adaptive")
+if quality_gate == "pass":
     base = "Prompt Optimizer v5.5. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
+elif quality_gate == "light":
+    base = "Prompt Optimizer v5.5. Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape before acting. " + common
+elif quality_gate == "full":
+    base = "Prompt Optimizer v5.5. Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before acting. " + common
+else:
+    base = "Prompt Optimizer v5.5. Apply PASS/LIGHT/FULL quality gating before acting. " + common
 
 # Prefer the exact model observed by BeforeModel in this session. Before the first
 # model call, use only explicit configuration visible to the hook. Never assume a
@@ -286,9 +299,13 @@ if cfg.get("behavior") == "preview":
         "If ask_user is unavailable, print the prompt and wait for explicit confirmation. "
     )
 else:
-    if cfg.get("qualityGate", True):
-        base += "AUTO MODE: silently optimize only when useful and execute in the same turn. "
-    else:
+    if quality_gate == "pass":
         base += "AUTO MODE: normalize every in-scope prompt and execute in the same turn. "
+    elif quality_gate == "light":
+        base += "AUTO MODE: apply the selected LIGHT gate and execute in the same turn. "
+    elif quality_gate == "full":
+        base += "AUTO MODE: apply the selected FULL gate and execute in the same turn. "
+    else:
+        base += "AUTO MODE: silently optimize only when useful and execute in the same turn. "
 
 print(json.dumps({"suppressOutput": True, "hookSpecificOutput": {"additionalContext": base}}))

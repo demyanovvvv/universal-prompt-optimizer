@@ -14,3 +14,5 @@ Use task-specific detail only when it changes execution:
 - artifact or document: audience, fidelity, required content, structure, and output artifact.
 
 Use examples, delimiters, role framing, structured output, decomposition, or explicit style only when that technique solves a concrete problem. Do not expose private reasoning.
+
+For coding work, end with a concise factual result: changes made, validation actually run and its result, and any concrete blocker or unverified boundary. For research, distinguish confirmed evidence from inference and cite sources when requested. Do not add a report template where the requested output does not need one.

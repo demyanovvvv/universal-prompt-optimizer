@@ -46,6 +46,12 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(cleaned[0]["command"], "user-command")
         self.assertEqual(cleaned[1]["hooks"], [{"name": "user", "command": "keep"}])
 
+    def test_pi_preview_does_not_consume_turn_without_interactive_ui(self):
+        source = (ROOT / "adapters" / "pi" / "extensions" / "prompt-optimizer.ts").read_text(encoding="utf-8")
+        ui_check = source.index("if (!ctx.hasUI)")
+        preview_state = source.index("previewedTurns.set(sid, turn)")
+        self.assertLess(ui_check, preview_state)
+
     def test_remove_json_fields_preserves_custom_fields(self):
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / ".prompt-optimizer.json"
@@ -187,6 +193,9 @@ class InstallerTests(unittest.TestCase):
         self.assertTrue(installer.legacy_quality_gate_enabled("full"))
         self.assertFalse(installer.legacy_quality_gate_enabled("pass"))
         self.assertFalse(installer.legacy_quality_gate_enabled(False))
+
+    def test_legacy_quality_gate_mapping_preserves_explicit_enabled_mode(self):
+        self.assertTrue(installer.legacy_quality_gate_enabled(True))
 
     def test_opencode_duplicate_guard_distinguishes_pending_turn(self):
         source = (ROOT / "adapters/opencode/plugin/session-state.ts").read_text(encoding="utf-8")

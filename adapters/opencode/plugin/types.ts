@@ -95,6 +95,7 @@ export type DecisionInput = {
   duplicate?: boolean
   taskType?: TaskType
   risk?: "none" | "consequential"
+  executionIntent?: "execute" | "plan" | "review" | "explain"
 }
 
 export type TaskType = "implementation" | "bugfix" | "refactor" | "review" | "research" | "documentation" | "testing" | "planning" | "security" | "migration" | "unknown"

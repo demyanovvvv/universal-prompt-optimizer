@@ -42,7 +42,22 @@ def run(path: Path = CASES) -> dict:
     known_aliases = {alias for item in registry["profiles"] for alias in [item["id"], *item.get("aliases", [])]}
     errors: list[str] = []
     ids: set[str] = set()
+    contracts = 0
     required_fields = {"id", "model", "request", "expect"}
+    contract_fields = {
+        "profile": (str, type(None)),
+        "taskType": str,
+        "risk": str,
+        "executionIntent": str,
+        "gate": str,
+        "action": str,
+    }
+    contract_values = {
+        "risk": {"none", "consequential"},
+        "executionIntent": {"execute", "plan", "review", "explain"},
+        "gate": {"pass", "light", "full"},
+        "action": {"apply", "preview", "skip"},
+    }
     for index, case in enumerate(cases, 1):
         missing = required_fields - set(case)
         if missing:
@@ -56,6 +71,20 @@ def run(path: Path = CASES) -> dict:
             errors.append(f"{case_id}: request must be non-empty")
         if not isinstance(case["expect"], list) or not case["expect"]:
             errors.append(f"{case_id}: expect must be a non-empty array")
+        contract = case.get("contract")
+        if contract is not None:
+            contracts += 1
+            if not isinstance(contract, dict):
+                errors.append(f"{case_id}: contract must be an object")
+            else:
+                for field, value in contract.items():
+                    if field not in contract_fields:
+                        errors.append(f"{case_id}: unknown contract field: {field}")
+                        continue
+                    if not isinstance(value, contract_fields[field]):
+                        errors.append(f"{case_id}: contract.{field} has invalid type")
+                    if field in contract_values and value not in contract_values[field]:
+                        errors.append(f"{case_id}: contract.{field} has invalid value: {value}")
         model = case["model"]
         if model not in known_models and model not in known_aliases and model not in {"deepseek-v4"}:
             errors.append(f"{case_id}: model is not in registry or explicit ambiguous-model set: {model}")
@@ -82,7 +111,7 @@ def run(path: Path = CASES) -> dict:
     missing_astra = required_astra_cases - case_ids
     if missing_astra:
         errors.append(f"missing GPT-6 Astra evaluation cases: {sorted(missing_astra)}")
-    return {"cases": len(cases), "errors": errors, "passed": not errors}
+    return {"cases": len(cases), "contracts": contracts, "errors": errors, "passed": not errors}
 
 
 def main() -> int:

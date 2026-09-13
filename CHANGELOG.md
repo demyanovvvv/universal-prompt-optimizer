@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Tightened OpenCode model routing to registry aliases only, preserving approved
+  suffixes while refusing near-version and provider-name false matches.
+- Preserved all ordered text parts from multipart user messages and delayed
+  `scope=first` consumption until a supported model turn is actually processed.
+- Added consequence-aware task signals for destructive/external work, plan-only
+  intent, English/Russian migration and security terms, and explicit verification
+  requests.
+- Kept `qualityGate` string semantics consistent across native and legacy adapters;
+  added executable decision contracts to the runtime evaluation suite.
 - Added a separate native OpenCode TUI plugin with compact status indicators,
   command-palette/slash controls, and `Ctrl+Shift+P` on-demand access.
 - Added OpenCode task-aware `adaptive`, `pass`, `light`, and `full` quality gates

@@ -5,6 +5,12 @@ from pathlib import Path
 
 STATE_TTL_SECONDS = 30 * 24 * 60 * 60
 STATE_LIMIT = 200
+QUALITY_GATES = {'pass', 'light', 'full', 'adaptive'}
+
+def normalize_quality_gate(value):
+    if isinstance(value, bool):
+        return 'adaptive' if value else 'pass'
+    return value if isinstance(value, str) and value in QUALITY_GATES else None
 
 def read_json(path: Path, default):
     try:
@@ -65,8 +71,9 @@ def normalized_config(value):
         out['behavior'] = value['behavior']
     if value.get('scope') in {'first', 'all'}:
         out['scope'] = value['scope']
-    if isinstance(value.get('qualityGate'), bool):
-        out['qualityGate'] = value['qualityGate']
+    quality_gate = normalize_quality_gate(value.get('qualityGate'))
+    if quality_gate is not None:
+        out['qualityGate'] = quality_gate
     if value.get('unsupportedModel') in {'skip', 'generic'}:
         out['unsupportedModel'] = value['unsupportedModel']
     return out
@@ -78,12 +85,12 @@ def config_has_invalid_managed_fields(value):
         ('schemaVersion' in value and (not isinstance(value['schemaVersion'], int) or isinstance(value['schemaVersion'], bool) or value['schemaVersion'] != 1))
         or ('behavior' in value and value['behavior'] not in {'auto', 'preview', 'off'})
         or ('scope' in value and value['scope'] not in {'first', 'all'})
-        or ('qualityGate' in value and not isinstance(value['qualityGate'], bool))
+        or ('qualityGate' in value and normalize_quality_gate(value['qualityGate']) is None)
         or ('unsupportedModel' in value and value['unsupportedModel'] not in {'skip', 'generic'})
     )
 
 def read_cfg(root: Path):
-    cfg={'behavior':'auto','scope':'all','qualityGate':True,'unsupportedModel':'skip'}
+    cfg={'behavior':'auto','scope':'all','qualityGate':'adaptive','unsupportedModel':'skip'}
     invalid_config=False
     for p in [Path.home()/'.config/prompt-optimizer/config.json', root/'.prompt-optimizer.json']:
         if not p.exists():

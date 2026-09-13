@@ -6,6 +6,7 @@ import { join } from "node:path"
 
 type Behavior = "auto" | "preview" | "off"
 type Scope = "first" | "all"
+type QualityGate = "pass" | "light" | "full" | "adaptive"
 const sessionBehaviors = new Map<string, Behavior>()
 const sessionTurns = new Map<string, number>()
 const previewedTurns = new Map<string, number>()
@@ -38,7 +39,32 @@ const hints: Array<[RegExp,string]> = [
   [/gpt.*5[.-]6.*sol|gpt-5[.-]6|(^|[\/_-])sol($|[\/_-])/, "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools."],
 ]
 
-function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: boolean; unsupportedModel: "skip"|"generic" } {
+function normalizeQualityGate(value: any): QualityGate | undefined {
+  if (["pass", "light", "full", "adaptive"].includes(value)) return value as QualityGate
+  if (typeof value === "boolean") return value ? "adaptive" : "pass"
+  return undefined
+}
+
+function gateInstructions(gate: QualityGate): { base: string; mode: string } {
+  if (gate === "pass") return {
+    base: BASE_ALWAYS,
+    mode: "AUTO MODE: normalize every in-scope prompt and execute immediately.",
+  }
+  if (gate === "light") return {
+    base: BASE_GATE,
+    mode: "Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape, then execute immediately.",
+  }
+  if (gate === "full") return {
+    base: BASE_GATE,
+    mode: "Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before executing immediately.",
+  }
+  return {
+    base: BASE_GATE,
+    mode: "AUTO MODE: silently optimize only when the quality gate says it helps and execute immediately.",
+  }
+}
+
+function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: QualityGate; unsupportedModel: "skip"|"generic" } {
   const sid = String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
   const paths = [join(homedir(), ".config", "prompt-optimizer", "config.json"), join(ctx.cwd, ".prompt-optimizer.json")]
   let data:any = {}
@@ -50,7 +76,7 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: boolean
       if (("behavior" in parsed && !["auto","preview","off"].includes(parsed.behavior))
         || ("schemaVersion" in parsed && (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion !== 1))
         || ("scope" in parsed && !["first","all"].includes(parsed.scope))
-        || ("qualityGate" in parsed && typeof parsed.qualityGate !== 'boolean')
+         || ("qualityGate" in parsed && normalizeQualityGate(parsed.qualityGate) === undefined)
         || ("unsupportedModel" in parsed && !["skip","generic"].includes(parsed.unsupportedModel))) {
         invalidConfig = true
         continue
@@ -61,7 +87,7 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: boolean
   return {
     behavior: sessionBehaviors.get(sid) ?? (invalidConfig ? "off" : (["auto","preview","off"].includes(data.behavior) ? data.behavior : "auto")),
     scope: ["first","all"].includes(data.scope) ? data.scope : "all",
-    qualityGate: typeof data.qualityGate === 'boolean' ? data.qualityGate : true,
+     qualityGate: normalizeQualityGate(data.qualityGate) ?? "adaptive",
     unsupportedModel: data.unsupportedModel === "generic" ? "generic" : "skip",
   }
 }
@@ -101,8 +127,8 @@ export default function (pi: ExtensionAPI) {
       if (previewedTurns.get(sid) === turn) {
         return { content:[{type:'text',text:'PREVIEW_REJECTED: this user-turn already has a preview.'}], details:{approved:false} }
       }
-      previewedTurns.set(sid, turn)
       if (!ctx.hasUI) return { content:[{type:'text',text:'PREVIEW_UNAVAILABLE: no interactive UI. Print the optimized prompt and wait for explicit confirmation.'}], details:{approved:false} }
+      previewedTurns.set(sid, turn)
       const ok = await ctx.ui.confirm("Prompt preview", params.optimized_prompt)
       if (ok) return { content:[{type:'text',text:`PROMPT_PREVIEW_APPROVED\n${params.optimized_prompt}`}], details:{approved:true,prompt:params.optimized_prompt} }
       const edited = await ctx.ui.editor("Изменить prompt", params.optimized_prompt)
@@ -123,8 +149,9 @@ export default function (pi: ExtensionAPI) {
     sessionTurns.set(sid, userTurn)
     previewedTurns.delete(sid)
     if (settings.scope === 'first' && userTurn > 1) return
-    const base = settings.qualityGate ? BASE_GATE : BASE_ALWAYS
-    const mode = settings.behavior === 'preview' ? PREVIEW : (settings.qualityGate ? 'AUTO MODE: silently optimize only when useful and execute immediately.' : 'AUTO MODE: normalize every in-scope prompt and execute immediately.')
+     const gate = gateInstructions(settings.qualityGate)
+     const base = gate.base
+     const mode = settings.behavior === 'preview' ? PREVIEW : gate.mode
     return { systemPrompt: `${event.systemPrompt}\n\n${base}\n${hint ?? 'Neutral model fallback: use model/provider-neutral shaping only.'}\n${mode}` }
   })
 }

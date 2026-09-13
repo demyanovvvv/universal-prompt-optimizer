@@ -12,7 +12,12 @@ export function decide(input: DecisionInput, prompt = ""): OptimizationDecision 
       ? input.sessionOverride.profile
       : input.profile ?? (settings.unsupportedModel === "generic" ? "generic" : "none")
   const taskType = input.taskType ?? "unknown"
-  const gate = chooseQualityGate(qualityGate, { prompt, taskType: taskType as TaskType, risk: input.risk })
+  const gate = chooseQualityGate(qualityGate, {
+    prompt,
+    taskType: taskType as TaskType,
+    risk: input.risk,
+    executionIntent: input.executionIntent,
+  })
   if (input.duplicate) {
     return { action: "skip", behavior, scope, qualityGate, taskType, profile: "none", profileConfidence: "low", reason: "duplicate event" }
   }

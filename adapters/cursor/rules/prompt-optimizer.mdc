@@ -7,7 +7,7 @@ At the start of each user-turn, read `.cursor/.prompt-optimizer-runtime.json` if
 
 If `active` is false or behavior is OFF, do not apply automatic prompt optimization. `active` already accounts for `scope=first|all`.
 
-Otherwise apply the canonical `.agents/skills/prompt-optimizer/SKILL.md` rules and the exact matching model profile when `model_id`/`model` unambiguously matches. Do not guess ambiguous variants. If `qualityGate` is true, PASS a clear request unchanged, use LIGHT for a small missing boundary, and load the conditional FULL workflow only for genuinely complex work. If `qualityGate` is false, normalize every in-scope request into the leanest model-appropriate execution brief. Keep the prompt lean and do not invent requirements.
+Otherwise apply the canonical `.agents/skills/prompt-optimizer/SKILL.md` rules and the exact matching model profile when `model_id`/`model` unambiguously matches. Do not guess ambiguous variants. `qualityGate=pass` forces the leanest normalization. `light` adds only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape. `full` builds a concise execution brief from task-relevant context. Only `adaptive` selects PASS/LIGHT/FULL from the request. Keep the prompt lean and do not invent requirements.
 
 If behavior is PREVIEW, load the canonical PREVIEW workflow and follow it once for this generation.
 

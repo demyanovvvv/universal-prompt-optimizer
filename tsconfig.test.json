@@ -10,6 +10,7 @@
   "include": [
     "types/host-modules.d.ts",
     "adapters/opencode/plugin/*.ts",
-    "tests/opencode-runtime.test.ts"
+    "tests/opencode-runtime.test.ts",
+    "tests/eval-contract.test.ts"
   ]
 }

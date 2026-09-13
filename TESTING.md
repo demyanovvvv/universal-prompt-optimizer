@@ -39,6 +39,9 @@ Verified on **2026-09-11** after the lifecycle, CI, schema, conformance, and eva
   preservation, schema versions, registry consistency, and eval fixtures.
 - The static eval runner validates 40 cases, including Astra completion,
   zero-context PASS, progressive disclosure, and required adversarial coverage.
+- The runtime eval suite executes machine-checkable routing, task-signal, gate,
+  and action contracts for the adversarial fixtures through the OpenCode runtime;
+  it does not claim to score provider model answers.
 - `--doctor` is read-only; uninstall and uninstall dry-run are exercised after a
   real multi-agent installation and preserve surrounding user content.
 - Cursor/Gemini runtime session maps are bounded and expire stale entries.

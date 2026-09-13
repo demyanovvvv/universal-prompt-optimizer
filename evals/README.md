@@ -30,3 +30,15 @@ The runner validates the fixture schema, model registry membership, unique IDs,
 and required adversarial cases without making provider calls. It is not a
 substitute for measured OFF/AUTO/PREVIEW runs; it provides a stable contract that
 a future provider runner can consume without changing `cases.jsonl`.
+
+## Executable decision contracts
+
+Fixtures may also include a `contract` object with expected deterministic routing
+signals: resolved profile, task type, consequence risk, execution intent, quality
+gate, and optimizer action. `npm run test:runtime` evaluates those fields through
+the actual OpenCode resolver, classifier, quality gate, and decision engine. This
+guards optimizer behavior without claiming to score an LLM's final answer.
+
+Keep `expect` as the human/provider-evaluation rubric. Provider traces should
+still compare OFF, AUTO, and PREVIEW on final answers, changed files, approval
+events, required checks, token use, retries, and scope drift.
