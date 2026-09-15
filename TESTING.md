@@ -14,6 +14,20 @@ Verified on **2026-09-11** after the lifecycle, CI, schema, conformance, and eva
 
 ## Package/runtime checks
 
+The CI-equivalent local sequence is:
+
+```bash
+npm ci
+npm test
+npm run verify:ts
+npm run test:registry
+npm run test:evals:strict
+bash ./verify.sh
+```
+
+GitHub Actions runs the same checks on Ubuntu and Windows. The Windows job uses
+the Git Bash available on the hosted runner for `verify.sh`.
+
 - Bash syntax: `install.sh`, `verify.sh`.
 - Python syntax: installer, Cursor hook, Gemini CLI hook.
 - JSON and JSONL syntax: every package file.

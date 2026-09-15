@@ -10,7 +10,9 @@
   intent, English/Russian migration and security terms, and explicit verification
   requests.
 - Kept `qualityGate` string semantics consistent across native and legacy adapters;
-  added executable decision contracts to the runtime evaluation suite.
+   added executable decision contracts to the runtime evaluation suite.
+- Added structured eval coverage reports and strict safety coverage checks to the
+  package verification path and Linux/Windows GitHub Actions workflow.
 - Added a separate native OpenCode TUI plugin with compact status indicators,
   command-palette/slash controls, and `Ctrl+Shift+P` on-demand access.
 - Added OpenCode task-aware `adaptive`, `pass`, `light`, and `full` quality gates

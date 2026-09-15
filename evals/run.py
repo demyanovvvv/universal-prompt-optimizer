@@ -11,6 +11,7 @@ results beside this static result.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -35,12 +36,12 @@ def load_cases(path: Path) -> list[dict]:
     return cases
 
 
-def run(path: Path = CASES) -> dict:
-    cases = load_cases(path)
+def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
     registry = json.loads(REGISTRY.read_text(encoding="utf-8"))
     known_models = {item["id"] for item in registry["profiles"]}
     known_aliases = {alias for item in registry["profiles"] for alias in [item["id"], *item.get("aliases", [])]}
     errors: list[str] = []
+    case_results: list[dict] = []
     ids: set[str] = set()
     contracts = 0
     required_fields = {"id", "model", "request", "expect"}
@@ -53,43 +54,100 @@ def run(path: Path = CASES) -> dict:
         "action": str,
     }
     contract_values = {
+        "profile": known_models | {None},
+        "taskType": {
+            "implementation", "bugfix", "refactor", "review", "research",
+            "documentation", "testing", "planning", "security", "migration",
+            "unknown",
+        },
         "risk": {"none", "consequential"},
         "executionIntent": {"execute", "plan", "review", "explain"},
         "gate": {"pass", "light", "full"},
         "action": {"apply", "preview", "skip"},
     }
+    contract_field_counts = {field: 0 for field in contract_fields}
+    contract_value_counts = {field: {} for field in contract_fields}
+    try:
+        input_digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        input_digest = None
+    report_metadata = {
+        "schemaVersion": 1,
+        "mode": "deterministic",
+        "providerCalls": 0,
+        "strictCoverage": strict_coverage,
+        "input": {"format": "jsonl", "sha256": input_digest},
+    }
+    try:
+        cases = load_cases(path)
+    except (OSError, ValueError) as exc:
+        return {
+            **report_metadata,
+            "cases": 0,
+            "contracts": 0,
+            "coverage": {
+                "total": 0,
+                "fields": contract_field_counts,
+                "values": contract_value_counts,
+            },
+            "caseResults": [],
+            "errors": [str(exc)],
+            "passed": False,
+        }
     for index, case in enumerate(cases, 1):
+        case_error_start = len(errors)
         missing = required_fields - set(case)
         if missing:
             errors.append(f"case {index}: missing fields {sorted(missing)}")
+            case_results.append({
+                "id": case.get("id", f"case-{index}"),
+                "passed": False,
+                "errors": errors[case_error_start:],
+            })
             continue
         case_id = case["id"]
         if not isinstance(case_id, str) or not case_id.strip() or case_id in ids:
             errors.append(f"case {index}: id must be unique and non-empty")
-        ids.add(case_id)
+            case_label = f"case {index}"
+        else:
+            ids.add(case_id)
+            case_label = case_id
         if not isinstance(case["request"], str) or not case["request"].strip():
-            errors.append(f"{case_id}: request must be non-empty")
+            errors.append(f"{case_label}: request must be non-empty")
         if not isinstance(case["expect"], list) or not case["expect"]:
-            errors.append(f"{case_id}: expect must be a non-empty array")
+            errors.append(f"{case_label}: expect must be a non-empty array")
         contract = case.get("contract")
         if contract is not None:
             contracts += 1
             if not isinstance(contract, dict):
-                errors.append(f"{case_id}: contract must be an object")
+                errors.append(f"{case_label}: contract must be an object")
             else:
                 for field, value in contract.items():
                     if field not in contract_fields:
-                        errors.append(f"{case_id}: unknown contract field: {field}")
+                        errors.append(f"{case_label}: unknown contract field: {field}")
                         continue
                     if not isinstance(value, contract_fields[field]):
-                        errors.append(f"{case_id}: contract.{field} has invalid type")
+                        errors.append(f"{case_label}: contract.{field} has invalid type")
+                        continue
                     if field in contract_values and value not in contract_values[field]:
-                        errors.append(f"{case_id}: contract.{field} has invalid value: {value}")
+                        errors.append(f"{case_label}: contract.{field} has invalid value: {value}")
+                    contract_field_counts[field] += 1
+                    value_key = "null" if value is None else str(value)
+                    field_counts = contract_value_counts[field]
+                    field_counts[value_key] = field_counts.get(value_key, 0) + 1
         model = case["model"]
-        if model not in known_models and model not in known_aliases and model not in {"deepseek-v4"}:
-            errors.append(f"{case_id}: model is not in registry or explicit ambiguous-model set: {model}")
-        if model == "deepseek-v4" and not any("guess" in str(item).lower() or "flash" in str(item).lower() for item in case["expect"]):
-            errors.append(f"{case_id}: ambiguous DeepSeek case must assert no variant guess")
+        if not isinstance(model, str) or not model.strip():
+            errors.append(f"{case_label}: model must be a non-empty string")
+        elif model not in known_models and model not in known_aliases and model not in {"deepseek-v4"}:
+            errors.append(f"{case_label}: model is not in registry or explicit ambiguous-model set: {model}")
+        elif model == "deepseek-v4" and not any("guess" in str(item).lower() or "flash" in str(item).lower() for item in case["expect"]):
+            errors.append(f"{case_label}: ambiguous DeepSeek case must assert no variant guess")
+
+        case_results.append({
+            "id": case_id,
+            "passed": len(errors) == case_error_start,
+            "errors": errors[case_error_start:],
+        })
 
     case_ids = ids
     required_negative_cases = {
@@ -111,15 +169,38 @@ def run(path: Path = CASES) -> dict:
     missing_astra = required_astra_cases - case_ids
     if missing_astra:
         errors.append(f"missing GPT-6 Astra evaluation cases: {sorted(missing_astra)}")
-    return {"cases": len(cases), "contracts": contracts, "errors": errors, "passed": not errors}
+    coverage = {
+        "total": contracts,
+        "fields": contract_field_counts,
+        "values": contract_value_counts,
+    }
+    if strict_coverage:
+        required_coverage = {
+            "risk": "consequential",
+            "gate": "full",
+            "action": "skip",
+        }
+        for field, value in required_coverage.items():
+            if coverage["values"].get(field, {}).get(value, 0) == 0:
+                errors.append(f"strict coverage missing contract.{field}={value}")
+    return {
+        **report_metadata,
+        "cases": len(cases),
+        "contracts": contracts,
+        "coverage": coverage,
+        "caseResults": case_results,
+        "errors": errors,
+        "passed": not errors,
+    }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Run deterministic Prompt Optimizer evaluation checks")
     parser.add_argument("--cases", type=Path, default=CASES)
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--strict-coverage", action="store_true", help="require consequential, FULL, and skip contract coverage")
     args = parser.parse_args()
-    result = run(args.cases)
+    result = run(args.cases, strict_coverage=args.strict_coverage)
     rendered = json.dumps(result, ensure_ascii=False, indent=2) + "\n"
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)

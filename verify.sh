@@ -114,7 +114,7 @@ ok "JSON, registry, 20 профилей/override skills, версии и чис�
 "$PYTHON_BIN" -B tests/registry_conformance.py
 ok "Согласованность registry и адаптеров" "Registry and adapter conformance"
 
-"$PYTHON_BIN" -B evals/run.py >/dev/null
+"$PYTHON_BIN" -B evals/run.py --strict-coverage >/dev/null
 ok "Статическая матрица evals" "Static evaluation matrix"
 
 PYTHONDONTWRITEBYTECODE=1 "$PYTHON_BIN" -B -m unittest discover -s tests >/dev/null
@@ -130,7 +130,7 @@ if [[ -n "$TSC_BIN" ]]; then
   "$TSC_BIN" -p tsconfig.verify.json
   ok "Синтаксис TypeScript" "TypeScript syntax"
   "$TSC_BIN" -p tsconfig.test.json
-  node --test .tmp-tests/opencode/tests/opencode-runtime.test.js >/dev/null
+   node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js >/dev/null
   ok "Поведенческие тесты OpenCode runtime" "OpenCode runtime behavior tests"
 else
   warn "tsc не найден — синтаксис TypeScript не проверен локально" "tsc not found — TypeScript syntax check skipped"

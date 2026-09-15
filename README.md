@@ -17,7 +17,9 @@ management, schema validation, conformance tests, and deterministic eval checks.
 - Managed configuration now carries `schemaVersion: 1`; the formal contract is
   `prompt-optimizer.schema.json`. Unknown fields remain supported and preserved.
 - GitHub Actions verifies Linux and Windows, unit/conformance/eval suites, and
-  the OpenCode/Pi TypeScript adapters using the pinned npm toolchain.
+  the OpenCode/Pi TypeScript adapters using the pinned npm toolchain. CI also
+  enforces strict safety coverage for consequential, FULL-gate, and skip-action
+  evaluation contracts.
 - Cursor and Gemini runtime state is bounded and entries expire after 30 days.
 - `evals/run.py` validates 40 deterministic fixtures, including Astra persistence,
   progressive-disclosure, ambiguous-model,

@@ -13,3 +13,6 @@ __pycache__/
 node_modules/
 npm-debug.log*
 .tmp-tests/
+
+# Generated deterministic evaluation reports.
+evals/results/

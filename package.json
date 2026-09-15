@@ -12,7 +12,9 @@
     "test:runtime": "tsc -p tsconfig.test.json && node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js",
     "test:registry": "python -B tests/registry_conformance.py",
     "test:evals": "python -B evals/run.py",
-    "test": "python -B -m unittest discover -s tests -v && npm run test:runtime"
+    "test:evals:strict": "python -B evals/run.py --strict-coverage",
+    "compare:evals": "python -B -m evals.compare",
+    "test": "python -B -m unittest discover -s tests -v && npm run test:evals:strict && npm run test:runtime"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

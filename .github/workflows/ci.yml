@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Run test suite
+        run: npm test
+
+      - name: Run TypeScript verification
+        run: npm run verify:ts
+
+      - name: Run registry conformance
+        run: npm run test:registry
+
+      - name: Run strict evaluation contracts
+        run: npm run test:evals:strict -- --output evals/results/latest.json
+
+      - name: Upload evaluation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report-${{ matrix.os }}
+          path: evals/results/latest.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Run package self-check
+        run: bash ./verify.sh
