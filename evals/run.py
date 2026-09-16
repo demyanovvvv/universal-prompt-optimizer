@@ -13,7 +13,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
+
+try:
+    from evals.report_schema import validate_report
+except ModuleNotFoundError:  # supports the documented `python evals/run.py` form
+    from report_schema import validate_report
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -116,6 +122,22 @@ def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
             errors.append(f"{case_label}: request must be non-empty")
         if not isinstance(case["expect"], list) or not case["expect"]:
             errors.append(f"{case_label}: expect must be a non-empty array")
+        rubric = case.get("rubric")
+        if rubric is not None:
+            if not isinstance(rubric, dict):
+                errors.append(f"{case_label}: rubric must be an object")
+            else:
+                forbidden = rubric.get("forbidden", [])
+                if not isinstance(forbidden, list) or not all(isinstance(item, str) and item.strip() for item in forbidden):
+                    errors.append(f"{case_label}: rubric.forbidden must be an array of non-empty strings")
+                min_score = rubric.get("minScore", 1.0)
+                if not isinstance(min_score, (int, float)) or isinstance(min_score, bool) or not math.isfinite(min_score) or not 0 <= min_score <= 1:
+                    errors.append(f"{case_label}: rubric.minScore must be finite and between 0 and 1")
+                required_fields = rubric.get("requiredFields", [])
+                if not isinstance(required_fields, list) or not all(isinstance(item, str) and item.strip() for item in required_fields):
+                    errors.append(f"{case_label}: rubric.requiredFields must be an array of non-empty strings")
+                if "exact" in rubric and not isinstance(rubric["exact"], (dict, list, str, int, float, bool, type(None))):
+                    errors.append(f"{case_label}: rubric.exact must be JSON-compatible")
         contract = case.get("contract")
         if contract is not None:
             contracts += 1
@@ -183,7 +205,7 @@ def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
         for field, value in required_coverage.items():
             if coverage["values"].get(field, {}).get(value, 0) == 0:
                 errors.append(f"strict coverage missing contract.{field}={value}")
-    return {
+    report = {
         **report_metadata,
         "cases": len(cases),
         "contracts": contracts,
@@ -192,6 +214,11 @@ def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
         "errors": errors,
         "passed": not errors,
     }
+    report_errors = validate_report(report, "deterministic")
+    if report_errors:
+        report["errors"].extend(report_errors)
+        report["passed"] = False
+    return report
 
 
 def main() -> int:

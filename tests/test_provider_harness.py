@@ -8,10 +8,14 @@ from tempfile import TemporaryDirectory
 from pathlib import Path
 
 from evals.provider import cli_provider, run_provider_cases, run_provider_matrix
-from evals.quality import compare_reports, score_response
+from evals.quality import compare_reports, score_exact_match, score_response
 
 
 class ProviderHarnessTests(unittest.TestCase):
+    def test_exact_scorer_reports_match(self):
+        self.assertEqual(score_exact_match({"ok": True}, {"ok": True}), {"passed": True, "matched": True})
+        self.assertEqual(score_exact_match({"ok": True}, {"ok": False}), {"passed": False, "matched": False})
+
     def test_score_response_checks_expected_phrases_case_insensitively(self):
         score = score_response({"text": "Implemented the fix and ran focused verification."}, ["fix", "verification"])
 
@@ -35,6 +39,171 @@ class ProviderHarnessTests(unittest.TestCase):
         self.assertFalse(report["passed"])
         self.assertEqual(report["failures"], 0)
         self.assertFalse(report["caseResults"][0]["quality"]["passed"])
+
+    def test_provider_forwards_only_supported_rubric_fields(self):
+        calls = []
+
+        def provider(payload):
+            calls.append(payload)
+            return {"text": "fix verification"}
+
+        run_provider_cases(
+            [{
+                "id": "one",
+                "model": "astra",
+                "request": "hello",
+                "expect": ["fix"],
+                "rubric": {"forbidden": ["unrelated"], "minScore": 1.0},
+                "secretMetadata": "must not be forwarded",
+            }],
+            mode="AUTO",
+            provider=provider,
+        )
+
+        self.assertEqual(calls[0]["rubric"], {"forbidden": ["unrelated"], "minScore": 1.0})
+        self.assertNotIn("secretMetadata", calls[0])
+
+    def test_provider_envelope_preserves_response_and_metrics_without_zero_filling(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello", "expect": ["done"]}],
+            mode="AUTO",
+            provider=lambda payload: {
+                "response": {"text": "done"},
+                "metrics": {"inputTokens": 4, "outputTokens": 2, "cost": 0.01},
+            },
+        )
+
+        result = report["caseResults"][0]
+        self.assertEqual(result["response"], {"text": "done"})
+        self.assertEqual(result["metrics"]["inputTokens"], 4)
+        self.assertNotIn("reasoningTokens", result["metrics"])
+        self.assertEqual(report["metrics"]["available"], ["cost", "inputTokens", "outputTokens"])
+        self.assertEqual(report["metrics"]["total"]["inputTokens"], 4)
+
+    def test_provider_envelope_preserves_bounded_redacted_trace(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello"}],
+            mode="AUTO",
+            provider=lambda payload: {
+                "response": {"text": "done"},
+                "trace": [{"event": "request", "durationMs": 2, "detail": "Bearer trace-secret"}],
+            },
+        )
+
+        self.assertEqual(report["caseResults"][0]["trace"][0]["event"], "request")
+        self.assertEqual(report["caseResults"][0]["trace"][0]["detail"], "Bearer [REDACTED]")
+        self.assertEqual(report["trace"]["events"], 1)
+
+    def test_provider_rejects_malformed_trace_as_case_failure(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello"}],
+            mode="AUTO",
+            provider=lambda payload: {"response": {"ok": True}, "trace": [{"event": ""}]},
+        )
+
+        self.assertFalse(report["passed"])
+        self.assertIn("trace[0].event", report["caseResults"][0]["error"])
+
+    def test_provider_redacts_secret_like_response_strings(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello"}],
+            mode="AUTO",
+            provider=lambda payload: {"text": "Bearer secret-token-123456"},
+        )
+
+        self.assertEqual(report["caseResults"][0]["response"]["text"], "Bearer [REDACTED]")
+
+    def test_provider_report_exposes_quality_aggregate(self):
+        report = run_provider_cases(
+            [
+                {"id": "good", "model": "astra", "request": "hello", "expect": ["done"]},
+                {"id": "bad", "model": "astra", "request": "hello", "expect": ["missing"]},
+            ],
+            mode="AUTO",
+            provider=lambda payload: {"text": "done"},
+        )
+
+        self.assertEqual(report["quality"], {"cases": 2, "scored": 2, "passed": 1, "passRate": 0.5})
+
+    def test_rubric_can_require_fields_and_exact_response(self):
+        report = run_provider_cases(
+            [{
+                "id": "one",
+                "model": "astra",
+                "request": "hello",
+                "expect": ["done"],
+                "rubric": {"requiredFields": ["text"], "exact": {"text": "done"}},
+            }],
+            mode="AUTO",
+            provider=lambda payload: {"text": "done"},
+        )
+
+        self.assertTrue(report["passed"])
+        self.assertTrue(report["caseResults"][0]["quality"]["fields"]["passed"])
+        self.assertTrue(report["caseResults"][0]["quality"]["exact"]["passed"])
+
+    def test_provider_report_exposes_latency_percentiles(self):
+        report = run_provider_cases(
+            [
+                {"id": "one", "model": "astra", "request": "hello"},
+                {"id": "two", "model": "astra", "request": "hello"},
+            ],
+            mode="AUTO",
+            provider=lambda payload: {"ok": True},
+        )
+
+        self.assertEqual(report["latency"]["measured"], 2)
+        self.assertGreaterEqual(report["latency"]["p50Ms"], 0)
+        self.assertGreaterEqual(report["latency"]["p95Ms"], report["latency"]["p50Ms"])
+
+    def test_matrix_report_exposes_per_mode_quality_and_metrics(self):
+        report = run_provider_matrix(
+            [{"id": "one", "model": "astra", "request": "hello", "expect": ["done"]}],
+            provider=lambda payload: {"response": {"text": "done"}, "metrics": {"cost": 0.1}},
+            approve_preview=True,
+        )
+
+        self.assertEqual(report["quality"]["AUTO"]["passRate"], 1.0)
+        self.assertEqual(report["metrics"]["OFF"]["total"]["cost"], 0.1)
+
+    def test_provider_rejects_invalid_metrics_as_case_failure(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello"}],
+            mode="AUTO",
+            provider=lambda payload: {"response": {"ok": True}, "metrics": {"cost": -1}},
+        )
+
+        self.assertFalse(report["passed"])
+        self.assertEqual(report["caseResults"][0]["status"], "failed")
+        self.assertIn("metrics.cost", report["caseResults"][0]["error"])
+
+    def test_invalid_rubric_is_rejected_before_provider_calls(self):
+        calls = []
+
+        with self.assertRaisesRegex(ValueError, "requiredFields"):
+            run_provider_cases(
+                [{
+                    "id": "one",
+                    "model": "astra",
+                    "request": "hello",
+                    "expect": ["done"],
+                    "rubric": {"requiredFields": "text"},
+                }],
+                mode="AUTO",
+                provider=lambda payload: calls.append(payload),
+            )
+
+        self.assertEqual(calls, [])
+
+    def test_provider_rejects_non_finite_metrics_as_case_failure(self):
+        report = run_provider_cases(
+            [{"id": "one", "model": "astra", "request": "hello"}],
+            mode="AUTO",
+            provider=lambda payload: {"response": {"ok": True}, "metrics": {"cost": float("nan")}},
+        )
+
+        self.assertFalse(report["passed"])
+        self.assertIn("finite", report["caseResults"][0]["error"])
 
     def test_compare_reports_detects_quality_regression_by_case_id(self):
         baseline = {

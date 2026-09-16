@@ -1,0 +1,41 @@
+name: Provider Eval Mock
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mock-provider:
+    name: Mock provider matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run approved local mock matrix
+        run: >-
+          python -B -m evals.provider
+          --cases evals/cases.jsonl
+          --mode MATRIX
+          --approve
+          --output evals/results/matrix.json
+          --provider python tests/provider_mock.py
+
+      - name: Validate mock report artifact
+        run: python -B -m evals.validate_report evals/results/matrix.json --kind matrix
+
+      - name: Upload mock evaluation report
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-eval-mock
+          path: evals/results/matrix.json
+          if-no-files-found: error
+          retention-days: 14

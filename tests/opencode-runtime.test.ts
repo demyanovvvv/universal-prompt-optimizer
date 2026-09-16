@@ -1,5 +1,5 @@
 import * as assert from "node:assert/strict"
-import * as test from "node:test"
+import test from "node:test"
 
 import plugin, { promptText, resolveModel } from "../adapters/opencode/plugin/index"
 import { decide } from "../adapters/opencode/plugin/decision-engine"

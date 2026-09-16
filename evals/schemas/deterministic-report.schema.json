@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/deterministic-report.schema.json",
+  "title": "Deterministic evaluation report",
+  "type": "object",
+  "required": ["schemaVersion", "mode", "providerCalls", "caseResults", "passed"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "mode": {"const": "deterministic"},
+    "providerCalls": {"const": 0},
+    "caseResults": {"type": "array"},
+    "passed": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

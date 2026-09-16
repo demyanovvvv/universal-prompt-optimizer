@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/provider-report.schema.json",
+  "title": "Provider evaluation report",
+  "type": "object",
+  "required": ["schemaVersion", "mode", "providerCalls", "failures", "caseResults", "summary", "passed"],
+  "$defs": {
+    "quality": {
+      "type": "object",
+      "required": ["expected", "matched", "passed", "missing"],
+      "properties": {
+        "expected": {"type": "integer", "minimum": 0},
+        "matched": {"type": "integer", "minimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "passed": {"type": "boolean"},
+        "missing": {"type": "array", "items": {"type": "string"}},
+        "forbidden": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": true
+    },
+    "caseResult": {
+      "type": "object",
+      "required": ["id", "status"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["measured", "failed", "approval_required"]},
+        "durationMs": {"type": "integer", "minimum": 0},
+        "quality": {"$ref": "#/$defs/quality"},
+        "metrics": {"type": "object"},
+        "trace": {"type": "array", "maxItems": 100}
+      },
+      "additionalProperties": true
+    }
+  },
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "mode": {"enum": ["OFF", "AUTO", "PREVIEW"]},
+    "providerCalls": {"type": "integer", "minimum": 0},
+    "failures": {"type": "integer", "minimum": 0},
+    "caseResults": {"type": "array", "items": {"$ref": "#/$defs/caseResult"}},
+    "metrics": {"type": "object"},
+    "quality": {"type": "object"},
+    "latency": {"type": "object"},
+    "trace": {"type": "object"},
+    "summary": {"type": "object"},
+    "passed": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

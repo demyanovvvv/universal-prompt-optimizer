@@ -16,6 +16,8 @@ jobs:
   verify:
     name: Verify
     timeout-minutes: 10
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -28,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
       - name: Set up Python
@@ -50,6 +52,9 @@ jobs:
 
       - name: Run strict evaluation contracts
         run: npm run test:evals:strict -- --output evals/results/latest.json
+
+      - name: Validate evaluation report artifact
+        run: npm run validate:eval-report -- evals/results/latest.json --kind deterministic
 
       - name: Upload evaluation report
         uses: actions/upload-artifact@v4
