@@ -1,7 +1,7 @@
 import * as assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
-import * as test from "node:test"
+import test from "node:test"
 
 import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"

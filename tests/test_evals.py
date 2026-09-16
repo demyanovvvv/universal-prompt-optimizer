@@ -10,6 +10,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class EvaluationFixtureTests(unittest.TestCase):
+    def test_documented_direct_runner_invocation_works(self):
+        completed = __import__("subprocess").run(
+            [__import__("sys").executable, "evals/run.py", "--strict-coverage"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
     def test_static_evaluation_matrix(self):
         result = run()
         self.assertTrue(result["passed"], result["errors"])
@@ -78,6 +88,18 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertIn("negative-ambiguous-model: contract.taskType has invalid value: invented", result["errors"])
         self.assertIn("negative-ambiguous-model: contract.profile has invalid value: invented", result["errors"])
 
+    def test_invalid_rubric_values_return_errors_instead_of_crashing(self):
+        with TemporaryDirectory() as raw:
+            path = Path(raw) / "cases.jsonl"
+            path.write_text(
+                '{"id":"one","model":"astra","request":"Explain this","expect":["answer"],"rubric":{"forbidden":"not-an-array","minScore":2}}\n',
+                encoding="utf-8",
+            )
+            result = run(path)
+
+        self.assertFalse(result["passed"])
+        self.assertTrue(any("rubric" in error for error in result["errors"]))
+
     def test_malformed_case_fields_return_errors_instead_of_crashing(self):
         with TemporaryDirectory() as raw:
             path = Path(raw) / "cases.jsonl"
@@ -117,6 +139,8 @@ class EvaluationFixtureTests(unittest.TestCase):
 
     def test_ci_runs_repository_verification(self):
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("PYTHONDONTWRITEBYTECODE: \"1\"", workflow)
+        self.assertIn('node-version: "22"', workflow)
         self.assertIn("npm test", workflow)
         self.assertIn("npm run verify:ts", workflow)
         self.assertIn("npm run test:registry", workflow)
@@ -128,14 +152,35 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertIn("windows-latest", workflow)
         self.assertIn("timeout-minutes: 10", workflow)
         self.assertIn("workflow_dispatch:", workflow)
+        self.assertFalse((ROOT / ".github" / "workflows" / "verify.yml").exists())
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         self.assertIn("strict safety coverage", readme)
         package = json.loads((ROOT / "package.json").read_text(encoding="utf-8"))
         self.assertEqual(package["scripts"]["test:evals:strict"], "python -B evals/run.py --strict-coverage")
         self.assertIn("npm run test:evals:strict", package["scripts"]["test"])
+        self.assertIn("evals/results/matrix.json", package["scripts"]["test:evals:mock"])
         testing = (ROOT / "TESTING.md").read_text(encoding="utf-8")
         self.assertIn("npm run test:evals:strict", testing)
         self.assertIn("bash ./verify.sh", testing)
+        self.assertIn("canonical `CI` GitHub Actions workflow", testing)
+
+    def test_runtime_typescript_config_uses_supported_node_resolution(self):
+        config = json.loads((ROOT / "tsconfig.test.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(config["compilerOptions"]["module"], "Node16")
+        self.assertEqual(config["compilerOptions"]["moduleResolution"], "Node16")
+
+    def test_provider_workflows_share_matrix_baseline_filename(self):
+        mock_workflow = (ROOT / ".github" / "workflows" / "provider-eval-mock.yml").read_text(encoding="utf-8")
+        real_workflow = (ROOT / ".github" / "workflows" / "provider-eval-real.yml").read_text(encoding="utf-8")
+
+        self.assertIn("--output evals/results/matrix.json", mock_workflow)
+        self.assertIn("path: evals/results/matrix.json", mock_workflow)
+        self.assertIn("evals/baseline/matrix.json", real_workflow)
+        self.assertIn("--output evals/results/matrix.json", real_workflow)
+        self.assertIn("evals/results/matrix.json --kind matrix", real_workflow)
+        self.assertIn("path: evals/results/matrix.json", real_workflow)
+        self.assertIn("evals/results/comparison.json --kind comparison", real_workflow)
 
 
 

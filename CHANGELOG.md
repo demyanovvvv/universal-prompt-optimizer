@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Added versioned deterministic/provider/matrix/comparison report schemas and a
+  dependency-free saved-report validator.
+- Added deterministic required/forbidden phrase rubrics, quality pass rates,
+  bounded token/cost metrics, p50/p95 latency, and regression gates for quality,
+  reliability, latency, cost, and fixture changes.
+- Added recursive report redaction, an explicit OpenAI-compatible opt-in adapter,
+  a local mock provider matrix command, and a manual mock-provider CI workflow.
+- Consolidated package verification into the canonical Node 22 CI workflow,
+  prevented Python bytecode from breaking archive hygiene, and aligned runtime
+  TypeScript tests with the Node16 module resolver.
 - Tightened OpenCode model routing to registry aliases only, preserving approved
   suffixes while refusing near-version and provider-name false matches.
 - Preserved all ordered text parts from multipart user messages and delayed

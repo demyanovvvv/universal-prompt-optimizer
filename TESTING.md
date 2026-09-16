@@ -1,6 +1,6 @@
 # v5.5 build verification
 
-Verified on **2026-09-11** after the lifecycle, CI, schema, conformance, and eval audit.
+Verified on **2026-09-16** after the lifecycle, CI, schema, conformance, and eval audit.
 
 ## Interactive installer
 
@@ -22,11 +22,14 @@ npm test
 npm run verify:ts
 npm run test:registry
 npm run test:evals:strict
+npm run test:evals:mock
 bash ./verify.sh
 ```
 
-GitHub Actions runs the same checks on Ubuntu and Windows. The Windows job uses
-the Git Bash available on the hosted runner for `verify.sh`.
+The canonical `CI` GitHub Actions workflow runs the same checks on Ubuntu and
+Windows. It sets `PYTHONDONTWRITEBYTECODE=1` before Python checks so archive
+hygiene remains deterministic. The Windows job uses the Git Bash available on
+the hosted runner for `verify.sh`.
 
 - Bash syntax: `install.sh`, `verify.sh`.
 - Python syntax: installer, Cursor hook, Gemini CLI hook.
@@ -37,6 +40,13 @@ the Git Bash available on the hosted runner for `verify.sh`.
 - Archive hygiene: no `__pycache__` / `.pyc`.
 - Stale runtime IDs from v5.2/v5.3 rejected.
 - All-eight-agent installation dry-run.
+
+## Provider evaluation workflow
+
+The manual mock workflow produces a validated `matrix.json` artifact without
+network access or secrets. The manual real-provider workflow accepts that
+artifact name and its workflow run ID as the baseline, then writes the candidate
+report to the same `matrix.json` path before comparing the selected mode.
 - Real project-scope installation for all eight agents.
 - Existing Prompt Optimizer JSON plus unrelated custom fields survives an update.
 - Cursor `scope=first`: first generation active, second inactive.

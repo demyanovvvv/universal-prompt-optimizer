@@ -57,12 +57,28 @@ Two provider reports can be compared by stable fixture ID:
 ```bash
 python -B -m evals.compare baseline.json candidate.json \
   --min-quality-pass-rate 0.9 \
+  --max-latency-increase 0.5 \
+  --max-cost-increase 0.2 \
+  --run-mode AUTO \
   --output evals/results/comparison.json
 ```
 
 The comparison fails if a previously passing case becomes failing or if the
-candidate quality pass rate falls below the selected threshold. Baseline and
-candidate reports must contain the same case IDs.
+candidate quality pass rate falls below the selected threshold, reliability
+changes, latency/cost thresholds, or fixture digests change. Added and removed
+case IDs are reported as warnings and fail the comparison by default. Use
+`--allow-fixture-change` only when the fixture update is intentional.
+Matrix reports require `--run-mode` so comparisons never accidentally mix OFF,
+AUTO, and PREVIEW outcomes.
+
+The manual real-provider workflow requires a validated baseline matrix artifact
+and the workflow run ID containing that artifact,
+compares the selected mode with quality/reliability/latency/cost gates, and
+uploads the comparison report. It is protected by the `provider-eval` environment;
+the normal CI workflow never receives provider credentials.
+The manual mock workflow produces the compatible `matrix.json` artifact. Use that
+artifact and its workflow run ID as the baseline inputs for a first real-provider
+comparison, or replace it with a reviewed baseline from a previous provider run.
 Each report also records whether strict coverage was enabled and the SHA-256 digest
 of the input JSONL bytes. This makes an uploaded artifact traceable to the exact
 fixture content without embedding that content in the report.
@@ -72,6 +88,45 @@ contract. The default remains schema-only coverage validation.
 The GitHub Actions workflow writes this JSON report to
 `evals/results/latest.json` and uploads it as a platform-specific artifact for
 14 days.
+
+## Report contracts and metrics
+
+Report contracts are versioned JSON Schemas in `evals/schemas/`. The dependency-free
+runtime validator is available through:
+
+```bash
+npm run validate:eval-report -- evals/results/latest.json --kind deterministic
+```
+
+Provider reports preserve `response`, optional `metrics`, quality scoring, and
+local monotonic latency. Supported provider metrics are `inputTokens`,
+`outputTokens`, `reasoningTokens`, `cachedTokens`, and `cost`. Missing metrics
+remain absent; they are never represented as zero. Reports expose metric totals,
+quality pass rate, and p50/p95 latency. Provider responses and errors are redacted
+for common bearer/API-key formats before they are written to a report.
+
+The optional provider envelope is:
+
+```json
+{
+  "response": {"text": "..."},
+  "metrics": {"inputTokens": 12, "outputTokens": 8, "cost": 0.01}
+}
+```
+
+`evals/http_provider.py` contains an explicit OpenAI-compatible adapter. The
+caller supplies endpoint and API key; the harness does not read credentials from
+the environment or filesystem. Network evaluation is therefore opt-in and is
+not part of normal CI.
+
+Run the complete local mock matrix without network access:
+
+```bash
+npm run test:evals:mock
+```
+
+The manual GitHub Actions workflow `.github/workflows/provider-eval-mock.yml`
+runs the same mock matrix and uploads a validated artifact. It uses no secrets.
 
 ## Executable decision contracts
 

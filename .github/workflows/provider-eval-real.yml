@@ -1,0 +1,103 @@
+name: Provider Eval Real
+
+on:
+  workflow_dispatch:
+    inputs:
+      endpoint:
+        description: "OpenAI-compatible chat completions endpoint"
+        required: false
+        default: "https://api.openai.com/v1/chat/completions"
+        type: string
+      baseline-artifact:
+        description: "Artifact name containing baseline matrix.json"
+        required: true
+        type: string
+      baseline-run-id:
+        description: "Workflow run ID containing the baseline artifact"
+        required: true
+        type: string
+      run-mode:
+        description: "Matrix mode to compare"
+        required: false
+        default: "AUTO"
+        type: choice
+        options:
+          - OFF
+          - AUTO
+          - PREVIEW
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  measured-provider:
+    name: Approved provider matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: provider-eval
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download baseline report
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.baseline-artifact }}
+          run-id: ${{ inputs.baseline-run-id }}
+          github-token: ${{ github.token }}
+          path: evals/baseline
+
+      - name: Validate baseline report
+        run: python -B -m evals.validate_report evals/baseline/matrix.json --kind matrix
+
+      - name: Run approved provider matrix
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ENDPOINT: ${{ inputs.endpoint }}
+        run: >-
+          python -B -m evals.provider
+          --cases evals/cases.jsonl
+          --mode MATRIX
+          --approve
+          --output evals/results/matrix.json
+          --provider python evals/openai_cli.py
+
+      - name: Validate provider report artifact
+        run: python -B -m evals.validate_report evals/results/matrix.json --kind matrix
+
+      - name: Compare provider report with baseline
+        run: >-
+          python -B -m evals.compare
+          evals/baseline/matrix.json
+          evals/results/matrix.json
+          --run-mode ${{ inputs.run-mode }}
+          --min-quality-pass-rate 0.9
+          --max-quality-drop 0.1
+          --max-latency-increase 0.5
+           --max-cost-increase 0.2
+           --output evals/results/comparison.json
+
+      - name: Validate comparison report artifact
+        run: python -B -m evals.validate_report evals/results/comparison.json --kind comparison
+
+      - name: Upload comparison report
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-eval-comparison
+          path: evals/results/comparison.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload provider report
+        uses: actions/upload-artifact@v4
+        with:
+          name: provider-eval-real
+          path: evals/results/matrix.json
+          if-no-files-found: error
+          retention-days: 14

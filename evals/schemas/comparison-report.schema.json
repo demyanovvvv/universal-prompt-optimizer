@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/comparison-report.schema.json",
+  "title": "Evaluation regression comparison",
+  "type": "object",
+  "required": ["passed"],
+  "properties": {
+    "passed": {"type": "boolean"},
+    "cases": {"type": "integer", "minimum": 0},
+    "regressions": {"type": "array", "items": {"type": "string"}},
+    "reliabilityRegressions": {"type": "array", "items": {"type": "string"}},
+    "latencyRegressions": {"type": "array", "items": {"type": "string"}},
+    "costRegressions": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/matrix-report.schema.json",
+  "title": "Provider matrix report",
+  "type": "object",
+  "required": ["schemaVersion", "mode", "modes", "providerCalls", "caseResults", "runs", "passed"],
+  "$defs": {
+    "caseResult": {
+      "type": "object",
+      "required": ["id", "results"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "results": {"type": "object"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "mode": {"const": "matrix"},
+    "modes": {"const": ["OFF", "AUTO", "PREVIEW"]},
+    "providerCalls": {"type": "integer", "minimum": 0},
+    "caseResults": {"type": "array", "items": {"$ref": "#/$defs/caseResult"}},
+    "runs": {"type": "object"},
+    "passed": {"type": "boolean"}
+  },
+  "additionalProperties": true
+}

@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.verify.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
+    "module": "Node16",
+    "moduleResolution": "Node16",
     "outDir": ".tmp-tests/opencode",
     "noEmit": false,
     "rootDir": "."

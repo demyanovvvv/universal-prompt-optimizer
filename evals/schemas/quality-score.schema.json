@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/quality-score.schema.json",
+  "title": "Deterministic response quality score",
+  "type": "object",
+  "required": ["expected", "matched", "passed", "missing"],
+  "properties": {
+    "expected": {"type": "integer", "minimum": 0},
+    "matched": {"type": "integer", "minimum": 0},
+    "score": {"type": "number", "minimum": 0, "maximum": 1},
+    "passed": {"type": "boolean"},
+    "missing": {"type": "array", "items": {"type": "string"}},
+    "forbidden": {"type": "array", "items": {"type": "string"}},
+    "fields": {"type": "object"},
+    "exact": {"type": "object"}
+  },
+  "allOf": [
+    {
+      "if": {"required": ["score"]},
+      "then": {"properties": {"score": {"minimum": 0, "maximum": 1}}}
+    }
+  ],
+  "additionalProperties": true
+}

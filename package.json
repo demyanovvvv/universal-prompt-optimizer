@@ -13,7 +13,9 @@
     "test:registry": "python -B tests/registry_conformance.py",
     "test:evals": "python -B evals/run.py",
     "test:evals:strict": "python -B evals/run.py --strict-coverage",
+    "test:evals:mock": "python -B -m evals.provider --cases evals/cases.jsonl --mode MATRIX --approve --output evals/results/matrix.json --provider python tests/provider_mock.py && python -B -m evals.validate_report evals/results/matrix.json --kind matrix",
     "compare:evals": "python -B -m evals.compare",
+    "validate:eval-report": "python -B -m evals.validate_report",
     "test": "python -B -m unittest discover -s tests -v && npm run test:evals:strict && npm run test:runtime"
   },
   "devDependencies": {
