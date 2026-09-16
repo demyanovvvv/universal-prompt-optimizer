@@ -39,6 +39,7 @@ class ReportContractTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
+                errors="replace",
             )
 
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
@@ -74,6 +75,7 @@ class ReportContractTests(unittest.TestCase):
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
+                errors="replace",
             )
             validation = subprocess.run(
                 [sys.executable, "-m", "evals.validate_report", str(report_path), "--kind", "matrix"],
