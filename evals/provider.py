@@ -11,6 +11,7 @@ import hashlib
 import json
 import math
 import subprocess
+import sys
 import tempfile
 import time
 from collections.abc import Callable, Iterable
@@ -458,7 +459,7 @@ def main() -> int:
             temporary.write(rendered)
             temporary_path = Path(temporary.name)
         temporary_path.replace(args.output)
-    print(rendered, end="")
+    sys.stdout.buffer.write(rendered.encode("utf-8"))
     return 0 if result["passed"] else 1
 
 
