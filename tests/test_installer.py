@@ -14,6 +14,29 @@ SPEC.loader.exec_module(installer)
 
 
 class InstallerTests(unittest.TestCase):
+    def test_legacy_quality_gate_preserves_explicit_gate_semantics(self):
+        self.assertFalse(installer.legacy_quality_gate_enabled("pass"))
+        self.assertTrue(installer.legacy_quality_gate_enabled("light"))
+        self.assertTrue(installer.legacy_quality_gate_enabled("full"))
+        self.assertTrue(installer.legacy_quality_gate_enabled("adaptive"))
+
+    def test_shared_config_keeps_explicit_quality_gate(self):
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "config.json"
+            installer.write_shared_config(path, "auto", "all", "skip", "full")
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8"))["qualityGate"], "full")
+
+    def test_runtime_ignores_merge_preserves_existing_entries(self):
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / ".gitignore"
+            path.write_text("user-rule\n", encoding="utf-8")
+            installer.merge_runtime_ignores(path, [".cursor/state.json"])
+            installer.merge_runtime_ignores(path, [".gemini/state.json"])
+            content = path.read_text(encoding="utf-8")
+            self.assertIn(".cursor/state.json", content)
+            self.assertIn(".gemini/state.json", content)
+            self.assertIn("user-rule\n", content)
+
     def test_remove_managed_block_preserves_user_text(self):
         with tempfile.TemporaryDirectory() as raw:
             path = Path(raw) / "AGENTS.md"

@@ -44,10 +44,10 @@ def config(cwd: Path):
             continue
         if (
             ("schemaVersion" in value and (not isinstance(value["schemaVersion"], int) or isinstance(value["schemaVersion"], bool) or value["schemaVersion"] != 1))
-            or ("behavior" in value and value["behavior"] not in {"auto", "preview", "off"})
-            or ("scope" in value and value["scope"] not in {"first", "all"})
+            or ("behavior" in value and (not isinstance(value["behavior"], str) or value["behavior"] not in {"auto", "preview", "off"}))
+            or ("scope" in value and (not isinstance(value["scope"], str) or value["scope"] not in {"first", "all"}))
             or ("qualityGate" in value and normalize_quality_gate(value["qualityGate"]) is None)
-            or ("unsupportedModel" in value and value["unsupportedModel"] not in {"skip", "generic"})
+            or ("unsupportedModel" in value and (not isinstance(value["unsupportedModel"], str) or value["unsupportedModel"] not in {"skip", "generic"}))
         ):
             invalid_config = True
             continue
@@ -188,9 +188,7 @@ def exact_profile_for(model: str | None) -> str | None:
     mid = model.lower().replace("_", "-")
     # Only map an unambiguous ID. Aliases such as auto/pro/flash are deliberately
     # not treated as Gemini 3.8 Flash because routing can resolve them elsewhere.
-    if re.search(r"(?:^|[/._-])gemini[-_. ]*3[.-]8(?:[^a-z0-9]+|.*)flash(?:$|[/._-])", mid):
-        return "gemini-3.8-flash"
-    if "gemini-3.8-flash" in mid:
+    if re.search(r"(?:^|/)gemini[-_. ]*3[.-]8[-_]flash(?:[-_](?:latest|\d[\w.-]*))?$", mid):
         return "gemini-3.8-flash"
     return None
 

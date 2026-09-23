@@ -23,7 +23,7 @@ export function normalizeQualityGate(value: unknown): QualityGate | undefined {
 export function qualityGateFromEnvironment(value: unknown): QualityGate | undefined {
   if (typeof value !== "string") return undefined
   if (["false", "off", "0"].includes(value.toLowerCase())) return "pass"
-  return normalizeQualityGate(value) ?? "adaptive"
+  return normalizeQualityGate(value)
 }
 
 export function readJson(path: string): JsonObject | undefined {
@@ -50,11 +50,11 @@ export function hasInvalidManagedFields(value: JsonObject | undefined): boolean 
   if (!value) return false
   return (
     ("schemaVersion" in value && (typeof value.schemaVersion !== "number" || value.schemaVersion !== 1))
-    || ("behavior" in value && !["auto", "preview", "off"].includes(String(value.behavior)))
-    || ("scope" in value && !["first", "all"].includes(String(value.scope)))
+    || ("behavior" in value && (typeof value.behavior !== "string" || !["auto", "preview", "off"].includes(value.behavior)))
+    || ("scope" in value && (typeof value.scope !== "string" || !["first", "all"].includes(value.scope)))
     || ("qualityGate" in value && normalizeQualityGate(value.qualityGate) === undefined)
-    || ("unsupportedModel" in value && !["skip", "generic"].includes(String(value.unsupportedModel)))
-    || ("mode" in value && !["first", "all", "off"].includes(String(value.mode)))
+    || ("unsupportedModel" in value && (typeof value.unsupportedModel !== "string" || !["skip", "generic"].includes(value.unsupportedModel)))
+    || ("mode" in value && (typeof value.mode !== "string" || !["first", "all", "off"].includes(value.mode)))
   )
 }
 
@@ -93,7 +93,7 @@ export function resolveSettings(
   const sharedProject = join(projectRoot, ".prompt-optimizer.json")
   const projectConfig = join(projectRoot, ".opencode", "prompt-optimizer.json")
   const paths = [sharedGlobal, globalConfig, sharedProject, projectConfig]
-  const invalidConfig = paths.some(path => hasInvalidJson(path) || hasInvalidManagedFields(readJson(path)))
+  let invalidConfig = paths.some(path => hasInvalidJson(path) || hasInvalidManagedFields(readJson(path)))
   const values = paths
     .map(path => ({ path, value: readJson(path) }))
     .filter((item): item is { path: string; value: JsonObject } => item.value !== undefined)
@@ -103,6 +103,12 @@ export function resolveSettings(
   const scopeEnv = env.PROMPT_OPTIMIZER_SCOPE
   const qualityEnv = env.PROMPT_OPTIMIZER_QUALITY_GATE
   const unsupportedEnv = env.PROMPT_OPTIMIZER_UNSUPPORTED_MODEL
+  if (
+    (behaviorEnv !== undefined && !validBehavior(behaviorEnv))
+    || (scopeEnv !== undefined && !validScope(scopeEnv))
+    || (qualityEnv !== undefined && qualityGateFromEnvironment(qualityEnv) === undefined)
+    || (unsupportedEnv !== undefined && !validUnsupportedModel(unsupportedEnv))
+  ) invalidConfig = true
   const highestFileSource: ConfigSource = values.some(item => item.path === projectConfig || item.path === sharedProject) ? "project" : values.some(item => item.path === globalConfig || item.path === sharedGlobal) ? "global" : "default"
   const optionsSource: ConfigSource = options && Object.keys(options).length ? "environment" : highestFileSource
   const behaviorResult = behaviorEnv !== undefined

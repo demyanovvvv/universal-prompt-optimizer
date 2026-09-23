@@ -6,6 +6,8 @@ Primary goals: higher first-pass success, fewer misunderstandings/scope errors, 
 
 ## v5.5 — verified lifecycle build
 
+The native hooks require Python 3.10 or newer.
+
 This release keeps the v5.4 runtime behavior and adds reproducible CI, lifecycle
 management, schema validation, conformance tests, and deterministic eval checks.
 

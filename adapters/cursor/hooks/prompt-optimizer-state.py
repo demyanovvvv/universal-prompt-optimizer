@@ -83,10 +83,10 @@ def config_has_invalid_managed_fields(value):
         return True
     return (
         ('schemaVersion' in value and (not isinstance(value['schemaVersion'], int) or isinstance(value['schemaVersion'], bool) or value['schemaVersion'] != 1))
-        or ('behavior' in value and value['behavior'] not in {'auto', 'preview', 'off'})
-        or ('scope' in value and value['scope'] not in {'first', 'all'})
+        or ('behavior' in value and (not isinstance(value['behavior'], str) or value['behavior'] not in {'auto', 'preview', 'off'}))
+        or ('scope' in value and (not isinstance(value['scope'], str) or value['scope'] not in {'first', 'all'}))
         or ('qualityGate' in value and normalize_quality_gate(value['qualityGate']) is None)
-        or ('unsupportedModel' in value and value['unsupportedModel'] not in {'skip', 'generic'})
+        or ('unsupportedModel' in value and (not isinstance(value['unsupportedModel'], str) or value['unsupportedModel'] not in {'skip', 'generic'}))
     )
 
 def read_cfg(root: Path):

@@ -6,6 +6,7 @@ import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
 import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
+import { hasInvalidManagedFields, qualityGateFromEnvironment } from "../adapters/opencode/plugin/config"
 import type { Settings } from "../adapters/opencode/plugin/types"
 
 const settings: Settings = {
@@ -31,6 +32,22 @@ test("model resolution preserves variant precedence and reports its source", () 
   assert.equal(resolveModel("anthropic", "claude-fable-5.10").profile, undefined)
   assert.equal(resolveModel("proxy", "glm-5.30").profile, undefined)
   assert.equal(resolveModel("astra", "unknown-model").profile, undefined)
+})
+
+test("managed config rejects non-string enum values", () => {
+  assert.equal(hasInvalidManagedFields({ behavior: ["off"] }), true)
+  assert.equal(hasInvalidManagedFields({ scope: { value: "all" } }), true)
+  assert.equal(hasInvalidManagedFields({ qualityGate: ["full"] }), true)
+})
+
+test("invalid quality gate environment values are not treated as adaptive", () => {
+  assert.equal(qualityGateFromEnvironment("not-a-gate"), undefined)
+  assert.equal(qualityGateFromEnvironment("off"), "pass")
+})
+
+test("task classifier recognizes Russian analysis requests", () => {
+  const result = classifyTask("Проанализируй проект, что нужно исправить, что улучшить, предложи улучшения")
+  assert.equal(result.type, "review")
 })
 
 test("prompt extraction preserves ordered text parts without duplicating message text", () => {

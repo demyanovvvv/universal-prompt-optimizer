@@ -278,7 +278,7 @@ def legacy_quality_gate_enabled(quality_gate: str | bool) -> bool:
 def configured_block(rel: str, behavior: str, scope: str, quality_gate: str | bool, unsupported: str) -> str:
     block=text(rel).rstrip()
     marker=END
-    q='on' if legacy_quality_gate_enabled(quality_gate) else 'off'
+    q = quality_gate if isinstance(quality_gate, str) else ('adaptive' if quality_gate else 'pass')
     line=f"\nConfigured by installer: `behavior={behavior}`, `scope={scope}`, `qualityGate={q}`, `unsupportedModel={unsupported}`. If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
     return block.replace(marker, line+marker)
 
@@ -287,11 +287,17 @@ def merge_runtime_ignores(path: Path, entries: list[str], *, backup=True, dry_ru
     current = path.read_text(encoding='utf-8') if path.exists() else ''
     if (IGNORE_START in current) != (IGNORE_END in current):
         fail(L(f"Incomplete runtime ignore block in {path}", f"Неполный блок runtime ignore в {path}"))
-    block = IGNORE_START + '\n' + '\n'.join(entries) + '\n' + IGNORE_END
+    existing_entries: list[str] = []
+    if IGNORE_START in current:
+        _, managed = current.split(IGNORE_START, 1)
+        managed, _ = managed.split(IGNORE_END, 1)
+        existing_entries = [line.strip() for line in managed.splitlines() if line.strip() and not line.strip().startswith('#')]
+    merged_entries = list(dict.fromkeys(existing_entries + entries))
+    block = IGNORE_START + '\n' + '\n'.join(merged_entries) + '\n' + IGNORE_END
     if IGNORE_START in current:
         before, rest = current.split(IGNORE_START, 1)
         _, after = rest.split(IGNORE_END, 1)
-        new = before.rstrip() + '\n\n' + block + after.lstrip('\n')
+        new = before.rstrip() + '\n\n' + block + '\n' + after.lstrip('\n')
         action = L('updated', 'обновлено')
     else:
         new = current.rstrip() + ('\n\n' if current.strip() else '') + block + '\n'
@@ -789,8 +795,7 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',root/'.opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(root/'.opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
-    legacy_gate = legacy_quality_gate_enabled(quality_gate)
-    out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,legacy_gate,backup=backup,dry_run=dry_run))
+    out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(root/'.opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(root/'.pi',backup=backup,dry_run=dry_run))
     if 'cursor' in selected: out.extend(install_cursor(root,python_bin,backup=backup,dry_run=dry_run))
@@ -819,8 +824,7 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',home/'.config/opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(home/'.config/opencode',backup=backup,dry_run=dry_run))
     if not auto: return out
-    legacy_gate = legacy_quality_gate_enabled(quality_gate)
-    out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,legacy_gate,backup=backup,dry_run=dry_run))
+    out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(home/'.config/opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(home/'.pi/agent',backup=backup,dry_run=dry_run))
     if 'claude' in selected: out.append(merge_block(home/'.claude/CLAUDE.md',configured_block('auto/CLAUDE.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))

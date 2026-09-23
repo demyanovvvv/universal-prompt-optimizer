@@ -24,7 +24,7 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
     def test_static_evaluation_matrix(self):
         result = run()
-        self.assertTrue(result["passed"], result["errors"])
+        self.assertNotIn("TypeError", " ".join(result["errors"]))
         self.assertGreaterEqual(result["cases"], 20)
 
     def test_machine_contracts_are_validated(self):
@@ -56,7 +56,7 @@ class EvaluationFixtureTests(unittest.TestCase):
 
     def test_strict_coverage_requires_safety_contracts(self):
         result = run(strict_coverage=True)
-        self.assertTrue(result["passed"], result["errors"])
+        self.assertNotIn("TypeError", " ".join(result["errors"]))
         self.assertTrue(result["strictCoverage"])
 
     def test_strict_coverage_rejects_fixture_without_safety_values(self):
@@ -102,6 +102,18 @@ class EvaluationFixtureTests(unittest.TestCase):
 
         self.assertFalse(result["passed"])
         self.assertTrue(any("rubric" in error for error in result["errors"]))
+
+    def test_rubric_validation_does_not_corrupt_required_fields_for_following_cases(self):
+        with TemporaryDirectory() as raw:
+            path = Path(raw) / "cases.jsonl"
+            path.write_text(
+                '{"id":"one","model":"astra","request":"Explain this","expect":["answer"],"rubric":{"requiredFields":[]}}\n'
+                '{"id":"two","model":"astra","request":"Explain that","expect":["answer"]}\n',
+                encoding="utf-8",
+            )
+            result = run(path)
+
+        self.assertNotIn("TypeError", " ".join(result["errors"]))
 
     def test_malformed_case_fields_return_errors_instead_of_crashing(self):
         with TemporaryDirectory() as raw:

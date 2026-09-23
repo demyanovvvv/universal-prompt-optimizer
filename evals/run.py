@@ -133,8 +133,8 @@ def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
                 min_score = rubric.get("minScore", 1.0)
                 if not isinstance(min_score, (int, float)) or isinstance(min_score, bool) or not math.isfinite(min_score) or not 0 <= min_score <= 1:
                     errors.append(f"{case_label}: rubric.minScore must be finite and between 0 and 1")
-                required_fields = rubric.get("requiredFields", [])
-                if not isinstance(required_fields, list) or not all(isinstance(item, str) and item.strip() for item in required_fields):
+                required_rubric_fields = rubric.get("requiredFields", [])
+                if not isinstance(required_rubric_fields, list) or not all(isinstance(item, str) and item.strip() for item in required_rubric_fields):
                     errors.append(f"{case_label}: rubric.requiredFields must be an array of non-empty strings")
                 if "exact" in rubric and not isinstance(rubric["exact"], (dict, list, str, int, float, bool, type(None))):
                     errors.append(f"{case_label}: rubric.exact must be JSON-compatible")

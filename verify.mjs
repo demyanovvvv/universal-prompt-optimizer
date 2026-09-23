@@ -38,7 +38,7 @@ function run(command, args, options = {}) {
 
 function checkPython() {
   for (const candidate of [process.env.PYTHON_BIN, "python3", "python", "py"].filter(Boolean)) {
-    const probe = run(candidate, ["-c", "import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)"]);
+    const probe = run(candidate, ["-c", "import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)"]);
     if (probe.status === 0) return candidate;
   }
   return null;

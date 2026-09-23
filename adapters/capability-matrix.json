@@ -30,16 +30,17 @@
       "exactModelRouting": true,
       "firstTurnRouting": "exact",
       "behaviors": ["AUTO", "PREVIEW", "OFF"],
-      "previewEnforcement": "host-tool",
+       "previewEnforcement": "advisory",
       "hostEnforcedApproval": false,
       "qualityGateSupport": "runtime-state",
       "sessionState": "process-local",
       "persistence": "none",
       "telemetry": "none",
       "mechanism": "Pi extension using before_agent_start with ctx.model and a preview tool",
-      "knownLimitations": [
-        "Non-interactive print/JSON modes stop for explicit confirmation instead of an interactive editor."
-      ]
+       "knownLimitations": [
+         "The preview tool provides confirmation UI but is not a host-enforced mutation barrier.",
+         "Non-interactive print/JSON modes stop for explicit confirmation instead of an interactive editor."
+       ]
     },
     {
       "id": "cursor",

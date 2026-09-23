@@ -93,9 +93,11 @@ maps to `pass`.
    `BeforeModel` observation from the second turn onward.
 
 **PREVIEW ran the task without asking.**
-PREVIEW is advisory on every adapter except Pi. The host must block mutating
-tools for it to be a hard barrier. Use Pi, or switch to AUTO and review prompts
-from your own git diff.
+PREVIEW is advisory on every adapter. The host must block mutating tools for it
+to be a hard barrier; the integrations can request confirmation but cannot
+guarantee that a model or host will not bypass an instruction or helper tool.
+Review the exact prompt and use host-level tool permissions when a hard barrier
+is required.
 
 **Cursor/Gemini state looks stale.**
 Runtime state files are bounded and expire after 30 days. Delete

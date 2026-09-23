@@ -30,7 +30,7 @@ LOCALAPPDATA_DIR="${LOCALAPPDATA:-}"
 
 is_tty() { [[ -t 0 && -t 1 ]]; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
-python_works() { [[ -n "$1" ]] && command_exists "$1" && "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; }
+python_works() { [[ -n "$1" ]] && command_exists "$1" && "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; }
 resolve_python() {
   if [[ -n "${PYTHON_BIN:-}" ]] && python_works "$PYTHON_BIN"; then return 0; fi
   for candidate in python3 python py; do

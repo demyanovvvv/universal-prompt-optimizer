@@ -11,8 +11,16 @@ import math
 import time
 from typing import Any
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 from urllib.parse import urlparse
+
+
+class _NoRedirectHandler(HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise RuntimeError("provider redirect rejected")
+
+
+_OPENER = build_opener(_NoRedirectHandler)
 
 
 def openai_compatible_provider(
@@ -54,7 +62,7 @@ def openai_compatible_provider(
     )
     for attempt in range(max_retries + 1):
         try:
-            with urlopen(request, timeout=timeout) as response:
+            with _OPENER.open(request, timeout=timeout) as response:
                 body = response.read(max_response_bytes + 1)
             break
         except HTTPError as exc:

@@ -21,7 +21,7 @@ bash -n install.sh verify.sh || fail "Ошибка синтаксиса Bash" "B
 ok "Синтаксис Bash" "Bash syntax"
 
 PYTHON_BIN="${PYTHON_BIN:-}"
-python_works(){ [[ -n "$1" ]] && command -v "$1" >/dev/null 2>&1 && "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; }
+python_works(){ [[ -n "$1" ]] && command -v "$1" >/dev/null 2>&1 && "$1" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)' >/dev/null 2>&1; }
 if ! python_works "$PYTHON_BIN"; then
   for candidate in python3 python py; do
     if python_works "$candidate"; then PYTHON_BIN="$candidate"; break; fi

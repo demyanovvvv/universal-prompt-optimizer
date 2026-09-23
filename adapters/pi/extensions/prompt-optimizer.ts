@@ -23,16 +23,15 @@ const hints: Array<[RegExp,string]> = [
   [/^claude-opus-5$/, "Claude Opus 5: complete task spec upfront; strong scope; keep required checks but suppress generic re-verification/verifier-agent scaffolding."],
   [/^claude-opus-4[.-]8$/, "Claude Opus 4.8: literal explicit scope propagation; require tool evidence when needed; concrete frontend design direction; review behavior/test failures without vague severity filtering."],
   [/claude.*sonnet.*5/, "Claude Sonnet 5: direct task, explicit affected scope/constraints/acceptance; literal propagation; concrete review failure criteria; no legacy thinking-budget/CoT."],
-  [/glm.*5[.-]3.*flash/, "GLM-5.3-Flash: autonomous framing; visual tasks use inspect->implement->render/run->compare->refine->verify."],
-  [/glm.*5[.-]3/, "GLM-5.3: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding."],
-  [/glm.*5[.-]2/, "GLM-5.2: inspect architecture/dependencies/interfaces; short plan if useful; implement and run relevant validation."],
+  [/glm.*5[.-]3(?:[-_]flash)?$/, "GLM-5.3 or GLM-5.3-Flash: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding."],
+  [/glm.*5[.-]2$/, "GLM-5.2: inspect architecture/dependencies/interfaces; short plan if useful; implement and run relevant validation."],
   [/deepseek.*4.*flash/, "DeepSeek V4 Flash: compact direct task/context/constraints/required verification/done; no manual CoT."],
   [/deepseek.*4.*pro/, "DeepSeek V4 Pro: complete objective/context/scope/non-negotiable constraints/acceptance; autonomous debug/validation; no manual CoT."],
   [/kimi.*k.*3/, "Kimi K3: compact objective/context/constraints/acceptance, end-to-end autonomy; reasoning history is harness-only."],
   [/muse.*spark.*1[.-]3/, "Muse Spark 1.3: why/inputs/objective/deliverable/structure/audience/quality, not tool choreography; genuine questions/consequential confirmation."],
   [/hy.*4.*preview/, "Hy4-preview: direct goal/boundaries/done/stop; suppress overthinking and repeated generic verification."],
   [/qwen.*3[.-]8.*max/, "Qwen3.8-Max: goal/context/constraints/acceptance + autonomous tool-feedback loop; no repeated manual decomposition; clear tools."],
-  [/gemini.*3[.-]8.*flash/, "Gemini 3.8 Flash: very concise/direct, PASS/LIGHT aggressively; long context first, task at end; avoid verbose legacy frameworks."],
+  [/gemini.*3[.-]8[-_]flash$/, "Gemini 3.8 Flash: very concise/direct, PASS/LIGHT aggressively; long context first, task at end; avoid verbose legacy frameworks."],
   [/grok.*4[.-]6/, "Grok 4.6: direct objective/context/constraints/evidence-tool policy/acceptance; native reasoning handles depth."],
   [/^(?:gpt-6-astra|astra)$/, "GPT-6 Astra: lean scope and explicit done boundary; for authorized implementation/bugfix work continue through implementation, inspection, fixes caused by the change, and affected validation; avoid needless approval, repo-wide reading, and generic over-testing."],
   [/^(?:gpt-6-sol|sol)$/, "GPT-6 Sol: preserve decisive context, hard constraints, approval boundaries and observable completion; infer routine intent and follow through on authorized work with proportionate validation."],
@@ -76,11 +75,11 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: Quality
     try {
       const parsed = JSON.parse(readFileSync(p,'utf8'))
       if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) { invalidConfig = true; continue }
-      if (("behavior" in parsed && !["auto","preview","off"].includes(parsed.behavior))
+       if (("behavior" in parsed && (typeof parsed.behavior !== "string" || !["auto","preview","off"].includes(parsed.behavior)))
         || ("schemaVersion" in parsed && (typeof parsed.schemaVersion !== 'number' || parsed.schemaVersion !== 1))
-        || ("scope" in parsed && !["first","all"].includes(parsed.scope))
+         || ("scope" in parsed && (typeof parsed.scope !== "string" || !["first","all"].includes(parsed.scope)))
          || ("qualityGate" in parsed && normalizeQualityGate(parsed.qualityGate) === undefined)
-        || ("unsupportedModel" in parsed && !["skip","generic"].includes(parsed.unsupportedModel))) {
+         || ("unsupportedModel" in parsed && (typeof parsed.unsupportedModel !== "string" || !["skip","generic"].includes(parsed.unsupportedModel)))) {
         invalidConfig = true
         continue
       }

@@ -7,6 +7,31 @@ from evals.http_provider import openai_compatible_provider
 
 
 class HttpProviderTests(unittest.TestCase):
+    def test_openai_compatible_provider_rejects_cross_origin_redirects(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                self.send_response(302)
+                self.send_header("Location", "http://other.example.test/collect")
+                self.end_headers()
+
+            def log_message(self, *args):
+                return
+
+        server = HTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            with self.assertRaisesRegex(RuntimeError, "redirect"):
+                openai_compatible_provider(
+                    f"http://127.0.0.1:{server.server_port}/chat",
+                    "test-key",
+                    {"model": "mock", "request": "hello"},
+                    max_retries=0,
+                )
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join()
     def test_openai_compatible_provider_rejects_non_local_http_endpoint(self):
         with self.assertRaisesRegex(ValueError, "HTTPS"):
             openai_compatible_provider(
