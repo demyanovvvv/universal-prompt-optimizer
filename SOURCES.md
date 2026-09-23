@@ -1,6 +1,6 @@
 # Source provenance — Universal Prompt Optimizer v5.5
 
-Checked: **2026-09-23** for the GPT-6 family; other profiles retain their per-file checked dates.
+Checked: **2026-09-23** for the GPT-6 family and Claude Opus 5.5 / Claude Code guidance; other profiles retain their per-file checked dates.
 
 Rule precedence inside profiles:
 
@@ -23,6 +23,10 @@ A benchmark/default runtime parameter is not silently converted into a universal
 - Claude Fable 5.1: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5-1
 - Claude Fable 5: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5
 - Claude Opus 5: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5
+- Claude Opus 5.5 model overview: https://platform.claude.com/docs/en/models/opus-5-5/overview
+- Claude Opus 5.5 changes: https://platform.claude.com/docs/en/models/opus-5-5/whats-new-opus-5-5
+- Claude Opus 5.5 playbook: https://claude.dev/blog/getting-the-most-out-of-opus-5-5/
+- Claude Code best practices: https://code.claude.com/docs/en/best-practices
 - Claude Opus 4.8: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-4-8
 - Claude Sonnet 5: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5
 

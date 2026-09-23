@@ -45,7 +45,7 @@ The v5.4 installer/runtime hardening remains included:
 - Gemini CLI no longer assumes Gemini 3.8 Flash. `BeforeModel` now observes the exact resolved `llm_request.model` without modifying the request; first-turn routing uses only explicit `GEMINI_MODEL` / `model.name` when visible and otherwise follows SKIP/GENERIC without guessing.
 - Stale v5.2/v5.3 runtime IDs were removed; version identity is centralized in `VERSION`.
 - `verify.sh` performs package self-checks for Bash/Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
-- 22 model profiles and 22 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
+- 23 model profiles and 23 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
 - Installation updates managed files atomically, preserves unrelated files in existing skill/command directories, rejects malformed managed JSON, and refuses to install inside the package source tree.
 
 ### Quick start
@@ -71,7 +71,7 @@ GLM-5.2; GLM-5.3; GLM-5.3-Flash.
 DeepSeek V4 Flash; DeepSeek V4 Pro.
 
 ### Anthropic / Claude
-Claude Fable 5.1; Fable 5; Opus 5; Opus 4.8; Sonnet 5.
+ Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.
 
 ### Other
 Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Grok 4.6.
@@ -295,7 +295,7 @@ The machine-readable adapter contract is `adapters/capability-matrix.json`.
 
 ## Manual model override skills
 
-`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
+`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
 
 ## Developer-practice principle
 

@@ -55,7 +55,7 @@ for p in root.rglob('*.jsonl'):
 # registry
 reg=json.loads((root/'.agents/skills/prompt-optimizer/references/model-registry.json').read_text(encoding='utf-8'))
 profiles=reg.get('profiles',[])
-if len(profiles)!=22: raise SystemExit(f'expected 22 profiles, got {len(profiles)}')
+if len(profiles)!=23: raise SystemExit(f'expected 23 profiles, got {len(profiles)}')
 ids=[x['id'] for x in profiles]
 if len(set(ids))!=len(ids): raise SystemExit('duplicate profile IDs')
 for x in profiles:
@@ -70,7 +70,7 @@ for x in profiles:
 skill_root=root/'.agents/skills'
 expected_overrides={f"prompt-{item['id'].replace('.', '-')}" for item in profiles}
 overrides=[p for p in skill_root.iterdir() if p.is_dir() and p.name in expected_overrides]
-if len(overrides)!=22: raise SystemExit(f'expected 22 override skills, got {len(overrides)}')
+if len(overrides)!=23: raise SystemExit(f'expected 23 override skills, got {len(overrides)}')
 for name in expected_overrides:
     if not (skill_root/name/'SKILL.md').is_file(): raise SystemExit(f'missing {skill_root/name}/SKILL.md')
 # OpenCode profile type must cover registry IDs
@@ -109,7 +109,7 @@ bad=[p for p in root.rglob('*') if p.name=='__pycache__' or p.suffix=='.pyc']
 if bad: raise SystemExit('archive hygiene: '+', '.join(map(str,bad)))
 print('OK')
 PY
-ok "JSON, registry, 22 профиля/override skills, версии и чистота пакета" "JSON, registry, 22 profiles/override skills, version alignment and package hygiene"
+ok "JSON, registry, 23 профиля/override skills, версии и чистота пакета" "JSON, registry, 23 profiles/override skills, version alignment and package hygiene"
 
 "$PYTHON_BIN" -B tests/registry_conformance.py
 ok "Согласованность registry и адаптеров" "Registry and adapter conformance"

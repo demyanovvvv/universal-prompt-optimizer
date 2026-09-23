@@ -16,3 +16,4 @@ Never ask for full/private reasoning or reasoning extraction.
 
 Official source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-fable-5
 Runtime: `harness-claude.md`.
+Shared guidance (conditional): `claude-family.md`.

@@ -6,7 +6,10 @@ Be literal and explicit about affected scope: if a rule applies to every compone
 
 For frontend/design, replace vague “modern/beautiful” instructions with concrete visual direction: palette, typography, spacing, radius, layout, surfaces, motion, and reference-derived constraints. Positive examples can steer output style better than long negative lists.
 
+For code review, preserve the user's reporting threshold; otherwise describe concrete reportable failures (incorrect behavior, test failure, violated requirement) rather than an ambiguous “only important bugs” filter that literal interpretation may over-apply.
+
 Do not encode adaptive-thinking/effort configuration in prompt text.
 
 Official source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-4-8
 Runtime: `harness-claude.md`.
+Shared guidance (conditional): `claude-family.md`.

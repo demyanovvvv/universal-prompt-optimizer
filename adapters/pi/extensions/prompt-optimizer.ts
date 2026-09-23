@@ -17,11 +17,12 @@ const BASE_ALWAYS = `Prompt Optimizer v5.5: quality gate is disabled; normalize 
 const PREVIEW = `PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call prompt_optimizer_preview exactly once for this user-turn. Read-only context resolution may happen first. After tool approval, execute the returned approved/edited prompt; do not preview again in the same user-turn.`
 
 const hints: Array<[RegExp,string]> = [
-  [/claude.*fable.*5[.-]1/, "Claude Fable 5.1: end-to-end; targeted edits; batch independent tools; scope/test guard; progress only when useful; Claude XML/examples/long-context ordering conditionally."],
+  [/claude.*fable.*5[.-]1/, "Claude Fable 5.1: end-to-end authorized work; targeted edits; batch independent tools; scope/test guard; preserve constraints in compaction; progress only when useful; Claude XML/examples/long-context ordering conditionally."],
   [/claude.*fable.*5/, "Claude Fable 5: objective/why/context/boundaries/acceptance; high autonomy; tool-grounded progress; conditional periodic spec verification on long runs; strong scope guard; no legacy microsteps/reasoning extraction."],
-  [/claude.*opus.*4[.-]8/, "Claude Opus 4.8: literal explicit scope propagation; require tool evidence when needed; concrete frontend design direction."],
-  [/claude.*opus.*5/, "Claude Opus 5: complete task spec upfront; strong scope; keep required checks but suppress generic re-verification/verifier-agent scaffolding."],
-  [/claude.*sonnet.*5/, "Claude Sonnet 5: direct task, explicit affected scope/constraints/acceptance; literal propagation; no legacy thinking-budget/CoT."],
+  [/^claude-opus-5[.-]5$/, "Claude Opus 5.5: complete task and observable done criteria; continue authorized reversible work; preserve required checks; use targeted evidence/review and mark unconfirmed findings; no generic think-hard scaffolding."],
+  [/^claude-opus-5$/, "Claude Opus 5: complete task spec upfront; strong scope; keep required checks but suppress generic re-verification/verifier-agent scaffolding."],
+  [/^claude-opus-4[.-]8$/, "Claude Opus 4.8: literal explicit scope propagation; require tool evidence when needed; concrete frontend design direction; review behavior/test failures without vague severity filtering."],
+  [/claude.*sonnet.*5/, "Claude Sonnet 5: direct task, explicit affected scope/constraints/acceptance; literal propagation; concrete review failure criteria; no legacy thinking-budget/CoT."],
   [/glm.*5[.-]3.*flash/, "GLM-5.3-Flash: autonomous framing; visual tasks use inspect->implement->render/run->compare->refine->verify."],
   [/glm.*5[.-]3/, "GLM-5.3: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding."],
   [/glm.*5[.-]2/, "GLM-5.2: inspect architecture/dependencies/interfaces; short plan if useful; implement and run relevant validation."],

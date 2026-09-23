@@ -6,7 +6,10 @@ Use a direct task with explicit affected scope, requirements, constraints and ac
 
 For frontend, give concrete visual direction/tokens/reference constraints rather than generic aesthetic adjectives. Explicitly steer response length/style only when the deliverable needs it. Trigger tools/search directly when evidence matters rather than adding “think harder”.
 
+For review, give concrete reportable failure criteria rather than an invented vague severity cutoff; preserve a threshold the user explicitly requested. Avoid fixed-cadence status messages unless progress updates need tuning.
+
 Do not use old manual thinking-budget/CoT scaffolding; adaptive thinking/effort is runtime.
 
 Official source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5
 Runtime: `harness-claude.md`.
+Shared guidance (conditional): `claude-family.md`.

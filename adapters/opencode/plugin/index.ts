@@ -13,7 +13,7 @@ type Profile =
   | "astra" | "sol" | "terra" | "luna" | "gpt-5.6-sol" | "gpt-5.6-luna"
   | "glm-5.2" | "glm-5.3" | "glm-5.3-flash"
   | "deepseek-v4-flash" | "deepseek-v4-pro"
-  | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
+  | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5.5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
   | "kimi-k3" | "muse-spark-1.3" | "hy4-preview" | "qwen3.8-max" | "gemini-3.8-flash" | "grok-4.6"
 
 type Settings = import("./types").Settings
@@ -32,6 +32,7 @@ const PROFILE_HINTS: Record<Profile, string> = {
   "deepseek-v4-pro": PROFILE_HINTS_DATA["deepseek-v4-pro"],
   "claude-fable-5.1": PROFILE_HINTS_DATA["claude-fable-5.1"],
   "claude-fable-5": PROFILE_HINTS_DATA["claude-fable-5"],
+  "claude-opus-5.5": PROFILE_HINTS_DATA["claude-opus-5.5"],
   "claude-opus-5": PROFILE_HINTS_DATA["claude-opus-5"],
   "claude-opus-4.8": PROFILE_HINTS_DATA["claude-opus-4.8"],
   "claude-sonnet-5": PROFILE_HINTS_DATA["claude-sonnet-5"],
@@ -70,6 +71,8 @@ const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "claude-fable-5.1": "claude-fable-5.1",
   "claude-fable-5-1": "claude-fable-5.1",
   "claude-fable-5": "claude-fable-5",
+  "claude-opus-5.5": "claude-opus-5.5",
+  "claude-opus-5-5": "claude-opus-5.5",
   "claude-opus-5": "claude-opus-5",
   "claude-opus-4.8": "claude-opus-4.8",
   "claude-opus-4-8": "claude-opus-4.8",

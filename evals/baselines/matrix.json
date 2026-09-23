@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "matrix-baseline",
-  "fingerprint": "ee052881e59ed267163e3e70f3b01b1eeb2f3cd4630f177370b2ec1057d244f1",
+  "fingerprint": "135fed77da0e494bd2bba7e45c27a189aee375babe496326b8b0a9bb8d175e28",
   "modes": [
     "OFF",
     "AUTO",
@@ -9,47 +9,47 @@
   ],
   "input": {
     "format": "jsonl",
-    "sha256": "58e1eebc18c3e18f922bea22cd401ba4828b27183d5609ebae7be4950be16bca"
+    "sha256": "b733e8137d84b7504e838009f00d83d4993f55cb688775a7d3348c29573fa1a9"
   },
-  "providerCalls": 141,
+  "providerCalls": 150,
   "failures": 0,
   "runs": {
     "OFF": {
-      "cases": 47,
-      "measured": 47,
+      "cases": 50,
+      "measured": 50,
       "approvalRequired": 0,
       "failed": 0
     },
     "AUTO": {
-      "cases": 47,
-      "measured": 47,
+      "cases": 50,
+      "measured": 50,
       "approvalRequired": 0,
       "failed": 0
     },
     "PREVIEW": {
-      "cases": 47,
-      "measured": 47,
+      "cases": 50,
+      "measured": 50,
       "approvalRequired": 0,
       "failed": 0
     }
   },
   "quality": {
     "OFF": {
-      "cases": 47,
-      "scored": 47,
-      "passed": 47,
+      "cases": 50,
+      "scored": 50,
+      "passed": 50,
       "passRate": 1.0
     },
     "AUTO": {
-      "cases": 47,
-      "scored": 47,
-      "passed": 47,
+      "cases": 50,
+      "scored": 50,
+      "passed": 50,
       "passRate": 1.0
     },
     "PREVIEW": {
-      "cases": 47,
-      "scored": 47,
-      "passed": 47,
+      "cases": 50,
+      "scored": 50,
+      "passed": 50,
       "passRate": 1.0
     }
   },
@@ -61,8 +61,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 47,
-        "outputTokens": 47,
+        "inputTokens": 50,
+        "outputTokens": 50,
         "cost": 0.0
       }
     },
@@ -73,8 +73,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 47,
-        "outputTokens": 47,
+        "inputTokens": 50,
+        "outputTokens": 50,
         "cost": 0.0
       }
     },
@@ -85,8 +85,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 47,
-        "outputTokens": 47,
+        "inputTokens": 50,
+        "outputTokens": 50,
         "cost": 0.0
       }
     }
@@ -465,6 +465,59 @@
       }
     },
     {
+      "id": "claude-fable-long-run-scope",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ab7b7c886d9ff437b7e68dbbf6adf754e9041b2c679c47cbc8fd90fd5b531b63",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ab7b7c886d9ff437b7e68dbbf6adf754e9041b2c679c47cbc8fd90fd5b531b63",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ab7b7c886d9ff437b7e68dbbf6adf754e9041b2c679c47cbc8fd90fd5b531b63",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "claude-opus48-literal",
       "modes": {
         "OFF": {
@@ -562,6 +615,112 @@
           },
           "qualityPassed": true,
           "responseSha256": "3a9bcc2e10adc97d931bea19fa9d062ab15f7a9bc2fc62da2abc5cc13173043c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-opus55-completion-evidence",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4beb8e13ddd640c6d942a236738e463dff5487f509c38e801d89f88f7d8d4aea",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4beb8e13ddd640c6d942a236738e463dff5487f509c38e801d89f88f7d8d4aea",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4beb8e13ddd640c6d942a236738e463dff5487f509c38e801d89f88f7d8d4aea",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-review-concrete-threshold",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "39df56b9cb225adb6e1012886f97f77e55a790ad6a4f85686e48b6f5da926364",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "39df56b9cb225adb6e1012886f97f77e55a790ad6a4f85686e48b6f5da926364",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "39df56b9cb225adb6e1012886f97f77e55a790ad6a4f85686e48b6f5da926364",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,

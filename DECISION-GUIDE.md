@@ -7,7 +7,7 @@ This is the decision guide for the three user-facing questions: **which agent**,
 
 ## 1. Which agent should I install for?
 
-All eight agents share the same skill bundle and 22 model profiles. They differ only
+All eight agents share the same skill bundle and 23 model profiles. They differ only
 in how reliably the adapter can (a) discover the exact active model before the
 first call and (b) enforce an approval barrier in PREVIEW.
 
@@ -86,7 +86,7 @@ maps to `pass`.
 **Nothing is being optimized.**
 1. Run `./install.sh --scope project --project . --doctor` and confirm `behavior`
    is not `off` and the expected adapter files are `current`.
-2. Check the model is one of the 22 profiles; an unknown model with
+2. Check the model is one of the 23 profiles; an unknown model with
    `unsupportedModel: skip` intentionally injects nothing. Set `generic` to opt
    into neutral context.
 3. For Gemini CLI first-turn routing, set `GEMINI_MODEL` or rely on the

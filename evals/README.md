@@ -17,6 +17,8 @@ Quality gates must be tested explicitly: PASS must leave an already-good prompt 
 
 For GPT-6 Astra, Sol, and Luna, also measure whether adaptive PASS adds zero optimizer context, authorized implementation continues through its observable completion boundary, safe local work avoids needless approval, explicit plan-only boundaries stop mutation, and skill guidance is loaded only for skill-related work. GPT-6 family guidance is a starting point based on behavior observed on Astra, so representative Sol/Luna workloads should be evaluated separately.
 
+For Claude profiles, measure model-specific completion and review behavior separately: Fable profiles should preserve bounded autonomous execution and evidence-grounded progress on long runs; Opus profiles should not receive generic verification scaffolding; Opus 4.8 and Sonnet 5 should preserve explicit scope and concrete review thresholds; Opus 5.5 should preserve observable done criteria, targeted evidence, and bounded scope.
+
 Developer guidance is a constraint on the optimizer, not an excuse to override the user's/project's explicit rules.
 
 ## Deterministic CI check

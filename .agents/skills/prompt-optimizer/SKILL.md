@@ -20,7 +20,7 @@ Apply, in order: system/safety requirements; explicit user instructions and appr
 1. Resolve the behavior supplied by the harness: `AUTO` executes silently, `PREVIEW` requires approval, and `OFF` skips automatic preflight. Manual invocation still works when automatic behavior is off.
 2. Respect scope `all` or `first` as supplied by the harness.
 3. Resolve the model from the first reliable source: explicit override, resolved runtime ID, exact model named by the user, configured adapter profile, then neutral fallback if enabled. Never guess between materially different variants.
-4. Read only the matching profile below. Read a family profile only when the selected model profile points to it and its conditional guidance is relevant. Runtime settings belong in the matching `harness-*.md` note and are not prompt text.
+4. Read only the matching profile below. For Claude, read `references/claude-family.md` only when its conditional guidance is relevant; other family profiles are likewise conditional. Runtime settings belong in the matching `harness-*.md` note and are not prompt text.
 5. Select `PASS`, `LIGHT`, or `FULL`. `qualityGate=pass` (or legacy `false`) forces the leanest model-appropriate normalization; the other values use adaptive selection as configured.
 
 Profiles:
@@ -38,6 +38,7 @@ Profiles:
 - DeepSeek V4 Pro -> `references/deepseek-v4-pro.md`
 - Claude Fable 5.1 -> `references/claude-fable-5.1.md`
 - Claude Fable 5 -> `references/claude-fable-5.md`
+- Claude Opus 5.5 -> `references/claude-opus-5.5.md`
 - Claude Opus 5 -> `references/claude-opus-5.md`
 - Claude Opus 4.8 -> `references/claude-opus-4.8.md`
 - Claude Sonnet 5 -> `references/claude-sonnet-5.md`

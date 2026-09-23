@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added the Claude Opus 5.5 profile, exact `claude-opus-5-5` routing, Claude Code best-practice guidance, and separate Opus 5.5 manual/OpenCode overrides while preserving Opus 5 compatibility.
+
 - Added GPT-6 Sol and GPT-6 Luna as the standard `sol`/`luna` profiles and
   updated their prompting guidance from the GPT-6 family guide. Preserved
   versioned GPT-5.6 Sol/Luna profiles and aliases for compatibility, added

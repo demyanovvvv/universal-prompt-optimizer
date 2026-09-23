@@ -117,6 +117,15 @@
       "provenance": "official-model"
     },
     {
+      "id": "claude-opus-5.5",
+      "aliases": [
+        "claude-opus-5.5",
+        "claude-opus-5-5"
+      ],
+      "file": "claude-opus-5.5.md",
+      "provenance": "official-model+official-playbook"
+    },
+    {
       "id": "claude-opus-5",
       "aliases": [
         "claude-opus-5"

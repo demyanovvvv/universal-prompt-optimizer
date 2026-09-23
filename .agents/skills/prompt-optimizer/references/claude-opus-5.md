@@ -12,3 +12,4 @@ Use subagents only for sizeable genuinely independent work; do not use them as r
 
 Official source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-5
 Runtime: `harness-claude.md`.
+Shared guidance (conditional): `claude-family.md`. Required project checks and concrete user-requested review still apply; do not add generic review loops.

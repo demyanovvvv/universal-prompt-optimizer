@@ -18,11 +18,16 @@ const routes = [
   ["gpt-5.6-luna", "gpt-5.6-luna", "GPT-5.6 Luna"],
   ["gpt-5.6-terra", "terra", "GPT-5.6 Terra"],
   ["terra", "terra", "GPT-5.6 Terra"],
+  ["claude-opus-5-5", "claude-opus-5.5", "Claude Opus 5.5"],
+  ["claude-opus-5.5", "claude-opus-5.5", "Claude Opus 5.5"],
+  ["claude-opus-5", "claude-opus-5", "Claude Opus 5"],
+  ["claude-opus-4.8", "claude-opus-4.8", "Claude Opus 4.8"],
 ] as const
 
 const unsupported = [
   "gpt-6", "gpt-6-terra", "gpt-60-sol", "gpt-5.60-sol",
   "gpt-6-sol-extra", "gpt-6-sol-2026", "gpt-5.6-luna-extra", "solvent", "unknown-model",
+  "claude-opus-5.50", "claude-opus-5-50", "claude-opus-5-2026", "claude-opus-5.5-extra",
 ]
 
 test("OpenCode routes GPT generations separately and injects the matching profile", async () => {
