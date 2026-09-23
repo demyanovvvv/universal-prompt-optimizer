@@ -26,9 +26,11 @@ Apply, in order: system/safety requirements; explicit user instructions and appr
 Profiles:
 
 - GPT-6 Astra -> `references/gpt-6-astra.md`
-- GPT-5.6 Sol / `gpt-5.6` -> `references/gpt-5.6-sol.md`
-- GPT-5.6 Terra -> `references/gpt-5.6-terra.md`
-- GPT-5.6 Luna -> `references/gpt-5.6-luna.md`
+- GPT-6 Sol / `sol` -> `references/gpt-6-sol.md`
+- GPT-6 Luna / `luna` -> `references/gpt-6-luna.md`
+- GPT-5.6 Terra / `terra` -> `references/gpt-5.6-terra.md`
+- GPT-5.6 Sol / `gpt-5.6-sol` / `gpt-5.6` -> `references/gpt-5.6-sol.md`
+- GPT-5.6 Luna / `gpt-5.6-luna` -> `references/gpt-5.6-luna.md`
 - GLM-5.2 -> `references/glm-5.2.md`
 - GLM-5.3 -> `references/glm-5.3.md`
 - GLM-5.3-Flash -> `references/glm-5.3-flash.md`
@@ -46,6 +48,8 @@ Profiles:
 - Gemini 3.8 Flash -> `references/gemini-3.8-flash.md`
 - Grok 4.6 -> `references/grok-4.6.md`
 - Unknown -> `references/generic-agent.md` only when neutral fallback is enabled.
+
+Short overrides `sol` and `luna` select GPT-6. Explicit GPT-5.6 IDs select their versioned profiles; never infer a GPT-6 variant from bare `gpt-6`.
 
 Prefer official model-specific guidance over official family guidance, API/harness documentation, and explicitly marked heuristics, in that order.
 

@@ -55,7 +55,7 @@ for p in root.rglob('*.jsonl'):
 # registry
 reg=json.loads((root/'.agents/skills/prompt-optimizer/references/model-registry.json').read_text(encoding='utf-8'))
 profiles=reg.get('profiles',[])
-if len(profiles)!=20: raise SystemExit(f'expected 20 profiles, got {len(profiles)}')
+if len(profiles)!=22: raise SystemExit(f'expected 22 profiles, got {len(profiles)}')
 ids=[x['id'] for x in profiles]
 if len(set(ids))!=len(ids): raise SystemExit('duplicate profile IDs')
 for x in profiles:
@@ -70,7 +70,7 @@ for x in profiles:
 skill_root=root/'.agents/skills'
 expected_overrides={f"prompt-{item['id'].replace('.', '-')}" for item in profiles}
 overrides=[p for p in skill_root.iterdir() if p.is_dir() and p.name in expected_overrides]
-if len(overrides)!=20: raise SystemExit(f'expected 20 override skills, got {len(overrides)}')
+if len(overrides)!=22: raise SystemExit(f'expected 22 override skills, got {len(overrides)}')
 for name in expected_overrides:
     if not (skill_root/name/'SKILL.md').is_file(): raise SystemExit(f'missing {skill_root/name}/SKILL.md')
 # OpenCode profile type must cover registry IDs
@@ -109,7 +109,7 @@ bad=[p for p in root.rglob('*') if p.name=='__pycache__' or p.suffix=='.pyc']
 if bad: raise SystemExit('archive hygiene: '+', '.join(map(str,bad)))
 print('OK')
 PY
-ok "JSON, registry, 20 профилей/override skills, версии и чистота пакета" "JSON, registry, 20 profiles/override skills, version alignment and package hygiene"
+ok "JSON, registry, 22 профиля/override skills, версии и чистота пакета" "JSON, registry, 22 profiles/override skills, version alignment and package hygiene"
 
 "$PYTHON_BIN" -B tests/registry_conformance.py
 ok "Согласованность registry и адаптеров" "Registry and adapter conformance"
@@ -130,7 +130,7 @@ if [[ -n "$TSC_BIN" ]]; then
   "$TSC_BIN" -p tsconfig.verify.json
   ok "Синтаксис TypeScript" "TypeScript syntax"
   "$TSC_BIN" -p tsconfig.test.json
-   node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js >/dev/null
+   node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js .tmp-tests/opencode/tests/model-routing.test.js >/dev/null
   ok "Поведенческие тесты OpenCode runtime" "OpenCode runtime behavior tests"
 else
   warn "tsc не найден — синтаксис TypeScript не проверен локально" "tsc not found — TypeScript syntax check skipped"

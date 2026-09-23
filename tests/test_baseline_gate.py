@@ -53,7 +53,8 @@ class BaselineRoundTripTests(unittest.TestCase):
         self.assertEqual(validate_baseline(data), [])
         self.assertEqual(data["kind"], "matrix-baseline")
         self.assertEqual(data["modes"], ["OFF", "AUTO", "PREVIEW"])
-        self.assertEqual(len(data["cases"]), 40)
+        expected_cases = sum(1 for line in (ROOT / "evals" / "cases.jsonl").read_text(encoding="utf-8").splitlines() if line.strip())
+        self.assertEqual(len(data["cases"]), expected_cases)
         ids = [case["id"] for case in data["cases"]]
         self.assertEqual(len(ids), len(set(ids)))
         self.assertEqual(ids, sorted(ids))

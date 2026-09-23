@@ -7,9 +7,11 @@ export const PREVIEW = `PREVIEW MODE. Before any mutating or external action, bu
 
 export const PROFILE_HINTS: Record<Profile, string> = {
   astra: "GPT-6 Astra: keep prompts lean and narrowly scoped. For authorized implementation/bugfix work, continue through implementation, inspection, fixes caused by the change, and affected validation until done or concretely blocked; avoid needless approval pauses, repo-wide reading, and generic over-testing.",
-  sol: "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools.",
+  sol: "GPT-6 Sol: preserve decisive context, hard constraints, approval boundaries, and observable completion; infer routine intent and follow through on authorized work with proportionate validation.",
   terra: "GPT-5.6 Terra: lean complete brief, one instruction once, autonomy/approval boundaries, focused tools, proportionate validation.",
-  luna: "GPT-5.6 Luna: leanest bounded GPT-5.6 brief without losing correctness-critical context.",
+  luna: "GPT-6 Luna: compact bounded brief with one outcome, decisive context, hard constraints, exact output shape when needed, and correctness-critical validation.",
+  "gpt-5.6-sol": "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools.",
+  "gpt-5.6-luna": "GPT-5.6 Luna: leanest bounded GPT-5.6 brief without losing correctness-critical context.",
   "glm-5.2": "GLM-5.2: direct objective/context/constraints/acceptance; avoid redundant planning and manual reasoning scaffolding.",
   "glm-5.3": "GLM-5.3: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding.",
   "glm-5.3-flash": "GLM-5.3 Flash: compact direct task/context/constraints/acceptance; use concise tool-oriented instructions.",

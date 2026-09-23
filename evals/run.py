@@ -160,10 +160,12 @@ def run(path: Path = CASES, strict_coverage: bool = False) -> dict:
         model = case["model"]
         if not isinstance(model, str) or not model.strip():
             errors.append(f"{case_label}: model must be a non-empty string")
-        elif model not in known_models and model not in known_aliases and model not in {"deepseek-v4"}:
+        elif model not in known_models and model not in known_aliases and model not in {"deepseek-v4", "gpt-6"}:
             errors.append(f"{case_label}: model is not in registry or explicit ambiguous-model set: {model}")
         elif model == "deepseek-v4" and not any("guess" in str(item).lower() or "flash" in str(item).lower() for item in case["expect"]):
             errors.append(f"{case_label}: ambiguous DeepSeek case must assert no variant guess")
+        elif model == "gpt-6" and not any("never guess" in str(item).lower() or "no variant guess" in str(item).lower() for item in case["expect"]):
+            errors.append(f"{case_label}: ambiguous GPT-6 case must assert no variant guess")
 
         case_results.append({
             "id": case_id,

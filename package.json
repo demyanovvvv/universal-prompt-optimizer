@@ -11,7 +11,7 @@
     "verify:bash": "bash ./verify.sh",
     "verify:ts": "tsc -p tsconfig.verify.json",
     "test:adapters": "python -B tests/adapter_conformance.py",
-    "test:runtime": "tsc -p tsconfig.test.json && node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js",
+    "test:runtime": "tsc -p tsconfig.test.json && node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js .tmp-tests/opencode/tests/model-routing.test.js",
     "test:registry": "python -B tests/registry_conformance.py",
     "test:evals": "python -B evals/run.py",
     "test:evals:strict": "python -B evals/run.py --strict-coverage",

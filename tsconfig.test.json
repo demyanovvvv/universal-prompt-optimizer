@@ -11,6 +11,7 @@
     "types/host-modules.d.ts",
     "adapters/opencode/plugin/*.ts",
     "tests/opencode-runtime.test.ts",
-    "tests/eval-contract.test.ts"
+    "tests/eval-contract.test.ts",
+    "tests/model-routing.test.ts"
   ]
 }

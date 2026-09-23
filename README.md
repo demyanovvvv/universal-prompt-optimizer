@@ -21,7 +21,7 @@ management, schema validation, conformance tests, and deterministic eval checks.
   enforces strict safety coverage for consequential, FULL-gate, and skip-action
   evaluation contracts.
 - Cursor and Gemini runtime state is bounded and entries expire after 30 days.
-- `evals/run.py` validates 40 deterministic fixtures, including Astra persistence,
+- `evals/run.py` validates 47 deterministic fixtures, including GPT-6 Sol/Luna routing, Astra persistence,
   progressive-disclosure, ambiguous-model,
   prompt-injection, destructive-action, and secret-preservation cases.
 - OpenCode now has a separate native TUI plugin. It is invisible by default apart
@@ -45,7 +45,7 @@ The v5.4 installer/runtime hardening remains included:
 - Gemini CLI no longer assumes Gemini 3.8 Flash. `BeforeModel` now observes the exact resolved `llm_request.model` without modifying the request; first-turn routing uses only explicit `GEMINI_MODEL` / `model.name` when visible and otherwise follows SKIP/GENERIC without guessing.
 - Stale v5.2/v5.3 runtime IDs were removed; version identity is centralized in `VERSION`.
 - `verify.sh` performs package self-checks for Bash/Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
-- 20 model profiles and 20 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
+- 22 model profiles and 22 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
 - Installation updates managed files atomically, preserves unrelated files in existing skill/command directories, rejects malformed managed JSON, and refuses to install inside the package source tree.
 
 ### Quick start
@@ -60,7 +60,9 @@ chmod +x install.sh verify.sh
 ## Models
 
 ### OpenAI
-GPT-6 Astra; GPT-5.6 Sol (`gpt-5.6` alias), Terra, Luna.
+GPT-6 Astra, Sol, and Luna (`gpt-6-sol`, `gpt-6-luna`; short aliases `sol`, `luna`). GPT-5.6 Terra remains `terra`; legacy GPT-5.6 Sol/Luna remain available as `gpt-5.6-sol` / `gpt-5.6-luna`, with `gpt-5.6` preserved as a GPT-5.6 Sol alias.
+
+**Migration:** `prompt-sol` / `prompt-luna` and session overrides `sol` / `luna` now select GPT-6. Use `prompt-gpt-5-6-sol` / `prompt-gpt-5-6-luna` or versioned profile overrides for GPT-5.6. Bare `gpt-6` is ambiguous and follows the configured unsupported-model policy. These profiles shape prompts; they do not switch the runtime model.
 
 ### Z.ai / GLM
 GLM-5.2; GLM-5.3; GLM-5.3-Flash.
@@ -293,7 +295,7 @@ The machine-readable adapter contract is `adapters/capability-matrix.json`.
 
 ## Manual model override skills
 
-`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
+`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
 
 ## Developer-practice principle
 

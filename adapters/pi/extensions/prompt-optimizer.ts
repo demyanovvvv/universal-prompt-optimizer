@@ -33,10 +33,12 @@ const hints: Array<[RegExp,string]> = [
   [/qwen.*3[.-]8.*max/, "Qwen3.8-Max: goal/context/constraints/acceptance + autonomous tool-feedback loop; no repeated manual decomposition; clear tools."],
   [/gemini.*3[.-]8.*flash/, "Gemini 3.8 Flash: very concise/direct, PASS/LIGHT aggressively; long context first, task at end; avoid verbose legacy frameworks."],
   [/grok.*4[.-]6/, "Grok 4.6: direct objective/context/constraints/evidence-tool policy/acceptance; native reasoning handles depth."],
-  [/gpt.*6.*astra|(^|[\/_-])astra($|[\/_-])/, "GPT-6 Astra: lean scope and explicit done boundary; for authorized implementation/bugfix work continue through implementation, inspection, fixes caused by the change, and affected validation; avoid needless approval, repo-wide reading, and generic over-testing."],
-  [/gpt.*5[.-]6.*terra|(^|[\/_-])terra($|[\/_-])/, "GPT-5.6 Terra: lean complete brief, one instruction once, autonomy/approval boundaries, focused tools, proportionate validation."],
-  [/gpt.*5[.-]6.*luna|(^|[\/_-])luna($|[\/_-])/, "GPT-5.6 Luna: leanest bounded GPT-5.6 brief without losing correctness-critical context."],
-  [/gpt.*5[.-]6.*sol|gpt-5[.-]6|(^|[\/_-])sol($|[\/_-])/, "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools."],
+  [/^(?:gpt-6-astra|astra)$/, "GPT-6 Astra: lean scope and explicit done boundary; for authorized implementation/bugfix work continue through implementation, inspection, fixes caused by the change, and affected validation; avoid needless approval, repo-wide reading, and generic over-testing."],
+  [/^(?:gpt-6-sol|sol)$/, "GPT-6 Sol: preserve decisive context, hard constraints, approval boundaries and observable completion; infer routine intent and follow through on authorized work with proportionate validation."],
+  [/^(?:gpt-6-luna|luna)$/, "GPT-6 Luna: compact bounded brief with one outcome, decisive context, hard constraints, exact output shape when needed, and correctness-critical validation."],
+  [/^gpt-5\.6-luna$/, "GPT-5.6 Luna: leanest bounded GPT-5.6 brief without losing correctness-critical context."],
+  [/^gpt-5\.6(?:-sol)?$/, "GPT-5.6 Sol: lean outcome-focused brief, decisive context, autonomy/approval boundaries, success criteria, focused tools."],
+  [/^(?:gpt-5\.6-terra|terra)$/, "GPT-5.6 Terra: lean complete brief, one instruction once, autonomy/approval boundaries, focused tools, proportionate validation."],
 ]
 
 function normalizeQualityGate(value: any): QualityGate | undefined {
@@ -92,7 +94,9 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: Quality
   }
 }
 function hintFor(model:any): string | undefined {
-  const id = `${model?.provider ?? ""}/${model?.id ?? ""}`.toLowerCase().replace(/_/g,'-')
+  // Provider names are metadata, not model aliases. Matching them would make a
+  // provider named "sol" or "luna" activate the wrong profile.
+  const id = `${model?.id ?? ""}`.trim().toLowerCase().replace(/_/g,'-').split('/').at(-1)!.replace(/-latest$/, '')
   for (const [re,h] of hints) if (re.test(id)) return h
   return undefined
 }

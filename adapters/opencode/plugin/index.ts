@@ -10,7 +10,7 @@ import type { ModelResolution, SessionOverride, SessionState } from "./types"
 // Keep the registry-facing union in this entrypoint so the existing conformance
 // check can detect missing OpenCode profile routing without importing TypeScript.
 type Profile =
-  | "astra" | "sol" | "terra" | "luna"
+  | "astra" | "sol" | "terra" | "luna" | "gpt-5.6-sol" | "gpt-5.6-luna"
   | "glm-5.2" | "glm-5.3" | "glm-5.3-flash"
   | "deepseek-v4-flash" | "deepseek-v4-pro"
   | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
@@ -23,6 +23,8 @@ const PROFILE_HINTS: Record<Profile, string> = {
   sol: PROFILE_HINTS_DATA.sol,
   terra: PROFILE_HINTS_DATA.terra,
   luna: PROFILE_HINTS_DATA.luna,
+  "gpt-5.6-sol": PROFILE_HINTS_DATA["gpt-5.6-sol"],
+  "gpt-5.6-luna": PROFILE_HINTS_DATA["gpt-5.6-luna"],
   "glm-5.2": PROFILE_HINTS_DATA["glm-5.2"],
   "glm-5.3": PROFILE_HINTS_DATA["glm-5.3"],
   "glm-5.3-flash": PROFILE_HINTS_DATA["glm-5.3-flash"],
@@ -47,13 +49,15 @@ const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using 
 const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "gpt-6-astra": "astra",
   astra: "astra",
-  "gpt-5.6": "sol",
-  "gpt-5.6-sol": "sol",
+  "gpt-6-sol": "sol",
   sol: "sol",
+  "gpt-6-luna": "luna",
+  luna: "luna",
+  "gpt-5.6": "gpt-5.6-sol",
+  "gpt-5.6-sol": "gpt-5.6-sol",
+  "gpt-5.6-luna": "gpt-5.6-luna",
   "gpt-5.6-terra": "terra",
   terra: "terra",
-  "gpt-5.6-luna": "luna",
-  luna: "luna",
   "glm-5.2": "glm-5.2",
   "glm-5-2": "glm-5.2",
   "glm-5.3": "glm-5.3",

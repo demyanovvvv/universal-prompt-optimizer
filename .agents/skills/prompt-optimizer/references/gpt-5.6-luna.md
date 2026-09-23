@@ -1,4 +1,4 @@
-# GPT-5.6 Luna prompt profile
+# GPT-5.6 Luna prompt profile (legacy versioned profile)
 
 **Provenance:** official GPT-5.6 family guidance + official Luna positioning (efficient/high-volume). The strongest prompt-compression bias here is an operational heuristic. Checked 2026-09-06.
 

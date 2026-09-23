@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "matrix-baseline",
-  "fingerprint": "e7f6e553e4bbb0d2404bc0a7b66a8470b7e471156609c24b970eea3d9dff371d",
+  "fingerprint": "ee052881e59ed267163e3e70f3b01b1eeb2f3cd4630f177370b2ec1057d244f1",
   "modes": [
     "OFF",
     "AUTO",
@@ -9,47 +9,47 @@
   ],
   "input": {
     "format": "jsonl",
-    "sha256": "80f5424ed3860735aca54d8b944fd4974b2c45b7f7fd91176b8d188b34c8aefa"
+    "sha256": "58e1eebc18c3e18f922bea22cd401ba4828b27183d5609ebae7be4950be16bca"
   },
-  "providerCalls": 120,
+  "providerCalls": 141,
   "failures": 0,
   "runs": {
     "OFF": {
-      "cases": 40,
-      "measured": 40,
+      "cases": 47,
+      "measured": 47,
       "approvalRequired": 0,
       "failed": 0
     },
     "AUTO": {
-      "cases": 40,
-      "measured": 40,
+      "cases": 47,
+      "measured": 47,
       "approvalRequired": 0,
       "failed": 0
     },
     "PREVIEW": {
-      "cases": 40,
-      "measured": 40,
+      "cases": 47,
+      "measured": 47,
       "approvalRequired": 0,
       "failed": 0
     }
   },
   "quality": {
     "OFF": {
-      "cases": 40,
-      "scored": 40,
-      "passed": 40,
+      "cases": 47,
+      "scored": 47,
+      "passed": 47,
       "passRate": 1.0
     },
     "AUTO": {
-      "cases": 40,
-      "scored": 40,
-      "passed": 40,
+      "cases": 47,
+      "scored": 47,
+      "passed": 47,
       "passRate": 1.0
     },
     "PREVIEW": {
-      "cases": 40,
-      "scored": 40,
-      "passed": 40,
+      "cases": 47,
+      "scored": 47,
+      "passed": 47,
       "passRate": 1.0
     }
   },
@@ -61,8 +61,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 40,
-        "outputTokens": 40,
+        "inputTokens": 47,
+        "outputTokens": 47,
         "cost": 0.0
       }
     },
@@ -73,8 +73,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 40,
-        "outputTokens": 40,
+        "inputTokens": 47,
+        "outputTokens": 47,
         "cost": 0.0
       }
     },
@@ -85,8 +85,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 40,
-        "outputTokens": 40,
+        "inputTokens": 47,
+        "outputTokens": 47,
         "cost": 0.0
       }
     }
@@ -1039,6 +1039,165 @@
           },
           "qualityPassed": true,
           "responseSha256": "162e95638dc5313a5bbdf009a4226b2974349abe71b34bedda6be168b6523b19",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gpt6-luna-bounded",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c7bce4356e0a205c3856ba543fa7771d330de349594a57d0c7ed2de3dc41733e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c7bce4356e0a205c3856ba543fa7771d330de349594a57d0c7ed2de3dc41733e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c7bce4356e0a205c3856ba543fa7771d330de349594a57d0c7ed2de3dc41733e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gpt6-sol-followthrough",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2767f9cf0ef8f6e41d150dfe286e058e313090dd231096e96c1106578a2cd31",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2767f9cf0ef8f6e41d150dfe286e058e313090dd231096e96c1106578a2cd31",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2767f9cf0ef8f6e41d150dfe286e058e313090dd231096e96c1106578a2cd31",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gpt6-sol-preview",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1828781a803641a85d18268366c067c7e5a2366022a0df9ba4a180212735f73a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1828781a803641a85d18268366c067c7e5a2366022a0df9ba4a180212735f73a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1828781a803641a85d18268366c067c7e5a2366022a0df9ba4a180212735f73a",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,
@@ -2099,6 +2258,218 @@
           },
           "qualityPassed": true,
           "responseSha256": "d35fac6350ef9c0559ed0ca4d6130d5f2027c4ecdc99f6e26e14d935e97722f8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-gpt56-legacy-alias",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "88337653a39502165d8ff088ec9193988f1d7d261e79999dc27eab3e4c7362c4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "88337653a39502165d8ff088ec9193988f1d7d261e79999dc27eab3e4c7362c4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "88337653a39502165d8ff088ec9193988f1d7d261e79999dc27eab3e4c7362c4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-gpt6-ambiguous-family",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "45c07f7f63aebc3e44e62f8ce8c7d71603edf0b2e5c1880f1f2e538168a645e8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "45c07f7f63aebc3e44e62f8ce8c7d71603edf0b2e5c1880f1f2e538168a645e8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "45c07f7f63aebc3e44e62f8ce8c7d71603edf0b2e5c1880f1f2e538168a645e8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-gpt6-luna-short-alias",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a4e65db52bfed9275553ecb5178cf99dfb3809fc3d333898a31637f5b0f39330",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a4e65db52bfed9275553ecb5178cf99dfb3809fc3d333898a31637f5b0f39330",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a4e65db52bfed9275553ecb5178cf99dfb3809fc3d333898a31637f5b0f39330",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-gpt6-short-aliases",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "5f738baf2bd74dde454d65266707af3d2b37ce09eafb97d3e85909fe0e42ede6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "5f738baf2bd74dde454d65266707af3d2b37ce09eafb97d3e85909fe0e42ede6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 1,
+            "matched": 1,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "5f738baf2bd74dde454d65266707af3d2b37ce09eafb97d3e85909fe0e42ede6",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,

@@ -5,7 +5,7 @@ export type LegacyMode = "first" | "all" | "off"
 export type UnsupportedModel = "skip" | "generic"
 
 export type Profile =
-  | "astra" | "sol" | "terra" | "luna"
+  | "astra" | "sol" | "terra" | "luna" | "gpt-5.6-sol" | "gpt-5.6-luna"
   | "glm-5.2" | "glm-5.3" | "glm-5.3-flash"
   | "deepseek-v4-flash" | "deepseek-v4-pro"
   | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
@@ -109,7 +109,7 @@ export type OptimizationDecision = DecisionSummary & {
 }
 
 export const PROFILE_IDS = [
-  "astra", "sol", "terra", "luna",
+  "astra", "sol", "terra", "luna", "gpt-5.6-sol", "gpt-5.6-luna",
   "glm-5.2", "glm-5.3", "glm-5.3-flash",
   "deepseek-v4-flash", "deepseek-v4-pro",
   "claude-fable-5.1", "claude-fable-5", "claude-opus-5", "claude-opus-4.8", "claude-sonnet-5",

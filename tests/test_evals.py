@@ -41,7 +41,8 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertEqual(result["input"]["sha256"], expected_digest)
         self.assertEqual(result["input"]["format"], "jsonl")
         coverage = result["coverage"]
-        self.assertEqual(coverage["total"], 7)
+        cases = [json.loads(line) for line in (ROOT / "evals" / "cases.jsonl").read_text(encoding="utf-8").splitlines() if line.strip()]
+        self.assertEqual(coverage["total"], sum("contract" in case for case in cases))
         self.assertGreaterEqual(coverage["fields"]["risk"], 3)
         self.assertGreaterEqual(coverage["values"]["action"]["skip"], 1)
         self.assertGreaterEqual(coverage["values"]["gate"]["full"], 1)

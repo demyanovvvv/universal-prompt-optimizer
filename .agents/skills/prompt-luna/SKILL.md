@@ -1,6 +1,6 @@
 ---
 name: prompt-luna
-description: Optimize the user's raw task specifically for GPT-5.6 Luna, then execute it. Use when the user explicitly selects this model profile.
+description: Optimize the user's raw task specifically for GPT-6 Luna, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
   version: "5.5"

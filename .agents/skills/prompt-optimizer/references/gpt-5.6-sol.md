@@ -1,4 +1,4 @@
-# GPT-5.6 Sol prompt profile
+# GPT-5.6 Sol prompt profile (legacy versioned profile)
 
 **Provenance:** official GPT-5.6 family guidance; Sol tier positioning is official. Checked 2026-09-06.
 

@@ -1,8 +1,9 @@
 # GPT-6 Astra prompt profile
 
-**Provenance:** official OpenAI model and coding-agent guidance, checked 2026-09-13.
+**Provenance:** official OpenAI model and coding-agent guidance; GPT-6 family guide rechecked 2026-09-23, coding-agent guidance checked 2026-09-13.
 
 ## Preferred shaping
+- Read `gpt-6-family.md` only when skill conflicts, writing style, delegation, or testing behavior needs tuning beyond the concise guidance below.
 - Infer routine intent/scope from conversation and bias toward action/follow-through; do not stop at capability acknowledgement, a plan, or the first implementation when completion is authorized.
 - Make instruction priority explicit when skills/rules may conflict: explicit user instructions outrank this optimization layer.
 - Avoid unnecessary approval pauses. Continue through already-authorized local, reversible, read-only, preparatory, implementation, and validation work; ask only when a consequential action or missing decision actually requires it.

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Added GPT-6 Sol and GPT-6 Luna as the standard `sol`/`luna` profiles and
+  updated their prompting guidance from the GPT-6 family guide. Preserved
+  versioned GPT-5.6 Sol/Luna profiles and aliases for compatibility, added
+  generation-safe OpenCode/Pi routing, and documented GPT-6 runtime settings.
+
 - Added versioned deterministic/provider/matrix/comparison report schemas and a
   dependency-free saved-report validator.
 - Added deterministic required/forbidden phrase rubrics, quality pass rates,

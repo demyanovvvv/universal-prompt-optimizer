@@ -44,7 +44,7 @@ both the portable and bash self-checks.
 - JSON and JSONL syntax: every package file.
 - TypeScript compile check: OpenCode plugin and Pi extension via the pinned local `tsc`
   when dependencies are installed, or a compatible global `tsc`.
-- Registry alignment: exactly 20 model profiles and 20 manual override skills; OpenCode profile union matches registry IDs.
+- Registry alignment: exactly 22 model profiles and 22 manual override skills; OpenCode profile union matches registry IDs.
 - Archive hygiene: no `__pycache__` / `.pyc`.
 - Stale runtime IDs from v5.2/v5.3 rejected.
 - All-eight-agent installation dry-run.
@@ -71,15 +71,18 @@ path before comparing the selected mode.
 - Gemini CLI `scope=first`: first BeforeAgent active, subsequent user turn suppressed.
 - Gemini CLI model observation: BeforeModel stores the exact `llm_request.model` without returning an `llm_request` override; a later BeforeAgent in the same session applies Gemini 3.8 Flash rules only on an unambiguous exact match.
 - Gemini CLI unknown-model SKIP produces no optimizer context; GENERIC opts into neutral context.
-- OpenCode router precedence includes all 20 profiles, `gpt-5.6 -> Sol`, Fable 5.1 before Fable 5, GLM Flash before GLM 5.3, and no guess for bare `deepseek-v4`.
-- Registry conformance covers all 20 profiles, manual skills, OpenCode commands,
+- OpenCode router precedence includes all 22 profiles, GPT-6 `sol`/`luna`, versioned GPT-5.6 Sol/Luna, Fable 5.1 before Fable 5, GLM Flash before GLM 5.3, and no guess for bare `deepseek-v4`.
+- Registry conformance covers all 22 profiles, manual skills, OpenCode commands,
   OpenCode profile/hint maps, Pi model tokens, and canonical skill references.
 - Twelve deterministic Python unit tests cover project/global lifecycle,
   managed blocks/hooks, modified
   file preservation, custom JSON
   preservation, schema versions, registry consistency, and eval fixtures.
-- The static eval runner validates 40 cases, including Astra completion,
-  zero-context PASS, progressive disclosure, and required adversarial coverage.
+- The static eval runner validates 47 cases, including GPT-6 defaults and versioned
+  GPT-5.6 compatibility, Astra completion, zero-context PASS, progressive disclosure,
+  and required adversarial coverage. Executable OpenCode and Pi hook tests verify
+  generation separation, supported aliases and `-latest`, and rejection of
+  unknown variants and provider-name matches.
 - The runtime eval suite executes machine-checkable routing, task-signal, gate,
   and action contracts for the adversarial fixtures through the OpenCode runtime;
   it does not claim to score provider model answers.
