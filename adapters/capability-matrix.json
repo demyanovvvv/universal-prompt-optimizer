@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "version": "5.5",
+  "adapters": [
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "sharedSkills": true,
+      "integration": "native",
+      "exactModelRouting": true,
+      "firstTurnRouting": "exact",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "native",
+      "sessionState": "process-local",
+      "persistence": "none",
+      "telemetry": "aggregate-local",
+      "mechanism": "v1 chat.message + experimental.chat.system.transform plugin and native TUI plugin",
+      "knownLimitations": [
+        "Session state is process-local and resets on plugin reload or restart.",
+        "PREVIEW is advisory: the question tool is a model instruction, not a host execution barrier."
+      ]
+    },
+    {
+      "id": "pi",
+      "name": "Pi",
+      "sharedSkills": true,
+      "integration": "native",
+      "exactModelRouting": true,
+      "firstTurnRouting": "exact",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "host-tool",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "runtime-state",
+      "sessionState": "process-local",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "Pi extension using before_agent_start with ctx.model and a preview tool",
+      "knownLimitations": [
+        "Non-interactive print/JSON modes stop for explicit confirmation instead of an interactive editor."
+      ]
+    },
+    {
+      "id": "cursor",
+      "name": "Cursor",
+      "sharedSkills": true,
+      "integration": "hook",
+      "exactModelRouting": true,
+      "firstTurnRouting": "exact",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "runtime-state",
+      "sessionState": "file",
+      "persistence": "runtime-state-file",
+      "telemetry": "none",
+      "mechanism": "beforeSubmitPrompt state bridge plus an always-on rule",
+      "knownLimitations": [
+        "beforeSubmitPrompt cannot inject arbitrary additional context; a small runtime state file is consumed by the rule.",
+        "Stale runtime state is possible until the next submit updates it."
+      ]
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "sharedSkills": true,
+      "integration": "hook",
+      "exactModelRouting": true,
+      "firstTurnRouting": "configured-or-neutral",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "runtime-state",
+      "sessionState": "file",
+      "persistence": "runtime-state-file",
+      "telemetry": "none",
+      "mechanism": "BeforeAgent preflight plus observation-only BeforeModel model capture and GEMINI.md",
+      "knownLimitations": [
+        "BeforeAgent does not expose the resolved model ID; exact routing begins only after the first BeforeModel observation.",
+        "CLI --model is not visible to BeforeAgent, so exact first-turn routing is not claimed for that case."
+      ]
+    },
+    {
+      "id": "claude",
+      "name": "Claude Code",
+      "sharedSkills": true,
+      "integration": "instructions",
+      "exactModelRouting": false,
+      "firstTurnRouting": "family",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "instructions",
+      "sessionState": "none",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "shared skills plus CLAUDE.md instructions",
+      "knownLimitations": [
+        "Exact model identity depends on what the runtime exposes or the user configures."
+      ]
+    },
+    {
+      "id": "copilot",
+      "name": "GitHub Copilot CLI",
+      "sharedSkills": true,
+      "integration": "instructions",
+      "exactModelRouting": false,
+      "firstTurnRouting": "configured-or-neutral",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "instructions",
+      "sessionState": "none",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "shared skills plus custom instructions",
+      "knownLimitations": [
+        "Config-file userPromptSubmitted hooks cannot rewrite the prompt; modifiedPrompt is SDK-programmatic only."
+      ]
+    },
+    {
+      "id": "codex",
+      "name": "OpenAI Codex",
+      "sharedSkills": true,
+      "integration": "instructions",
+      "exactModelRouting": false,
+      "firstTurnRouting": "configured-or-neutral",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "instructions",
+      "sessionState": "none",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "shared skills plus AGENTS.md instructions",
+      "knownLimitations": [
+        "Automatic routing uses exact runtime identity only when the agent exposes it to its own context."
+      ]
+    },
+    {
+      "id": "windsurf",
+      "name": "Windsurf",
+      "sharedSkills": true,
+      "integration": "instructions",
+      "exactModelRouting": false,
+      "firstTurnRouting": "configured-or-neutral",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "instructions",
+      "sessionState": "none",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "shared skills plus .windsurf/rules project or global rules",
+      "knownLimitations": [
+        "Project automation is isolated in .windsurf/rules/prompt-optimizer.md."
+      ]
+    }
+  ]
+}

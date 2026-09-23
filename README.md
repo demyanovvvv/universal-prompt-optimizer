@@ -277,12 +277,19 @@ without claiming a pre-existing plugin at the same conventional path.
 
 ```bash
 npm install
-./verify.sh
+npm run verify        # portable self-check (Node + Python, no bash/WSL needed)
+npm run verify:bash   # canonical bash self-check (Linux/macOS/Git Bash)
 npm test
 npm run verify:ts
 npm run test:runtime
 python -B evals/run.py
 ```
+
+### Choosing a configuration
+
+See `DECISION-GUIDE.md` for a task-oriented guide to picking the agent,
+behavior, quality gate, scope, and unknown-model policy, plus troubleshooting.
+The machine-readable adapter contract is `adapters/capability-matrix.json`.
 
 ## Manual model override skills
 

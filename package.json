@@ -7,13 +7,18 @@
     "node": ">=20"
   },
   "scripts": {
-    "verify": "bash ./verify.sh",
+    "verify": "node ./verify.mjs",
+    "verify:bash": "bash ./verify.sh",
     "verify:ts": "tsc -p tsconfig.verify.json",
+    "test:adapters": "python -B tests/adapter_conformance.py",
     "test:runtime": "tsc -p tsconfig.test.json && node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js",
     "test:registry": "python -B tests/registry_conformance.py",
     "test:evals": "python -B evals/run.py",
     "test:evals:strict": "python -B evals/run.py --strict-coverage",
     "test:evals:mock": "python -B -m evals.provider --cases evals/cases.jsonl --mode MATRIX --approve --output evals/results/matrix.json --provider python tests/provider_mock.py && python -B -m evals.validate_report evals/results/matrix.json --kind matrix",
+    "test:evals:baseline": "python -B -m evals.baseline_gate --baseline evals/baselines/matrix.json --candidate evals/results/matrix.json",
+    "test:evals:regression": "npm run test:evals:mock && npm run test:evals:baseline",
+    "update:evals:baseline": "npm run test:evals:mock && python -B -m evals.update_baseline --candidate evals/results/matrix.json --output evals/baselines/matrix.json",
     "compare:evals": "python -B -m evals.compare",
     "validate:eval-report": "python -B -m evals.validate_report",
     "test": "python -B -m unittest discover -s tests -v && npm run test:evals:strict && npm run test:runtime"

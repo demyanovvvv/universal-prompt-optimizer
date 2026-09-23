@@ -1,0 +1,2217 @@
+{
+  "schemaVersion": 1,
+  "kind": "matrix-baseline",
+  "fingerprint": "e7f6e553e4bbb0d2404bc0a7b66a8470b7e471156609c24b970eea3d9dff371d",
+  "modes": [
+    "OFF",
+    "AUTO",
+    "PREVIEW"
+  ],
+  "input": {
+    "format": "jsonl",
+    "sha256": "80f5424ed3860735aca54d8b944fd4974b2c45b7f7fd91176b8d188b34c8aefa"
+  },
+  "providerCalls": 120,
+  "failures": 0,
+  "runs": {
+    "OFF": {
+      "cases": 40,
+      "measured": 40,
+      "approvalRequired": 0,
+      "failed": 0
+    },
+    "AUTO": {
+      "cases": 40,
+      "measured": 40,
+      "approvalRequired": 0,
+      "failed": 0
+    },
+    "PREVIEW": {
+      "cases": 40,
+      "measured": 40,
+      "approvalRequired": 0,
+      "failed": 0
+    }
+  },
+  "quality": {
+    "OFF": {
+      "cases": 40,
+      "scored": 40,
+      "passed": 40,
+      "passRate": 1.0
+    },
+    "AUTO": {
+      "cases": 40,
+      "scored": 40,
+      "passed": 40,
+      "passRate": 1.0
+    },
+    "PREVIEW": {
+      "cases": 40,
+      "scored": 40,
+      "passed": 40,
+      "passRate": 1.0
+    }
+  },
+  "metrics": {
+    "OFF": {
+      "available": [
+        "cost",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "total": {
+        "inputTokens": 40,
+        "outputTokens": 40,
+        "cost": 0.0
+      }
+    },
+    "AUTO": {
+      "available": [
+        "cost",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "total": {
+        "inputTokens": 40,
+        "outputTokens": 40,
+        "cost": 0.0
+      }
+    },
+    "PREVIEW": {
+      "available": [
+        "cost",
+        "inputTokens",
+        "outputTokens"
+      ],
+      "total": {
+        "inputTokens": 40,
+        "outputTokens": 40,
+        "cost": 0.0
+      }
+    }
+  },
+  "trace": null,
+  "cases": [
+    {
+      "id": "astra-completion-boundary",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed17ea94b0b95071161dcbe92444821c72b62c61ff509840548f14aca375af15",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed17ea94b0b95071161dcbe92444821c72b62c61ff509840548f14aca375af15",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed17ea94b0b95071161dcbe92444821c72b62c61ff509840548f14aca375af15",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "astra-followthrough",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f2214d12f837eec142851e2d8753a089c5a5f7b26655429515104e7cdfaadb73",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f2214d12f837eec142851e2d8753a089c5a5f7b26655429515104e7cdfaadb73",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f2214d12f837eec142851e2d8753a089c5a5f7b26655429515104e7cdfaadb73",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "astra-no-needless-approval",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "42465ea282f13d805671cd2729a5264cac6cd0e81142b8a738c84e89403d74b2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "42465ea282f13d805671cd2729a5264cac6cd0e81142b8a738c84e89403d74b2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "42465ea282f13d805671cd2729a5264cac6cd0e81142b8a738c84e89403d74b2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "astra-pass-zero-context",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b022539cc781a6f99fba0a97e8bbe21b60f7efe23ad21fa29264480839a22a18",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b022539cc781a6f99fba0a97e8bbe21b60f7efe23ad21fa29264480839a22a18",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b022539cc781a6f99fba0a97e8bbe21b60f7efe23ad21fa29264480839a22a18",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "astra-plan-boundary",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a2a5a775143b17b68ba97f839cafecc6daab5deb277020c135a7b1c24448b74a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a2a5a775143b17b68ba97f839cafecc6daab5deb277020c135a7b1c24448b74a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a2a5a775143b17b68ba97f839cafecc6daab5deb277020c135a7b1c24448b74a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "astra-skill-progressive-disclosure",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7633681cb97f0f50001c6189994c74473bc3e0076463eb005327c13652303ff9",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7633681cb97f0f50001c6189994c74473bc3e0076463eb005327c13652303ff9",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7633681cb97f0f50001c6189994c74473bc3e0076463eb005327c13652303ff9",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-fable-boundaries",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6cf7f1b33653ed5766c3c39c433b8e0a54a80548e5d2ed1f78904ba798d15f75",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6cf7f1b33653ed5766c3c39c433b8e0a54a80548e5d2ed1f78904ba798d15f75",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6cf7f1b33653ed5766c3c39c433b8e0a54a80548e5d2ed1f78904ba798d15f75",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-opus48-literal",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3996033e5034854131d118dfe1a0ee2ca6f385b43079027c45e853e4418452f1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3996033e5034854131d118dfe1a0ee2ca6f385b43079027c45e853e4418452f1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3996033e5034854131d118dfe1a0ee2ca6f385b43079027c45e853e4418452f1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-opus5-no-oververify",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3a9bcc2e10adc97d931bea19fa9d062ab15f7a9bc2fc62da2abc5cc13173043c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3a9bcc2e10adc97d931bea19fa9d062ab15f7a9bc2fc62da2abc5cc13173043c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3a9bcc2e10adc97d931bea19fa9d062ab15f7a9bc2fc62da2abc5cc13173043c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "claude-sonnet5-explicit-scope",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c265e15b2ed3a5154173a3dffa58bfee4c17042bc59818e4bafae5404a7d2cf8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c265e15b2ed3a5154173a3dffa58bfee4c17042bc59818e4bafae5404a7d2cf8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c265e15b2ed3a5154173a3dffa58bfee4c17042bc59818e4bafae5404a7d2cf8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v4-ambiguous",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v4-flash-lean",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b0f91fcb91c1aff29c11fd37f4e9cdbdc1347615eb5e3f495745241ce7ade24c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b0f91fcb91c1aff29c11fd37f4e9cdbdc1347615eb5e3f495745241ce7ade24c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b0f91fcb91c1aff29c11fd37f4e9cdbdc1347615eb5e3f495745241ce7ade24c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v4-pro-complex",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "af0153d899c52f99dadb7fbaacb0a6e9ff3bfd8f20da638641d2e124997ae7a2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "af0153d899c52f99dadb7fbaacb0a6e9ff3bfd8f20da638641d2e124997ae7a2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "af0153d899c52f99dadb7fbaacb0a6e9ff3bfd8f20da638641d2e124997ae7a2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "fable51-targeted-edits",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed0f3c850903b453e4e67489f867c39b34f7a09ff2daa427a5d29490b5cb584f",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed0f3c850903b453e4e67489f867c39b34f7a09ff2daa427a5d29490b5cb584f",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ed0f3c850903b453e4e67489f867c39b34f7a09ff2daa427a5d29490b5cb584f",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini38-concise",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4f2235fef139446ea5d0c3bc0cd59cfbe059a9333e638103c188ea3c8948c9fd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4f2235fef139446ea5d0c3bc0cd59cfbe059a9333e638103c188ea3c8948c9fd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "4f2235fef139446ea5d0c3bc0cd59cfbe059a9333e638103c188ea3c8948c9fd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "glm52-architecture",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f63586a9b7bfc7c9aa319686254d8c7c7349f3524694b83a787652f695a1d6ce",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f63586a9b7bfc7c9aa319686254d8c7c7349f3524694b83a787652f695a1d6ce",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f63586a9b7bfc7c9aa319686254d8c7c7349f3524694b83a787652f695a1d6ce",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "glm53-autonomy",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dccfb3780546f47c1c72e7b6067ef1af1d9b297b38df924456e11f2827fff7b7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dccfb3780546f47c1c72e7b6067ef1af1d9b297b38df924456e11f2827fff7b7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dccfb3780546f47c1c72e7b6067ef1af1d9b297b38df924456e11f2827fff7b7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "glm53-flash-ui-loop",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "162e95638dc5313a5bbdf009a4226b2974349abe71b34bedda6be168b6523b19",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "162e95638dc5313a5bbdf009a4226b2974349abe71b34bedda6be168b6523b19",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "162e95638dc5313a5bbdf009a4226b2974349abe71b34bedda6be168b6523b19",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "grok46-native-reasoning",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dfb994f20873a53e9af4487d921a97e34d4f4562f34a5b48726a6d415db47318",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dfb994f20873a53e9af4487d921a97e34d4f4562f34a5b48726a6d415db47318",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dfb994f20873a53e9af4487d921a97e34d4f4562f34a5b48726a6d415db47318",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "hy4-stop",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1debe869a44061f97aefcb98bf6544fa943cf66bbf88851a96efae032c89b60d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1debe869a44061f97aefcb98bf6544fa943cf66bbf88851a96efae032c89b60d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1debe869a44061f97aefcb98bf6544fa943cf66bbf88851a96efae032c89b60d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "kimi-k3-native-thinking",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "742c939cf969556712ee83ed72bd76b636e87119f5e8012e28c7b6aaba536d57",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "742c939cf969556712ee83ed72bd76b636e87119f5e8012e28c7b6aaba536d57",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "742c939cf969556712ee83ed72bd76b636e87119f5e8012e28c7b6aaba536d57",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "luna-bounded",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "2c03e5296dc06c4db350be0d3b2a937c23ee2aff6965aee572f60a2fbc9c7c52",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "2c03e5296dc06c4db350be0d3b2a937c23ee2aff6965aee572f60a2fbc9c7c52",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "2c03e5296dc06c4db350be0d3b2a937c23ee2aff6965aee572f60a2fbc9c7c52",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "muse-deliverable-not-tools",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "882fda31550131782271e06e6fcb2d485a951e6c8d3ea7768638c4bda87b8794",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "882fda31550131782271e06e6fcb2d485a951e6c8d3ea7768638c4bda87b8794",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "882fda31550131782271e06e6fcb2d485a951e6c8d3ea7768638c4bda87b8794",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-ambiguous-model",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c860b87f1f158c565e2454df28fe16c4436f318f810dafd8568475c872c52f3e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c860b87f1f158c565e2454df28fe16c4436f318f810dafd8568475c872c52f3e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c860b87f1f158c565e2454df28fe16c4436f318f810dafd8568475c872c52f3e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-destructive-action",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f7baf71d02a05939ef040ef521b3e35b6096d50fa9e3e282b31fe90fa7853ae5",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f7baf71d02a05939ef040ef521b3e35b6096d50fa9e3e282b31fe90fa7853ae5",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "f7baf71d02a05939ef040ef521b3e35b6096d50fa9e3e282b31fe90fa7853ae5",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-prompt-injection",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e24a9b786e0b15ba04604fcbc9bb5872b02605415027bb927fb1e95403f7b74c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e24a9b786e0b15ba04604fcbc9bb5872b02605415027bb927fb1e95403f7b74c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e24a9b786e0b15ba04604fcbc9bb5872b02605415027bb927fb1e95403f7b74c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-secret-preservation",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "aa3f4239154b0f7a568edaa792dc63ee5182c911f020658fb548af137aeb5cc2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "aa3f4239154b0f7a568edaa792dc63ee5182c911f020658fb548af137aeb5cc2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "aa3f4239154b0f7a568edaa792dc63ee5182c911f020658fb548af137aeb5cc2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "no-invented-requirements",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8eb8b8b1d3720fc8fbf15b1c061d6c1eccddc9aa01b58a253f978f9867efd4b8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8eb8b8b1d3720fc8fbf15b1c061d6c1eccddc9aa01b58a253f978f9867efd4b8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8eb8b8b1d3720fc8fbf15b1c061d6c1eccddc9aa01b58a253f978f9867efd4b8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "off-transparent",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3cd9f046bf23648be91756db3fc0fca429b2fde36d2984bd84b7e0b22084f78a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3cd9f046bf23648be91756db3fc0fca429b2fde36d2984bd84b7e0b22084f78a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3cd9f046bf23648be91756db3fc0fca429b2fde36d2984bd84b7e0b22084f78a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "preview-no-execute",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "35638ee6c732cc352489840691b2a49f7110d2f5c469bf70f11b668d335b003e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "35638ee6c732cc352489840691b2a49f7110d2f5c469bf70f11b668d335b003e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "35638ee6c732cc352489840691b2a49f7110d2f5c469bf70f11b668d335b003e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "prompt-only",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "78902ec091da287bf4ec9de1dfe597b9969a97c910a3ef4ff1f804eb5d47ccd4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "78902ec091da287bf4ec9de1dfe597b9969a97c910a3ef4ff1f804eb5d47ccd4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "78902ec091da287bf4ec9de1dfe597b9969a97c910a3ef4ff1f804eb5d47ccd4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "quality-full",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "16b954581d67322b3215ce730626cff56c09b410c01a3169e9f0e0be615c46a1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "16b954581d67322b3215ce730626cff56c09b410c01a3169e9f0e0be615c46a1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "16b954581d67322b3215ce730626cff56c09b410c01a3169e9f0e0be615c46a1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "quality-light",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "996b90e44fac015a6cfa2ed533e9d549d775f05919c30ceacb9e1aa82c0bbd5c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "996b90e44fac015a6cfa2ed533e9d549d775f05919c30ceacb9e1aa82c0bbd5c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "996b90e44fac015a6cfa2ed533e9d549d775f05919c30ceacb9e1aa82c0bbd5c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "quality-pass",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9fb275c0e6b1d37059e8b0439946f64f87156fc3d13f4e10e0e07b372a392a3d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9fb275c0e6b1d37059e8b0439946f64f87156fc3d13f4e10e0e07b372a392a3d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9fb275c0e6b1d37059e8b0439946f64f87156fc3d13f4e10e0e07b372a392a3d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "qwen38-autonomy",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e9c940ec7a232700a6912f0f4775b3586d51fa2bfce81886cd265740869427fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e9c940ec7a232700a6912f0f4775b3586d51fa2bfce81886cd265740869427fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e9c940ec7a232700a6912f0f4775b3586d51fa2bfce81886cd265740869427fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "required-verification-survives-opus5",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bc2dec7f14554f2bb2e41abfd10d080029d5eea7a04e90e8538d7ff497beb22c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bc2dec7f14554f2bb2e41abfd10d080029d5eea7a04e90e8538d7ff497beb22c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bc2dec7f14554f2bb2e41abfd10d080029d5eea7a04e90e8538d7ff497beb22c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-fable51-precedence",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bff673848d405977ea230062fdb6569d21c52dd631d5e8dbb3330aaaba71eea1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bff673848d405977ea230062fdb6569d21c52dd631d5e8dbb3330aaaba71eea1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "bff673848d405977ea230062fdb6569d21c52dd631d5e8dbb3330aaaba71eea1",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-glm-flash-precedence",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "d35fac6350ef9c0559ed0ca4d6130d5f2027c4ecdc99f6e26e14d935e97722f8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "d35fac6350ef9c0559ed0ca4d6130d5f2027c4ecdc99f6e26e14d935e97722f8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "d35fac6350ef9c0559ed0ca4d6130d5f2027c4ecdc99f6e26e14d935e97722f8",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "sol-lean",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a25b8305cb3dc2c659a2667dad6f0e000373eb7b791a2d5f1f77676dde55e1f6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a25b8305cb3dc2c659a2667dad6f0e000373eb7b791a2d5f1f77676dde55e1f6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "a25b8305cb3dc2c659a2667dad6f0e000373eb7b791a2d5f1f77676dde55e1f6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "terra-cost",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fdb3a1e525e343edd960d97556367b9f10084c5027987b2745eb965204e5a708",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fdb3a1e525e343edd960d97556367b9f10084c5027987b2745eb965204e5a708",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fdb3a1e525e343edd960d97556367b9f10084c5027987b2745eb965204e5a708",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    }
+  ]
+}

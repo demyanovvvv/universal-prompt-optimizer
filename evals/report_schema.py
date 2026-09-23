@@ -226,6 +226,37 @@ def validate_report(report: Any, kind: str) -> list[str]:
             errors.append("providerCalls must be 0")
         if not isinstance(report.get("caseResults"), list):
             errors.append("caseResults must be an array")
+    elif kind == "baseline-gate":
+        if report.get("kind") != "baseline-gate":
+            errors.append("kind must be baseline-gate")
+        modes = report.get("modes")
+        if not isinstance(modes, dict):
+            errors.append("modes must be an object")
+        else:
+            if set(modes) != {"OFF", "AUTO", "PREVIEW"}:
+                errors.append("modes must contain OFF, AUTO, and PREVIEW")
+            for mode, entry in modes.items():
+                path = f"modes.{mode}"
+                if not isinstance(entry, dict):
+                    errors.append(f"{path} must be an object")
+                    continue
+                if not isinstance(entry.get("passed"), bool):
+                    errors.append(f"{path}.passed must be a boolean")
+                for field in ("regressions", "reliabilityRegressions", "errors"):
+                    if not isinstance(entry.get(field), list) or not all(isinstance(item, str) for item in entry.get(field, [])):
+                        errors.append(f"{path}.{field} must be an array of strings")
+        for field in ("errors", "failureReasons"):
+            if not isinstance(report.get(field), list) or not all(isinstance(item, str) for item in report.get(field, [])):
+                errors.append(f"{field} must be an array of strings")
+        fingerprint = report.get("fingerprint")
+        if fingerprint is not None:
+            if not isinstance(fingerprint, dict):
+                errors.append("fingerprint must be an object")
+            else:
+                for field in ("baseline", "candidate"):
+                    value = fingerprint.get(field)
+                    if value is not None and (not isinstance(value, str) or len(value) != 64):
+                        errors.append(f"fingerprint.{field} must be a 64-character hex digest or null")
     elif kind == "comparison":
         if not isinstance(report.get("passed"), bool):
             errors.append("passed must be a boolean")

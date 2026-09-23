@@ -5,6 +5,8 @@ import sys
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pycache_guard  # noqa: F401  (prevents child __pycache__ writes)
+
 from evals.quality import compare_reports, score_response
 from evals.report_schema import validate_report
 from evals.redaction import redact_sensitive
@@ -184,8 +186,10 @@ class ReportContractTests(unittest.TestCase):
         names = {path.name for path in schema_dir.glob("*.schema.json")}
 
         self.assertEqual(names, {
+            "baseline-gate-report.schema.json",
             "comparison-report.schema.json",
             "deterministic-report.schema.json",
+            "matrix-baseline.schema.json",
             "matrix-report.schema.json",
             "provider-report.schema.json",
             "quality-score.schema.json",
@@ -312,3 +316,33 @@ class ReportContractTests(unittest.TestCase):
 
         with self.assertRaisesRegex(ValueError, "run_mode"):
             compare_reports(report, report)
+
+    def test_baseline_gate_report_contract(self):
+        valid = {
+            "schemaVersion": 1,
+            "kind": "baseline-gate",
+            "passed": True,
+            "errors": [],
+            "failureReasons": [],
+            "fingerprint": {"baseline": "a" * 64, "candidate": "a" * 64},
+            "modes": {
+                mode: {"passed": True, "regressions": [], "reliabilityRegressions": [], "errors": []}
+                for mode in ("OFF", "AUTO", "PREVIEW")
+            },
+        }
+        self.assertEqual(validate_report(valid, "baseline-gate"), [])
+
+        invalid = {
+            "schemaVersion": 1,
+            "kind": "baseline-gate",
+            "passed": True,
+            "errors": [],
+            "failureReasons": [123],
+            "fingerprint": {"baseline": "short"},
+            "modes": {"OFF": {"passed": "yes"}},
+        }
+        errors = validate_report(invalid, "baseline-gate")
+        self.assertTrue(any("AUTO" in error for error in errors))
+        self.assertTrue(any("passed must be a boolean" in error for error in errors))
+        self.assertTrue(any("failureReasons" in error for error in errors))
+        self.assertTrue(any("fingerprint.baseline" in error for error in errors))

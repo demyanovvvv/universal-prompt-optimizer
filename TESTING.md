@@ -21,15 +21,23 @@ npm ci
 npm test
 npm run verify:ts
 npm run test:registry
+npm run test:adapters
 npm run test:evals:strict
 npm run test:evals:mock
-bash ./verify.sh
+npm run test:evals:baseline
+npm run verify          # portable: Node + Python only
+npm run verify:bash     # canonical bash script (Linux/macOS/Git Bash)
 ```
+
+`npm run verify` mirrors the coverage of `verify.sh` using only Node and Python,
+so it runs identically on Windows without WSL. Bash-only checks (shell syntax and
+the bash installer wrapper) are skipped with a warning when bash is unavailable
+and run under `npm run verify:bash`.
 
 The canonical `CI` GitHub Actions workflow runs the same checks on Ubuntu and
 Windows. It sets `PYTHONDONTWRITEBYTECODE=1` before Python checks so archive
-hygiene remains deterministic. The Windows job uses the Git Bash available on
-the hosted runner for `verify.sh`.
+hygiene remains deterministic. Windows runs the portable self-check; Linux runs
+both the portable and bash self-checks.
 
 - Bash syntax: `install.sh`, `verify.sh`.
 - Python syntax: installer, Cursor hook, Gemini CLI hook.
@@ -44,9 +52,18 @@ the hosted runner for `verify.sh`.
 ## Provider evaluation workflow
 
 The manual mock workflow produces a validated `matrix.json` artifact without
-network access or secrets. The manual real-provider workflow accepts that
-artifact name and its workflow run ID as the baseline, then writes the candidate
-report to the same `matrix.json` path before comparing the selected mode.
+network access or secrets. It then compares that matrix against the committed
+golden baseline (`evals/baselines/matrix.json`) with `evals.baseline_gate`, so a
+regression in fixture coverage, mode joining, quality scoring, or report assembly
+fails the workflow. Because the mock matrix is deterministic, the baseline stores
+a duration-free fingerprint: per case and mode it keeps status, quality counts,
+and a SHA-256 of the response instead of the response text, plus the aggregate
+run/quality/metrics/trace blocks and the fixture digest. Regenerate it only for
+intentional changes with `npm run update:evals:baseline`.
+
+The manual real-provider workflow accepts that artifact name and its workflow run
+ID as the baseline, then writes the candidate report to the same `matrix.json`
+path before comparing the selected mode.
 - Real project-scope installation for all eight agents.
 - Existing Prompt Optimizer JSON plus unrelated custom fields survives an update.
 - Cursor `scope=first`: first generation active, second inactive.

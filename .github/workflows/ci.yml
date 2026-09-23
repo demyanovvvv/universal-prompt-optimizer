@@ -50,6 +50,9 @@ jobs:
       - name: Run registry conformance
         run: npm run test:registry
 
+      - name: Run adapter capability conformance
+        run: npm run test:adapters
+
       - name: Run strict evaluation contracts
         run: npm run test:evals:strict -- --output evals/results/latest.json
 
@@ -64,5 +67,45 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Run package self-check
-        run: bash ./verify.sh
+      - name: Run portable package self-check
+        run: npm run verify
+
+      - name: Run bash package self-check
+        if: runner.os == 'Linux'
+        run: npm run verify:bash
+
+  mock-baseline:
+    name: Mock baseline gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run approved local mock matrix
+        run: npm run test:evals:mock
+
+      - name: Compare mock matrix with golden baseline
+        run: >-
+          npm run test:evals:baseline --
+          --output evals/results/baseline-gate.json
+
+      - name: Validate baseline gate report
+        run: npm run validate:eval-report -- evals/results/baseline-gate.json --kind baseline-gate
+
+      - name: Upload baseline gate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mock-baseline
+          path: |
+            evals/results/matrix.json
+            evals/results/baseline-gate.json
+          if-no-files-found: error
+          retention-days: 14

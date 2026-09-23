@@ -7,6 +7,8 @@ import time
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
+import pycache_guard  # noqa: F401  (prevents child __pycache__ writes)
+
 from evals.provider import cli_provider, run_provider_cases, run_provider_matrix
 from evals.quality import compare_reports, score_exact_match, score_response
 

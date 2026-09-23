@@ -32,10 +32,22 @@ jobs:
       - name: Validate mock report artifact
         run: python -B -m evals.validate_report evals/results/matrix.json --kind matrix
 
+      - name: Compare mock matrix with golden baseline
+        run: >-
+          python -B -m evals.baseline_gate
+          --baseline evals/baselines/matrix.json
+          --candidate evals/results/matrix.json
+          --output evals/results/baseline-gate.json
+
+      - name: Validate baseline gate report
+        run: python -B -m evals.validate_report evals/results/baseline-gate.json --kind baseline-gate
+
       - name: Upload mock evaluation report
         uses: actions/upload-artifact@v4
         with:
           name: provider-eval-mock
-          path: evals/results/matrix.json
+          path: |
+            evals/results/matrix.json
+            evals/results/baseline-gate.json
           if-no-files-found: error
           retention-days: 14

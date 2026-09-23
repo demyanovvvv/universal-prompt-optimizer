@@ -127,6 +127,21 @@ npm run test:evals:mock
 
 The manual GitHub Actions workflow `.github/workflows/provider-eval-mock.yml`
 runs the same mock matrix and uploads a validated artifact. It uses no secrets.
+The normal `CI` workflow also runs this mock matrix and the golden baseline gate
+on every push, so deterministic harness regressions are caught without provider
+credentials.
+
+Because the mock matrix is deterministic, `evals/baseline_gate.py` compares a
+candidate matrix against the committed `evals/baselines/matrix.json` using a
+duration-free fingerprint: per case and mode it pins status, quality counts, and
+a SHA-256 of the response instead of the response text, plus the aggregate
+run/quality/metrics/trace blocks and the fixture digest. Failures list explicit
+`failureReasons` such as `case removed: <id>` or `matrix drifted from baseline`.
+Regenerate the baseline only for intentional changes:
+
+```bash
+npm run update:evals:baseline
+```
 
 ## Executable decision contracts
 

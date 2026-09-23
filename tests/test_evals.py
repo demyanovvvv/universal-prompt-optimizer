@@ -4,6 +4,8 @@ import hashlib
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import pycache_guard  # noqa: F401  (prevents child __pycache__ writes)
+
 from evals.run import run
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -144,10 +146,12 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertIn("npm test", workflow)
         self.assertIn("npm run verify:ts", workflow)
         self.assertIn("npm run test:registry", workflow)
+        self.assertIn("npm run test:adapters", workflow)
         self.assertIn("npm run test:evals:strict", workflow)
         self.assertIn("evals/results/latest.json", workflow)
         self.assertIn("actions/upload-artifact@v4", workflow)
-        self.assertIn("bash ./verify.sh", workflow)
+        self.assertIn("npm run verify", workflow)
+        self.assertIn("npm run verify:bash", workflow)
         self.assertIn("ubuntu-latest", workflow)
         self.assertIn("windows-latest", workflow)
         self.assertIn("timeout-minutes: 10", workflow)
@@ -159,9 +163,13 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertEqual(package["scripts"]["test:evals:strict"], "python -B evals/run.py --strict-coverage")
         self.assertIn("npm run test:evals:strict", package["scripts"]["test"])
         self.assertIn("evals/results/matrix.json", package["scripts"]["test:evals:mock"])
+        self.assertEqual(package["scripts"]["verify"], "node ./verify.mjs")
+        self.assertEqual(package["scripts"]["verify:bash"], "bash ./verify.sh")
+        self.assertIn("evals/baselines/matrix.json", package["scripts"]["test:evals:baseline"])
         testing = (ROOT / "TESTING.md").read_text(encoding="utf-8")
         self.assertIn("npm run test:evals:strict", testing)
-        self.assertIn("bash ./verify.sh", testing)
+        self.assertIn("npm run test:evals:baseline", testing)
+        self.assertIn("npm run verify:bash", testing)
         self.assertIn("canonical `CI` GitHub Actions workflow", testing)
 
     def test_runtime_typescript_config_uses_supported_node_resolution(self):
@@ -175,12 +183,30 @@ class EvaluationFixtureTests(unittest.TestCase):
         real_workflow = (ROOT / ".github" / "workflows" / "provider-eval-real.yml").read_text(encoding="utf-8")
 
         self.assertIn("--output evals/results/matrix.json", mock_workflow)
-        self.assertIn("path: evals/results/matrix.json", mock_workflow)
+        self.assertIn("evals/baselines/matrix.json", mock_workflow)
+        self.assertIn("evals/results/baseline-gate.json", mock_workflow)
         self.assertIn("evals/baseline/matrix.json", real_workflow)
         self.assertIn("--output evals/results/matrix.json", real_workflow)
         self.assertIn("evals/results/matrix.json --kind matrix", real_workflow)
         self.assertIn("path: evals/results/matrix.json", real_workflow)
         self.assertIn("evals/results/comparison.json --kind comparison", real_workflow)
+
+    def test_spawned_python_children_disable_bytecode_writes(self):
+        import os
+        import subprocess
+        import sys
+
+        self.assertEqual(os.environ.get("PYTHONDONTWRITEBYTECODE"), "1")
+        completed = subprocess.run(
+            [sys.executable, "-c", "import sys; print(sys.dont_write_bytecode)"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "True")
 
 
 

@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/baseline-gate-report.schema.json",
+  "title": "Golden baseline regression gate",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "modes", "passed", "errors", "failureReasons"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "baseline-gate"},
+    "passed": {"type": "boolean"},
+    "modes": {
+      "type": "object",
+      "required": ["OFF", "AUTO", "PREVIEW"],
+      "additionalProperties": {
+        "type": "object",
+        "required": ["passed", "regressions", "reliabilityRegressions", "errors"],
+        "properties": {
+          "passed": {"type": "boolean"},
+          "regressions": {"type": "array", "items": {"type": "string"}},
+          "reliabilityRegressions": {"type": "array", "items": {"type": "string"}},
+          "errors": {"type": "array", "items": {"type": "string"}},
+          "baselineQualityPassRate": {"type": "number", "minimum": 0, "maximum": 1},
+          "candidateQualityPassRate": {"type": "number", "minimum": 0, "maximum": 1}
+        },
+        "additionalProperties": true
+      }
+    },
+    "fingerprint": {
+      "type": "object",
+      "properties": {
+        "baseline": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "candidate": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": true
+    },
+    "failureReasons": {"type": "array", "items": {"type": "string"}},
+    "errors": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

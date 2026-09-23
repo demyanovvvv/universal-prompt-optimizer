@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/demyanovvvv/universal-prompt-optimizer/evals/schemas/matrix-baseline.schema.json",
+  "title": "Committed golden matrix baseline",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "fingerprint", "modes", "input", "cases"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "kind": {"const": "matrix-baseline"},
+    "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "modes": {
+      "type": "array",
+      "prefixItems": [{"const": "OFF"}, {"const": "AUTO"}, {"const": "PREVIEW"}],
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "input": {
+      "type": "object",
+      "required": ["format", "sha256"],
+      "properties": {
+        "format": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "additionalProperties": true
+    },
+    "providerCalls": {"type": ["integer", "null"], "minimum": 0},
+    "failures": {"type": "integer", "minimum": 0},
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "modes"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "modes": {
+            "type": "object",
+            "required": ["OFF", "AUTO", "PREVIEW"],
+            "additionalProperties": {
+              "type": "object",
+              "required": ["status", "qualityPassed"],
+              "properties": {
+                "status": {"type": "string"},
+                "qualityPassed": {"type": "boolean"},
+                "responseSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "metrics": {"type": "object"},
+                "traceEvents": {"type": "integer", "minimum": 0},
+                "error": {"type": "string"}
+              },
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

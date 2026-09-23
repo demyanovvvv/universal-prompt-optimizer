@@ -23,13 +23,15 @@ def infer_kind(report: dict) -> str:
         return "provider"
     if "baselineQualityPassRate" in report or "candidateQualityPassRate" in report:
         return "comparison"
+    if report.get("kind") == "baseline-gate":
+        return "baseline-gate"
     raise ValueError("unable to infer report kind; pass --kind")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Validate a saved evaluation report")
     parser.add_argument("report", type=Path)
-    parser.add_argument("--kind", choices=["provider", "matrix", "deterministic", "comparison"])
+    parser.add_argument("--kind", choices=["provider", "matrix", "deterministic", "comparison", "baseline-gate"])
     args = parser.parse_args()
     try:
         value = json.loads(args.report.read_text(encoding="utf-8"))
