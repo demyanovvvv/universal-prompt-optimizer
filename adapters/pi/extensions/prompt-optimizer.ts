@@ -26,6 +26,8 @@ const hints: Array<[RegExp,string]> = [
   [/claude.*sonnet.*5/, "Claude Sonnet 5: direct task, explicit affected scope/constraints/acceptance; literal propagation; concrete review failure criteria; no legacy thinking-budget/CoT."],
   [/glm.*5[.-]3(?:[-_]flash)?$/, "GLM-5.3 or GLM-5.3-Flash: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding."],
   [/glm.*5[.-]2$/, "GLM-5.2: inspect architecture/dependencies/interfaces; short plan if useful; implement and run relevant validation."],
+  [/^deepseek(?:-v4[.-]1)?-flash$/, "DeepSeek V4.1 Flash: compact task/context/exact literals/hard constraints/required verification/done; authorized end-to-end work; explicit output/tool-schema/JSON/image asks only when needed; no manual CoT."],
+  [/deepseek.*4[.-]1.*flash/, "DeepSeek V4.1 Flash: compact task/context/exact literals/hard constraints/required verification/done; authorized end-to-end work; explicit output/tool-schema/JSON/image asks only when needed; no manual CoT."],
   [/deepseek.*4.*flash/, "DeepSeek V4 Flash: compact direct task/context/constraints/required verification/done; no manual CoT."],
   [/deepseek.*4.*pro/, "DeepSeek V4 Pro: complete objective/context/scope/non-negotiable constraints/acceptance; autonomous debug/validation; no manual CoT."],
   [/kimi.*k.*3/, "Kimi K3: compact objective/context/constraints/acceptance, end-to-end autonomy; reasoning history is harness-only."],

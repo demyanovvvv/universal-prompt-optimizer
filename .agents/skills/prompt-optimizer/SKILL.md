@@ -34,6 +34,7 @@ Profiles:
 - GLM-5.2 -> `references/glm-5.2.md`
 - GLM-5.3 -> `references/glm-5.3.md`
 - GLM-5.3-Flash -> `references/glm-5.3-flash.md`
+- DeepSeek V4.1 Flash / `deepseek-flash` -> `references/deepseek-v4.1-flash.md`
 - DeepSeek V4 Flash -> `references/deepseek-v4-flash.md`
 - DeepSeek V4 Pro -> `references/deepseek-v4-pro.md`
 - Claude Fable 5.1 -> `references/claude-fable-5.1.md`

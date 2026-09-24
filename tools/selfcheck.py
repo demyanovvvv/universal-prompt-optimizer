@@ -91,8 +91,8 @@ def package_hygiene() -> tuple[bool, str]:
         return False, "adapter manifest must contain eight unique adapters"
     registry = json.loads((ROOT / ".agents/skills/prompt-optimizer/references/model-registry.json").read_text(encoding="utf-8"))
     profiles = registry.get("profiles", [])
-    if len(profiles) != 23:
-        return False, f"expected 23 profiles, got {len(profiles)}"
+    if len(profiles) != 24:
+        return False, f"expected 24 profiles, got {len(profiles)}"
     ids = [item["id"] for item in profiles]
     if len(set(ids)) != len(ids):
         return False, "duplicate profile IDs"
@@ -107,8 +107,8 @@ def package_hygiene() -> tuple[bool, str]:
     skill_root = ROOT / ".agents/skills"
     expected_overrides = {f"prompt-{item['id'].replace('.', '-')}" for item in profiles}
     overrides = [p for p in skill_root.iterdir() if p.is_dir() and p.name in expected_overrides]
-    if len(overrides) != 23:
-        return False, f"expected 23 override skills, got {len(overrides)}"
+    if len(overrides) != 24:
+        return False, f"expected 24 override skills, got {len(overrides)}"
     for name in expected_overrides:
         if not (skill_root / name / "SKILL.md").is_file():
             return False, f"missing {skill_root / name}/SKILL.md"

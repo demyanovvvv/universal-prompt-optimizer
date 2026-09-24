@@ -64,6 +64,14 @@
       ]
     },
     {
+      "id": "deepseek-v4.1-flash",
+      "aliases": [
+        "deepseek-v4.1-flash",
+        "deepseek-v4-1-flash",
+        "deepseek-flash"
+      ]
+    },
+    {
       "id": "deepseek-v4-flash",
       "aliases": [
         "deepseek-v4-flash",

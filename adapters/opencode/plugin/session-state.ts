@@ -42,7 +42,7 @@ function normalizeResolution(value: unknown): SessionState["lastResolution"] {
   if (input.confidence !== "high" && input.confidence !== "low") return undefined
   if (input.source !== "exact-id" && input.source !== "pattern" && input.source !== "unsupported") return undefined
   if (typeof input.modelID !== "string") return undefined
-  const profiles = ["astra", "sol", "terra", "luna", "gpt-5.6-sol", "gpt-5.6-luna", "glm-5.2", "glm-5.3", "glm-5.3-flash", "deepseek-v4-flash", "deepseek-v4-pro", "claude-fable-5.1", "claude-fable-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-sonnet-5", "kimi-k3", "muse-spark-1.3", "hy4-preview", "qwen3.8-max", "gemini-3.8-flash", "grok-4.6"] as const
+  const profiles = ["astra", "sol", "terra", "luna", "gpt-5.6-sol", "gpt-5.6-luna", "glm-5.2", "glm-5.3", "glm-5.3-flash", "deepseek-v4.1-flash", "deepseek-v4-flash", "deepseek-v4-pro", "claude-fable-5.1", "claude-fable-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-sonnet-5", "kimi-k3", "muse-spark-1.3", "hy4-preview", "qwen3.8-max", "gemini-3.8-flash", "grok-4.6"] as const
   return {
     profile: typeof input.profile === "string" && profiles.includes(input.profile as typeof profiles[number]) ? input.profile as NonNullable<SessionState["lastResolution"]>["profile"] : undefined,
     confidence: input.confidence,

@@ -15,6 +15,7 @@ export const PROFILE_HINTS: Record<Profile, string> = {
   "glm-5.2": "GLM-5.2: direct objective/context/constraints/acceptance; avoid redundant planning and manual reasoning scaffolding.",
   "glm-5.3": "GLM-5.3: outcome/context/hard constraints/acceptance/autonomous end-to-end; avoid microstep scaffolding.",
   "glm-5.3-flash": "GLM-5.3 Flash: compact direct task/context/constraints/acceptance; use concise tool-oriented instructions.",
+  "deepseek-v4.1-flash": "DeepSeek V4.1 Flash: compact task/context/exact literals/hard constraints/required verification/done; authorized end-to-end work; explicit output/tool-schema/JSON/image asks only when needed; no manual CoT.",
   "deepseek-v4-flash": "DeepSeek V4 Flash: compact direct task/context/constraints/required verification/done; no role-play/tool narration or manual CoT.",
   "deepseek-v4-pro": "DeepSeek V4 Pro: explicit objective/context/constraints/acceptance and autonomous tool feedback; avoid repetitive decomposition.",
   "claude-fable-5.1": "Claude Fable 5.1: Fable end-to-end framing and finish authorized reversible work; targeted edits, batch independent tool calls, explicit search at low effort when evidence matters; preserve constraints across compaction and guard scope/tests; use Claude XML/examples/long-context ordering conditionally.",

@@ -89,7 +89,9 @@ GPT-6 Astra, Sol, and Luna (`gpt-6-sol`, `gpt-6-luna`; short aliases `sol`, `lun
 GLM-5.2; GLM-5.3; GLM-5.3-Flash.
 
 ### DeepSeek
-DeepSeek V4 Flash; DeepSeek V4 Pro.
+DeepSeek V4.1 Flash; DeepSeek V4 Flash; DeepSeek V4 Pro.
+
+V4.1 Flash is the canonical `deepseek-flash` model. The retired `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` IDs still resolve to it on the official API, so they map to the V4.1 Flash profile for routing; `deepseek-v4-pro` remains its own profile. A bare `deepseek-v4` is ambiguous and follows the configured unsupported-model policy.
 
 ### Anthropic / Claude
  Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.
@@ -316,7 +318,7 @@ The machine-readable adapter contract is `adapters/capability-matrix.json`.
 
 ## Manual model override skills
 
-`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
+`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-1-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
 
 ## Developer-practice principle
 

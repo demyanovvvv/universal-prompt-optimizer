@@ -84,6 +84,16 @@
       "provenance": "official-model"
     },
     {
+      "id": "deepseek-v4.1-flash",
+      "aliases": [
+        "deepseek-v4.1-flash",
+        "deepseek-v4-1-flash",
+        "deepseek-flash"
+      ],
+      "file": "deepseek-v4.1-flash.md",
+      "provenance": "official-api+derived-prompt"
+    },
+    {
       "id": "deepseek-v4-flash",
       "aliases": [
         "deepseek-v4-flash",

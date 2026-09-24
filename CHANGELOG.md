@@ -2,6 +2,12 @@
 
 ## 5.6 — 2026-09-24
 
+- Added the DeepSeek V4.1 Flash profile (`deepseek-v4.1-flash`, `deepseek-flash`)
+  with official thinking/tool-call/JSON/vision guidance, generation-safe
+  OpenCode/Pi routing ahead of the legacy V4 Flash regex, eval coverage, and a
+  manual override skill/command. Preserved V4 Flash and V4 Pro profiles and
+  aliases for compatibility.
+
 - Rebuilt the installer around a single declarative planner/executor shared by
   every adapter for project and global scopes, split into the `installer` package
   (`planning`, `executor`, `lifecycle`, `content`, `transaction`, `locking`,

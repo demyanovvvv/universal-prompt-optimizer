@@ -38,9 +38,13 @@ A benchmark/default runtime parameter is not silently converted into a universal
 - GLM-5.3-Flash: https://docs.z.ai/guides/vlm/glm-5.3-flash
 
 ## DeepSeek
+- V4.1 Flash release: https://api-docs.deepseek.com/news/news260910
 - Thinking Mode: https://api-docs.deepseek.com/guides/thinking_mode/
 - Tool Calls: https://api-docs.deepseek.com/guides/tool_calls/
+- JSON Output: https://api-docs.deepseek.com/guides/json_mode/
+- Vision: https://api-docs.deepseek.com/guides/vision
 - DeepSeek Harness: https://www.deepseek.com/harness/en/
+- V4.1 Flash model card: https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash
 - V4 Flash model card: https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash
 
 ## Moonshot / Kimi

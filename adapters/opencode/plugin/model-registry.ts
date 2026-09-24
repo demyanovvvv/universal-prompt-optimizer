@@ -9,6 +9,7 @@ export type Profile =
   | "glm-5.2"
   | "glm-5.3"
   | "glm-5.3-flash"
+  | "deepseek-v4.1-flash"
   | "deepseek-v4-flash"
   | "deepseek-v4-pro"
   | "claude-fable-5.1"
@@ -34,6 +35,7 @@ export const PROFILE_IDS = [
   "glm-5.2",
   "glm-5.3",
   "glm-5.3-flash",
+  "deepseek-v4.1-flash",
   "deepseek-v4-flash",
   "deepseek-v4-pro",
   "claude-fable-5.1",
@@ -68,6 +70,9 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "glm-5-3": "glm-5.3",
   "glm-5.3-flash": "glm-5.3-flash",
   "glm-5-3-flash": "glm-5.3-flash",
+  "deepseek-v4.1-flash": "deepseek-v4.1-flash",
+  "deepseek-v4-1-flash": "deepseek-v4.1-flash",
+  "deepseek-flash": "deepseek-v4.1-flash",
   "deepseek-v4-flash": "deepseek-v4-flash",
   "deepseek-v4-flash-0731": "deepseek-v4-flash",
   "deepseek-v4-pro": "deepseek-v4-pro",

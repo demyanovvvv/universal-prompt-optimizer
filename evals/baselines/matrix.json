@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "matrix-baseline",
-  "fingerprint": "135fed77da0e494bd2bba7e45c27a189aee375babe496326b8b0a9bb8d175e28",
+  "fingerprint": "c073b94e6096a6f51f79c17db85549e057013874f3b0b7a3282087057aa7401b",
   "modes": [
     "OFF",
     "AUTO",
@@ -9,47 +9,47 @@
   ],
   "input": {
     "format": "jsonl",
-    "sha256": "b733e8137d84b7504e838009f00d83d4993f55cb688775a7d3348c29573fa1a9"
+    "sha256": "0e7fef98158aa74de27da88f43145ac8935530acaf982009e82e1ddf334e93c2"
   },
-  "providerCalls": 150,
+  "providerCalls": 174,
   "failures": 0,
   "runs": {
     "OFF": {
-      "cases": 50,
-      "measured": 50,
+      "cases": 58,
+      "measured": 58,
       "approvalRequired": 0,
       "failed": 0
     },
     "AUTO": {
-      "cases": 50,
-      "measured": 50,
+      "cases": 58,
+      "measured": 58,
       "approvalRequired": 0,
       "failed": 0
     },
     "PREVIEW": {
-      "cases": 50,
-      "measured": 50,
+      "cases": 58,
+      "measured": 58,
       "approvalRequired": 0,
       "failed": 0
     }
   },
   "quality": {
     "OFF": {
-      "cases": 50,
-      "scored": 50,
-      "passed": 50,
+      "cases": 58,
+      "scored": 58,
+      "passed": 58,
       "passRate": 1.0
     },
     "AUTO": {
-      "cases": 50,
-      "scored": 50,
-      "passed": 50,
+      "cases": 58,
+      "scored": 58,
+      "passed": 58,
       "passRate": 1.0
     },
     "PREVIEW": {
-      "cases": 50,
-      "scored": 50,
-      "passed": 50,
+      "cases": 58,
+      "scored": 58,
+      "passed": 58,
       "passRate": 1.0
     }
   },
@@ -61,8 +61,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 50,
-        "outputTokens": 50,
+        "inputTokens": 58,
+        "outputTokens": 58,
         "cost": 0.0
       }
     },
@@ -73,8 +73,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 50,
-        "outputTokens": 50,
+        "inputTokens": 58,
+        "outputTokens": 58,
         "cost": 0.0
       }
     },
@@ -85,8 +85,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 50,
-        "outputTokens": 50,
+        "inputTokens": 58,
+        "outputTokens": 58,
         "cost": 0.0
       }
     }
@@ -933,6 +933,271 @@
           },
           "qualityPassed": true,
           "responseSha256": "af0153d899c52f99dadb7fbaacb0a6e9ff3bfd8f20da638641d2e124997ae7a2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v41-flash-json",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8fd67c63f00b0261693c62d48e120aea52a906f268cbe098678afc002008b8e7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8fd67c63f00b0261693c62d48e120aea52a906f268cbe098678afc002008b8e7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "8fd67c63f00b0261693c62d48e120aea52a906f268cbe098678afc002008b8e7",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v41-flash-lean",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "181fb2b0509a02008a6734ce107e1c1c11cd04455f278a50f7b68afaa136e0ee",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "181fb2b0509a02008a6734ce107e1c1c11cd04455f278a50f7b68afaa136e0ee",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 6,
+            "matched": 6,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "181fb2b0509a02008a6734ce107e1c1c11cd04455f278a50f7b68afaa136e0ee",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v41-flash-official-id",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ca310359451e43516430a5732b09c229d69c5d38e12b188c50336413a90324c6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ca310359451e43516430a5732b09c229d69c5d38e12b188c50336413a90324c6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "ca310359451e43516430a5732b09c229d69c5d38e12b188c50336413a90324c6",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v41-flash-tools",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1efd12390b97e652bfaa54c2986ed340f0d2f7765a6d57d8af0093de08ca4e45",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1efd12390b97e652bfaa54c2986ed340f0d2f7765a6d57d8af0093de08ca4e45",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1efd12390b97e652bfaa54c2986ed340f0d2f7765a6d57d8af0093de08ca4e45",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "deepseek-v41-flash-vision",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7426928402337165988afebdd81a706e54d6f0f77f952446c91d9865a128cd4e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7426928402337165988afebdd81a706e54d6f0f77f952446c91d9865a128cd4e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7426928402337165988afebdd81a706e54d6f0f77f952446c91d9865a128cd4e",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,
@@ -2311,6 +2576,165 @@
           },
           "qualityPassed": true,
           "responseSha256": "bc2dec7f14554f2bb2e41abfd10d080029d5eea7a04e90e8538d7ff497beb22c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-deepseek-v41-ambiguous",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c2e9fb54fb6f11babe2fbf470d416f83f2fa84a34dea019980ee0b730b8a9c99",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-deepseek-v41-near-miss",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "62e01d2a41025b0b9dfbdb58e044a965ccaf045663dbda91177028499d4b2bd2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "62e01d2a41025b0b9dfbdb58e044a965ccaf045663dbda91177028499d4b2bd2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "62e01d2a41025b0b9dfbdb58e044a965ccaf045663dbda91177028499d4b2bd2",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "router-deepseek-v41-not-v4-flash",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fa7925ef75c77bd9f6749bd1f62667b6655c8fc4ade6e96eb311f471ac1acbed",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fa7925ef75c77bd9f6749bd1f62667b6655c8fc4ade6e96eb311f471ac1acbed",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fa7925ef75c77bd9f6749bd1f62667b6655c8fc4ade6e96eb311f471ac1acbed",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,
