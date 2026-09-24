@@ -95,16 +95,20 @@ def _copy_files(operation: Operation, source_root: Path, transaction: InstallTra
         atomic_write_bytes(destination, source_file.read_bytes())
 
 
+def _is_owned_by_marker(directory: Path, name: str) -> bool:
+    marker_path = directory / ".prompt-optimizer-owner.json"
+    if not marker_path.exists():
+        return False
+    try:
+        marker = json.loads(marker_path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeError, json.JSONDecodeError):
+        return False
+    return marker.get("schema") == 1 and marker.get("owned") is True and marker.get("path") == name
+
+
 def _copy_owned_file(operation: Operation, source_root: Path, transaction: InstallTransaction, backup: bool) -> None:
     source = _source_file(operation, source_root)
-    owner = operation.path.parent / ".prompt-optimizer-owner.json"
-    owned = False
-    if owner.exists():
-        try:
-            marker = json.loads(owner.read_text(encoding="utf-8"))
-            owned = marker.get("schema") == 1 and marker.get("owned") is True and marker.get("path") == operation.path.name
-        except (OSError, UnicodeError, json.JSONDecodeError):
-            owned = False
+    owned = _is_owned_by_marker(operation.path.parent, operation.path.name)
     if operation.path.exists() and not owned and operation.path.read_bytes() != source.read_bytes():
         raise ValueError(f"refusing to overwrite user-owned file: {operation.path}")
     _reject_symlink(operation.path)
@@ -294,6 +298,9 @@ def _delete_tree_if_matches(operation: Operation, source_root: Path, transaction
         return
     if not operation.path.is_dir():
         raise ValueError(f"destination is not a directory: {operation.path}")
+    if operation.params and operation.params.get("requires_owner"):
+        if not _is_owned_by_marker(operation.path, operation.params.get("owner_name", operation.path.name)):
+            return
     for source_file in sorted(source.rglob("*")):
         if not source_file.is_file():
             continue

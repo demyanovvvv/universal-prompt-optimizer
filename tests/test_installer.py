@@ -413,6 +413,21 @@ class InstallerTests(unittest.TestCase):
             value = json.loads(config.read_text(encoding="utf-8"))
             self.assertEqual(value["plugin"], ["./plugins/user.tsx"])
 
+    def test_opencode_tui_uninstall_preserves_byte_identical_user_plugin(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            config = home / ".config/opencode/tui.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(json.dumps({"theme": "user-theme", "plugin": ["./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}), encoding="utf-8")
+            destination = home / ".config/opencode/plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
+            destination.parent.mkdir(parents=True)
+            destination.write_bytes((ROOT / "adapters/opencode/tui/prompt-optimizer.tsx").read_bytes())
+            installer.uninstall(home, "global")
+            self.assertTrue(destination.exists())
+            value = json.loads(config.read_text(encoding="utf-8"))
+            self.assertEqual(value["theme"], "user-theme")
+            self.assertNotIn("plugin", value)
+
     def test_opencode_tui_uninstall_removes_installer_owned_plugin(self):
         with tempfile.TemporaryDirectory() as raw:
             home = Path(raw)

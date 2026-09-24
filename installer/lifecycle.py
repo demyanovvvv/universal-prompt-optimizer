@@ -97,6 +97,7 @@ def uninstall_targets(root: Path, package_root: Path, scope: str) -> dict[str, t
 
 
 _CONFIG_FIELDS = ("schemaVersion", "behavior", "scope", "qualityGate", "unsupportedModel")
+_TUI_PLUGIN_NAME = "prompt-optimizer.tsx"
 _TUI_PLUGIN_SPEC = "./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
 
 
@@ -122,7 +123,8 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                 tui_config = root / (".opencode/tui.json" if scope == "project" else ".config/opencode/tui.json")
                 operations.append(Operation("delete_json_plugin_specs", tui_config, label="opencode-tui-registration",
                                             params={"specs": [_TUI_PLUGIN_SPEC]}))
-                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical))
+                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
+                                            params={"requires_owner": True, "owner_name": _TUI_PLUGIN_NAME}))
                 operations.append(Operation("delete_owned_file", destination / ".prompt-optimizer-owner.json",
                                             label="opencode-tui-owner"))
             else:
