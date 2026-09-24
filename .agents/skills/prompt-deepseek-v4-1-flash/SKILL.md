@@ -3,7 +3,7 @@ name: prompt-deepseek-v4-1-flash
 description: Optimize the user's raw task specifically for DeepSeek V4.1 Flash, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
-  version: "5.6"
+  version: "5.7"
 ---
 
 Apply target profile `deepseek-v4.1-flash`.

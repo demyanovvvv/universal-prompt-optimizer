@@ -1,14 +1,23 @@
-# Universal Prompt Optimizer v5.6
+# Universal Prompt Optimizer v5.7
 
 Model-aware adaptive Agent Skill that lets you write normal short human prompts while the active agent silently converts them **only when useful** into the prompt shape recommended for the selected model.
 
 Primary goals: higher first-pass success, fewer misunderstandings/scope errors, fewer repair iterations and lower total tokens per completed task — not merely fewer tokens in the first prompt.
 
-## v5.6 — composable installer core
+## v5.7 — DeepSeek V4.1 Flash profile
 
 The native hooks require Python 3.10 or newer.
 
-This release keeps the v5.5 runtime behavior and rebuilds the installer around a
+- Added the DeepSeek V4.1 Flash profile (`deepseek-v4.1-flash`, `deepseek-flash`)
+  with official thinking/tool-call/JSON/vision guidance and generation-safe
+  OpenCode/Pi routing ahead of the legacy V4 Flash rule.
+- Preserved the DeepSeek V4 Flash and V4 Pro profiles and aliases. The retired
+  `deepseek-v4-flash` IDs map to the V4.1 Flash profile because the official API
+  now routes them there; bare `deepseek-v4` stays ambiguous.
+
+The v5.6 release remains included:
+
+The installer is built around a
 single declarative planner/executor shared by every adapter, project and global.
 
 - The installer is split into the `installer` package: `planning`, `executor`,

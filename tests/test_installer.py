@@ -126,7 +126,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((root / ".codex/AGENTS.md").is_file())
             self.assertTrue((root / ".copilot/copilot-instructions.md").is_file())
             self.assertTrue((root / ".codeium/windsurf/memories/global_rules.md").is_file())
-            self.assertIn("## Prompt Optimizer v5.6 preflight", (root / ".codex/AGENTS.md").read_text(encoding="utf-8"))
+            self.assertIn("## Prompt Optimizer v5.7 preflight", (root / ".codex/AGENTS.md").read_text(encoding="utf-8"))
 
     def test_automatic_global_gemini_install_uses_composable_plan_layout(self):
         with tempfile.TemporaryDirectory() as raw:

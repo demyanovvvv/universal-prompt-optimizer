@@ -3,7 +3,7 @@ name: prompt-claude-fable-5
 description: Optimize the user's raw task specifically for Claude Fable 5, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
-  version: "5.6"
+  version: "5.7"
 ---
 
 Apply target profile `claude-fable-5`.

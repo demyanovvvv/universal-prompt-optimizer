@@ -6,7 +6,7 @@ import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./ses
 import { EXACT_MODEL_ALIASES } from "./model-registry"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
-// Universal Prompt Optimizer v5.6
+// Universal Prompt Optimizer v5.7
 
 type Settings = import("./types").Settings
 
