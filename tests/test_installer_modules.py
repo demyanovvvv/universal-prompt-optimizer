@@ -286,10 +286,10 @@ class InstallerModuleTests(unittest.TestCase):
             execute_plan(plan, source_root=ROOT)
             document = claude_doc.read_text(encoding="utf-8")
             self.assertTrue(document.startswith("User notes"))
-            self.assertIn("## Prompt Optimizer v5.5", document)
+            self.assertIn("## Prompt Optimizer v5.6", document)
             self.assertIn("canonical `.agents/skills/prompt-optimizer/SKILL.md`", document)
             agents = (root / "AGENTS.md").read_text(encoding="utf-8")
-            self.assertIn("## Prompt Optimizer v5.5 preflight", agents)
+            self.assertIn("## Prompt Optimizer v5.6 preflight", agents)
             self.assertTrue((root / ".github/copilot-instructions.md").is_file())
             self.assertTrue((root / ".windsurf/rules/prompt-optimizer.md").is_file())
 

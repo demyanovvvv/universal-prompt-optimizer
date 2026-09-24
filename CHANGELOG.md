@@ -1,7 +1,18 @@
 # Changelog
 
-## Unreleased
+## 5.6 — 2026-09-24
 
+- Rebuilt the installer around a single declarative planner/executor shared by
+  every adapter for project and global scopes, split into the `installer` package
+  (`planning`, `executor`, `lifecycle`, `content`, `transaction`, `locking`,
+  `catalog`).
+- Made `uninstall` declarative via `build_uninstall_plan` and fully transactional,
+  so a failure rolls back partial removals instead of leaving a half-removed
+  installation; `doctor` gained authoritative config and managed-block diagnostics
+  backed by the same managed-path map.
+- Consolidated package verification into `tools/selfcheck.py` with thin bash and
+  Node entry points, and reported corrupted managed JSON as a localized error
+  instead of a raw traceback.
 - Added the Claude Opus 5.5 profile, exact `claude-opus-5-5` routing, Claude Code best-practice guidance, and separate Opus 5.5 manual/OpenCode overrides while preserving Opus 5 compatibility.
 
 - Added GPT-6 Sol and GPT-6 Luna as the standard `sol`/`luna` profiles and
