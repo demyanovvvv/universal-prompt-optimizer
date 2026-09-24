@@ -3,7 +3,7 @@ name: prompt-claude-opus-4-8
 description: Optimize the user's raw task specifically for Claude Opus 4.8, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
-  version: "5.5"
+  version: "5.6"
 ---
 
 Apply target profile `claude-opus-4.8`.

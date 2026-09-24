@@ -1,4 +1,4 @@
-# OpenCode adapter — v5.5
+# OpenCode adapter — v5.6
 
 Strongest integration. The server plugin uses OpenCode v1 `chat.message` and
 `experimental.chat.system.transform` hooks, so the profile is selected from the

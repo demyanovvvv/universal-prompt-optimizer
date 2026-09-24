@@ -19,6 +19,15 @@ from pathlib import Path
 from typing import Any
 
 try:
+    from evals.provider_protocol import call_cli_provider
+    from evals.cases_loader import load_cases, select_cases
+    from evals.case_runner import validate_cases
+except ModuleNotFoundError:
+    from provider_protocol import call_cli_provider
+    from cases_loader import load_cases, select_cases
+    from case_runner import validate_cases
+
+try:
     from evals.quality import score_response
     from evals.report_schema import validate_report
     from evals.redaction import redact_sensitive
@@ -104,41 +113,7 @@ def cli_provider(
     max_output_bytes: int = 1_048_576,
 ) -> Any:
     """Call an explicit provider executable using a JSON stdin/stdout protocol."""
-    if not command or not all(isinstance(item, str) and item for item in command):
-        raise ValueError("provider command must be a non-empty argv list")
-    if max_output_bytes < 1:
-        raise ValueError("max_output_bytes must be positive")
-    encoded_payload = json.dumps(payload, ensure_ascii=False).encode("utf-8")
-    with tempfile.TemporaryFile() as stdout_file, tempfile.TemporaryFile() as stderr_file:
-        try:
-            completed = subprocess.run(
-                command,
-                input=encoded_payload,
-                stdout=stdout_file,
-                stderr=stderr_file,
-                check=False,
-                shell=False,
-                timeout=timeout,
-            )
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(f"provider timed out after {timeout:g}s") from exc
-        stderr_file.seek(0)
-        if completed.returncode:
-            detail = stderr_file.read(65_536).decode("utf-8", errors="replace").strip() or "no stderr"
-            raise RuntimeError(f"provider exited with {completed.returncode}: {detail}")
-        stdout_file.seek(0, 2)
-        output_bytes = stdout_file.tell()
-        if output_bytes > max_output_bytes:
-            raise RuntimeError(f"provider stdout exceeds {max_output_bytes} bytes")
-        stdout_file.seek(0)
-        try:
-            output = stdout_file.read().decode("utf-8")
-        except UnicodeDecodeError as exc:
-            raise RuntimeError(f"provider returned invalid UTF-8: {exc}") from exc
-    try:
-        return json.loads(output)
-    except json.JSONDecodeError as exc:
-        raise RuntimeError(f"provider returned invalid JSON: {exc}") from exc
+    return call_cli_provider(command, payload, timeout=timeout, max_output_bytes=max_output_bytes)
 
 
 def run_provider_cases(
@@ -167,26 +142,7 @@ def run_provider_cases(
     cases = list(cases)
     if len(cases) > max_cases:
         raise ValueError(f"max_cases exceeded: {len(cases)} > {max_cases}")
-    ids: set[str] = set()
-    for index, case in enumerate(cases, 1):
-        if not isinstance(case, dict):
-            raise ValueError(f"case {index} must be an object")
-        for field in ("id", "model", "request"):
-            if not isinstance(case.get(field), str) or not case[field].strip():
-                raise ValueError(f"case {index}: {field} must be a non-empty string")
-        if "expect" in case and (
-            not isinstance(case["expect"], list)
-            or not case["expect"]
-            or not all(isinstance(item, str) and item.strip() for item in case["expect"])
-        ):
-            raise ValueError(f"case {index}: expect must be a non-empty array of strings")
-        if "contract" in case and not isinstance(case["contract"], dict):
-            raise ValueError(f"case {index}: contract must be an object")
-        if "rubric" in case:
-            _validate_rubric(case["rubric"], index)
-        if case["id"] in ids:
-            raise ValueError(f"duplicate case id: {case['id']}")
-        ids.add(case["id"])
+    validate_cases(cases, _validate_rubric)
 
     case_results: list[dict[str, Any]] = []
     provider_calls = 0
@@ -371,23 +327,7 @@ def main() -> int:
         parser.error("--provider requires an executable argv")
     try:
         raw_input = args.cases.read_bytes()
-        cases = []
-        for line_number, line in enumerate(raw_input.decode("utf-8").splitlines(), 1):
-            if line.strip():
-                try:
-                    cases.append(json.loads(line))
-                except json.JSONDecodeError as exc:
-                    raise ValueError(f"line {line_number}: invalid JSON: {exc}") from exc
-        if args.selected_cases:
-            for index, case in enumerate(cases, 1):
-                if not isinstance(case, dict):
-                    raise ValueError(f"case {index} must be an object")
-            available_ids = {case.get("id") for case in cases}
-            for case_id in args.selected_cases:
-                if case_id not in available_ids:
-                    raise ValueError(f"unknown case id: {case_id}")
-            selected_ids = set(args.selected_cases)
-            cases = [case for case in cases if case.get("id") in selected_ids]
+        cases = select_cases(load_cases(args.cases), args.selected_cases)
         provider = lambda payload: cli_provider(
             args.provider,
             payload,

@@ -3,6 +3,7 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "allowJs": false,
     "noEmit": true,
     "noImplicitAny": false,
@@ -13,6 +14,7 @@
     "types/host-modules.d.ts",
     "adapters/opencode/plugin/index.ts",
     "adapters/opencode/plugin/*.ts",
-    "adapters/pi/extensions/prompt-optimizer.ts"
+    "adapters/opencode/tui/*.tsx",
+    "adapters/pi/extensions/*.ts"
   ]
 }

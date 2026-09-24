@@ -12,6 +12,12 @@ declare module "@opencode-ai/plugin/tui" {
   export type TuiSlotPlugin = { slots: Record<string, (...args: any[]) => unknown>; order?: number }
 }
 
+declare module "@opentui/solid/jsx-runtime" {
+  export const jsx: (...args: any[]) => JSX.Element
+  export const jsxs: (...args: any[]) => JSX.Element
+  export const Fragment: unknown
+}
+
 declare namespace JSX {
   interface Element {}
   interface IntrinsicElements {

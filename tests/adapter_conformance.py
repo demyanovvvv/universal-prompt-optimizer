@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 MATRIX = ROOT / "adapters/capability-matrix.json"
 COMPATIBILITY = ROOT / "COMPATIBILITY.md"
-INSTALL = ROOT / "install.py"
+MANIFEST = ROOT / "adapters/manifest.json"
 VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 BEHAVIORS = {"AUTO", "PREVIEW", "OFF"}
@@ -27,10 +27,9 @@ SESSION_STATE = {"process-local", "file", "none"}
 
 
 def _install_agents() -> set[str]:
-    match = re.search(r"^AGENTS\s*=\s*\{([^}]*)\}", INSTALL.read_text(encoding="utf-8"), re.MULTILINE)
-    if not match:
-        return set()
-    return {item.strip().strip("\"'") for item in match.group(1).split(",") if item.strip()}
+    data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    adapters = data.get("adapters")
+    return set(adapters) if data.get("schemaVersion") == 1 and isinstance(adapters, list) else set()
 
 
 def _compatibility_names() -> set[str]:
@@ -46,6 +45,9 @@ def _compatibility_names() -> set[str]:
 
 def check() -> list[str]:
     errors: list[str] = []
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    if manifest.get("schemaVersion") != 1:
+        errors.append("adapter manifest schemaVersion must be 1")
     data = json.loads(MATRIX.read_text(encoding="utf-8"))
     if data.get("schemaVersion") != 1:
         errors.append("capability matrix schemaVersion must be 1")

@@ -3,6 +3,7 @@ import { Type } from "typebox"
 import { existsSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
+import { resolvePiProfile } from "./model-registry"
 
 type Behavior = "auto" | "preview" | "off"
 type Scope = "first" | "all"
@@ -12,8 +13,8 @@ const sessionTurns = new Map<string, number>()
 const previewedTurns = new Map<string, number>()
 
 const BASE_COMMON = `Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; do not invent requirements. Keep prompts as lean as the task/model permits. Native Reasoning First: no hidden-CoT requests or generic 'think step by step'. User instructions override this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.5: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.5: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
+const BASE_GATE = `Prompt Optimizer v5.6: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
+const BASE_ALWAYS = `Prompt Optimizer v5.6: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
 const PREVIEW = `PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call prompt_optimizer_preview exactly once for this user-turn. Read-only context resolution may happen first. After tool approval, execute the returned approved/edited prompt; do not preview again in the same user-turn.`
 
 const hints: Array<[RegExp,string]> = [
@@ -87,7 +88,7 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: Quality
     } catch { invalidConfig = true }
   }
   return {
-    behavior: sessionBehaviors.get(sid) ?? (invalidConfig ? "off" : (["auto","preview","off"].includes(data.behavior) ? data.behavior : "auto")),
+    behavior: invalidConfig ? "off" : sessionBehaviors.get(sid) ?? (["auto","preview","off"].includes(data.behavior) ? data.behavior : "auto"),
     scope: ["first","all"].includes(data.scope) ? data.scope : "all",
      qualityGate: normalizeQualityGate(data.qualityGate) ?? "adaptive",
     unsupportedModel: data.unsupportedModel === "generic" ? "generic" : "skip",
@@ -97,6 +98,7 @@ function hintFor(model:any): string | undefined {
   // Provider names are metadata, not model aliases. Matching them would make a
   // provider named "sol" or "luna" activate the wrong profile.
   const id = `${model?.id ?? ""}`.trim().toLowerCase().replace(/_/g,'-').split('/').at(-1)!.replace(/-latest$/, '')
+  if (!resolvePiProfile(model?.id) && id) return undefined
   for (const [re,h] of hints) if (re.test(id)) return h
   return undefined
 }

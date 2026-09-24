@@ -48,6 +48,10 @@ test("OpenCode routes GPT generations separately and injects the matching profil
 // user config. Routing and before_agent_start remain real; Pi is not a dependency.
 function piHook() {
   const source = readFileSync(resolve(process.cwd(), "adapters/pi/extensions/prompt-optimizer.ts"), "utf8")
+  const routingSource = readFileSync(resolve(process.cwd(), "adapters/pi/extensions/model-registry.ts"), "utf8")
+  const routingCompiled = transpileModule(routingSource, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText
+  const routingExports: Record<string, unknown> = {}
+  runInNewContext(routingCompiled, { exports: routingExports, require })
   const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText
   const exports: { default?: (api: unknown) => void } = {}
   runInNewContext(compiled, {
@@ -55,6 +59,7 @@ function piHook() {
     require: (id: string) => {
       if (id === "typebox") return { Type: { Object: () => ({}), String: () => ({}) } }
       if (id === "node:fs") return { existsSync: () => false }
+      if (id === "./model-registry") return routingExports
       return require(id)
     },
     process: { env: {} },

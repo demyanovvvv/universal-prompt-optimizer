@@ -147,10 +147,14 @@ class EvaluationFixtureTests(unittest.TestCase):
         self.assertFalse(result["passed"])
         self.assertIn("case must be an object", result["errors"][0])
 
-    def test_verify_script_runs_strict_coverage(self):
-        verify = (ROOT / "verify.sh").read_text(encoding="utf-8")
-        self.assertIn("evals/run.py --strict-coverage", verify)
-        self.assertIn(".tmp-tests/opencode/tests/eval-contract.test.js", verify)
+    def test_verify_scripts_share_a_single_selfcheck(self):
+        verify_sh = (ROOT / "verify.sh").read_text(encoding="utf-8")
+        verify_mjs = (ROOT / "verify.mjs").read_text(encoding="utf-8")
+        self.assertIn("tools/selfcheck.py all", verify_sh)
+        self.assertIn("tools/selfcheck.py", verify_mjs)
+        self.assertIn(".tmp-tests/opencode/tests/eval-contract.test.js", verify_sh)
+        self.assertIn(".tmp-tests/opencode/tests/eval-contract.test.js", verify_mjs)
+        self.assertIn("evals/run.py", (ROOT / "tools/selfcheck.py").read_text(encoding="utf-8"))
 
     def test_ci_runs_repository_verification(self):
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")

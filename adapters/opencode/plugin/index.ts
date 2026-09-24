@@ -1,93 +1,18 @@
 import { classifyTask } from "./task-classifier"
-import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS as PROFILE_HINTS_DATA, qualityText } from "./prompt-builder"
+import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS, qualityText } from "./prompt-builder"
 import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
-import type { ModelResolution, SessionOverride, SessionState } from "./types"
+import { EXACT_MODEL_ALIASES } from "./model-registry"
+import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
-// Universal Prompt Optimizer v5.5
-
-// Keep the registry-facing union in this entrypoint so the existing conformance
-// check can detect missing OpenCode profile routing without importing TypeScript.
-type Profile =
-  | "astra" | "sol" | "terra" | "luna" | "gpt-5.6-sol" | "gpt-5.6-luna"
-  | "glm-5.2" | "glm-5.3" | "glm-5.3-flash"
-  | "deepseek-v4-flash" | "deepseek-v4-pro"
-  | "claude-fable-5.1" | "claude-fable-5" | "claude-opus-5.5" | "claude-opus-5" | "claude-opus-4.8" | "claude-sonnet-5"
-  | "kimi-k3" | "muse-spark-1.3" | "hy4-preview" | "qwen3.8-max" | "gemini-3.8-flash" | "grok-4.6"
+// Universal Prompt Optimizer v5.6
 
 type Settings = import("./types").Settings
-
-const PROFILE_HINTS: Record<Profile, string> = {
-  astra: PROFILE_HINTS_DATA.astra,
-  sol: PROFILE_HINTS_DATA.sol,
-  terra: PROFILE_HINTS_DATA.terra,
-  luna: PROFILE_HINTS_DATA.luna,
-  "gpt-5.6-sol": PROFILE_HINTS_DATA["gpt-5.6-sol"],
-  "gpt-5.6-luna": PROFILE_HINTS_DATA["gpt-5.6-luna"],
-  "glm-5.2": PROFILE_HINTS_DATA["glm-5.2"],
-  "glm-5.3": PROFILE_HINTS_DATA["glm-5.3"],
-  "glm-5.3-flash": PROFILE_HINTS_DATA["glm-5.3-flash"],
-  "deepseek-v4-flash": PROFILE_HINTS_DATA["deepseek-v4-flash"],
-  "deepseek-v4-pro": PROFILE_HINTS_DATA["deepseek-v4-pro"],
-  "claude-fable-5.1": PROFILE_HINTS_DATA["claude-fable-5.1"],
-  "claude-fable-5": PROFILE_HINTS_DATA["claude-fable-5"],
-  "claude-opus-5.5": PROFILE_HINTS_DATA["claude-opus-5.5"],
-  "claude-opus-5": PROFILE_HINTS_DATA["claude-opus-5"],
-  "claude-opus-4.8": PROFILE_HINTS_DATA["claude-opus-4.8"],
-  "claude-sonnet-5": PROFILE_HINTS_DATA["claude-sonnet-5"],
-  "kimi-k3": PROFILE_HINTS_DATA["kimi-k3"],
-  "muse-spark-1.3": PROFILE_HINTS_DATA["muse-spark-1.3"],
-  "hy4-preview": PROFILE_HINTS_DATA["hy4-preview"],
-  "qwen3.8-max": PROFILE_HINTS_DATA["qwen3.8-max"],
-  "gemini-3.8-flash": PROFILE_HINTS_DATA["gemini-3.8-flash"],
-  "grok-4.6": PROFILE_HINTS_DATA["grok-4.6"],
-}
 
 const AUTO_GATE = "AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn."
 
-const EXACT_MODEL_ALIASES: Record<string, Profile> = {
-  "gpt-6-astra": "astra",
-  astra: "astra",
-  "gpt-6-sol": "sol",
-  sol: "sol",
-  "gpt-6-luna": "luna",
-  luna: "luna",
-  "gpt-5.6": "gpt-5.6-sol",
-  "gpt-5.6-sol": "gpt-5.6-sol",
-  "gpt-5.6-luna": "gpt-5.6-luna",
-  "gpt-5.6-terra": "terra",
-  terra: "terra",
-  "glm-5.2": "glm-5.2",
-  "glm-5-2": "glm-5.2",
-  "glm-5.3": "glm-5.3",
-  "glm-5-3": "glm-5.3",
-  "glm-5.3-flash": "glm-5.3-flash",
-  "glm-5-3-flash": "glm-5.3-flash",
-  "deepseek-v4-flash": "deepseek-v4-flash",
-  "deepseek-v4-flash-0731": "deepseek-v4-flash",
-  "deepseek-v4-pro": "deepseek-v4-pro",
-  "claude-fable-5.1": "claude-fable-5.1",
-  "claude-fable-5-1": "claude-fable-5.1",
-  "claude-fable-5": "claude-fable-5",
-  "claude-opus-5.5": "claude-opus-5.5",
-  "claude-opus-5-5": "claude-opus-5.5",
-  "claude-opus-5": "claude-opus-5",
-  "claude-opus-4.8": "claude-opus-4.8",
-  "claude-opus-4-8": "claude-opus-4.8",
-  "claude-sonnet-5": "claude-sonnet-5",
-  "kimi-k3": "kimi-k3",
-  "muse-spark-1.3": "muse-spark-1.3",
-  "muse-spark-1-3": "muse-spark-1.3",
-  "hy4-preview": "hy4-preview",
-  "hy-4-preview": "hy4-preview",
-  "qwen3.8-max": "qwen3.8-max",
-  "qwen3.8-max-0902": "qwen3.8-max",
-  "qwen3.8-max-2026-09-02": "qwen3.8-max",
-  "gemini-3.8-flash": "gemini-3.8-flash",
-  "grok-4.6": "grok-4.6",
-}
 
 function normalizeModelID(value: string): string {
   return value.trim().toLowerCase().replace(/_/g, "-")
@@ -103,7 +28,7 @@ function modelCandidates(modelID: string): string[] {
 
 function matchedModel(modelID: string): { profile: Profile; alias: string } | undefined {
   for (const candidate of modelCandidates(modelID)) {
-    const profile = EXACT_MODEL_ALIASES[candidate]
+    const profile = Object.hasOwn(EXACT_MODEL_ALIASES, candidate) ? EXACT_MODEL_ALIASES[candidate] : undefined
     if (profile) return { profile, alias: candidate }
   }
   return undefined
@@ -250,7 +175,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const priorCount = stored.userPromptCount
       const prompt = promptText({ message: output?.message, parts: output?.parts })
       const settings = loadSettings()
-      const effectiveBehavior = stored.override?.behavior ?? settings.behavior
+      const effectiveBehavior = settings.invalidConfig ? "off" : stored.override?.behavior ?? settings.behavior
       const effectiveScope = stored.override?.scope ?? settings.scope
       const inScope = effectiveScope === "all" || (effectiveScope === "first" && priorCount === 0)
       const next = mergeState(stored, {
@@ -274,7 +199,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const effectiveSettings: Settings = {
         ...settings,
         ...stored.override,
-        behavior: stored.override?.behavior ?? settings.behavior,
+        behavior: settings.invalidConfig ? "off" : stored.override?.behavior ?? settings.behavior,
         scope: stored.override?.scope ?? settings.scope,
         qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
       }
@@ -324,7 +249,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       // decision observable without spending model context restating it.
       if (decision.behavior === "auto" && effectiveSettings.qualityGate === "adaptive" && decision.gate === "pass") return
 
-      const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile as Profile]
+      const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile]
       const base = effectiveSettings.qualityGate === "pass" ? BASE_ALWAYS : BASE_GATE
       const behaviorText = decision.behavior === "preview" ? PREVIEW : (effectiveSettings.qualityGate === "pass" ? AUTO_ALWAYS : AUTO_GATE)
       const selectedGate = decision.gate ? `${qualityText(decision.gate)}\n` : ""

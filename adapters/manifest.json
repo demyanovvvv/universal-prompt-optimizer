@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "adapters": [
+    "opencode",
+    "codex",
+    "cursor",
+    "pi",
+    "claude",
+    "gemini",
+    "copilot",
+    "windsurf"
+  ]
+}

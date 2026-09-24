@@ -5,7 +5,6 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VERSION="$(tr -d '\r\n' < "$SCRIPT_DIR/VERSION")"
 
-AGENT_IDS=(opencode codex cursor pi claude gemini copilot windsurf)
 AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf")
 
 scope="project"
@@ -38,6 +37,19 @@ resolve_python() {
   done
   return 1
 }
+load_agent_ids() {
+  local candidate output
+  for candidate in "${PYTHON_BIN:-}" python3 python py; do
+    [[ -n "$candidate" ]] || continue
+    command -v "$candidate" >/dev/null 2>&1 || continue
+    output=$("$candidate" -c 'import json,sys; print(" ".join(json.load(open(sys.argv[1], encoding="utf-8"))["adapters"]))' "$SCRIPT_DIR/adapters/manifest.json") || continue
+    read -r -a AGENT_IDS <<< "$output"
+    ((${#AGENT_IDS[@]} > 0)) && return 0
+  done
+  return 1
+}
+AGENT_IDS=()
+load_agent_ids || { printf '%s\n' 'Python 3 is required to read adapters/manifest.json' >&2; exit 1; }
 lower() { printf "%s" "$1" | tr "[:upper:]" "[:lower:]"; }
 
 # Language flags are handled before wizard detection so `./install.sh --ru`
