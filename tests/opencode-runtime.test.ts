@@ -6,7 +6,7 @@ import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
 import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
-import { hasInvalidManagedFields, qualityGateFromEnvironment } from "../adapters/opencode/plugin/config"
+import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
 import type { Settings } from "../adapters/opencode/plugin/types"
 
 const settings: Settings = {
@@ -32,6 +32,34 @@ test("model resolution preserves variant precedence and reports its source", () 
   assert.equal(resolveModel("anthropic", "claude-fable-5.10").profile, undefined)
   assert.equal(resolveModel("proxy", "glm-5.30").profile, undefined)
   assert.equal(resolveModel("astra", "unknown-model").profile, undefined)
+})
+
+test("invalid plugin options fail closed rather than silently enabling defaults", () => {
+  const resolved = resolveSettings(process.cwd(), { behavior: "invalid" }, {})
+  assert.equal(resolved.invalidConfig, true)
+  assert.equal(resolved.behavior, "off")
+})
+
+test("invalid managed config cannot be overridden back to AUTO for the same turn", async () => {
+  const { mkdtempSync, writeFileSync, rmSync } = await import("node:fs")
+  const { tmpdir } = await import("node:os")
+  const { join } = await import("node:path")
+  const project = mkdtempSync(join(tmpdir(), "upo-invalid-config-"))
+  try {
+    writeFileSync(join(project, ".prompt-optimizer.json"), JSON.stringify({ behavior: "unexpected" }))
+    const hooks = await plugin.server({ directory: project }, undefined)
+    await hooks["chat.message"]({ sessionID: "override-session", messageID: "m1" }, { message: { role: "user", id: "m1", model: { providerID: "openai", modelID: "gpt-6-sol" }, parts: [{ type: "text", text: "Inspect the repository" }] } })
+    const output: any = { system: [] }
+    await hooks["experimental.chat.system.transform"]({ sessionID: "override-session", model: { providerID: "openai", id: "gpt-6-sol" } }, output)
+    assert.deepEqual(output.system, [])
+  } finally {
+    rmSync(project, { recursive: true, force: true })
+  }
+})
+
+test("model lookup does not resolve inherited object properties as profiles", () => {
+  assert.equal(resolveModel("provider", "constructor").profile, undefined)
+  assert.equal(resolveModel("provider", "toString").profile, undefined)
 })
 
 test("managed config rejects non-string enum values", () => {

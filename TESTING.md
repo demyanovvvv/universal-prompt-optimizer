@@ -14,10 +14,17 @@ Verified on **2026-09-16** after the lifecycle, CI, schema, conformance, and eva
 
 ## Package/runtime checks
 
+The managed adapter list lives in `adapters/manifest.json`; Python managed
+configuration rules live in `config_contract.py`, with an equivalent pure
+TypeScript contract in `adapters/opencode/plugin/config-contract.ts`.
+`npm run check:model-registry` checks that the installed OpenCode routing data
+was generated from `.agents/skills/prompt-optimizer/references/model-registry.json`.
+
 The CI-equivalent local sequence is:
 
 ```bash
 npm ci
+npm run check:model-registry
 npm test
 npm run verify:ts
 npm run test:registry
@@ -29,10 +36,14 @@ npm run verify          # portable: Node + Python only
 npm run verify:bash     # canonical bash script (Linux/macOS/Git Bash)
 ```
 
-`npm run verify` mirrors the coverage of `verify.sh` using only Node and Python,
-so it runs identically on Windows without WSL. Bash-only checks (shell syntax and
-the bash installer wrapper) are skipped with a warning when bash is unavailable
-and run under `npm run verify:bash`.
+Both `verify.mjs` and `verify.sh` are thin launchers over a single source of
+truth, `tools/selfcheck.py`, which holds every cross-platform check. Each
+launcher only adds its environment-specific step: the Node launcher adds the
+TypeScript build and OpenCode runtime tests, the Bash launcher adds `bash -n`.
+`npm run verify` therefore runs identically on Windows without WSL; bash-only
+checks are skipped with a warning when bash is unavailable and run under
+`npm run verify:bash`. Shared checks can also be run directly, for example
+`python tools/selfcheck.py installer-lifecycle`.
 
 The canonical `CI` GitHub Actions workflow runs the same checks on Ubuntu and
 Windows. It sets `PYTHONDONTWRITEBYTECODE=1` before Python checks so archive

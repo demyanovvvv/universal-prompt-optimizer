@@ -2,23 +2,11 @@ import { existsSync, readFileSync, statSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
 import type { ConfigSource, QualityGate, ResolvedSettings, Settings } from "./types"
+import { DEFAULT_SETTINGS, hasInvalidManagedFields, normalizeQualityGate } from "./config-contract"
 
 export type PluginOptions = Record<string, unknown>
 
-export const DEFAULT_SETTINGS: Settings = {
-  behavior: "auto",
-  scope: "all",
-  qualityGate: "adaptive",
-  unsupportedModel: "skip",
-}
-
 type JsonObject = Record<string, unknown>
-
-export function normalizeQualityGate(value: unknown): QualityGate | undefined {
-  if (value === "pass" || value === "light" || value === "full" || value === "adaptive") return value
-  if (typeof value === "boolean") return value ? "adaptive" : "pass"
-  return undefined
-}
 
 export function qualityGateFromEnvironment(value: unknown): QualityGate | undefined {
   if (typeof value !== "string") return undefined
@@ -46,17 +34,7 @@ export function hasInvalidJson(path: string): boolean {
   }
 }
 
-export function hasInvalidManagedFields(value: JsonObject | undefined): boolean {
-  if (!value) return false
-  return (
-    ("schemaVersion" in value && (typeof value.schemaVersion !== "number" || value.schemaVersion !== 1))
-    || ("behavior" in value && (typeof value.behavior !== "string" || !["auto", "preview", "off"].includes(value.behavior)))
-    || ("scope" in value && (typeof value.scope !== "string" || !["first", "all"].includes(value.scope)))
-    || ("qualityGate" in value && normalizeQualityGate(value.qualityGate) === undefined)
-    || ("unsupportedModel" in value && (typeof value.unsupportedModel !== "string" || !["skip", "generic"].includes(value.unsupportedModel)))
-    || ("mode" in value && (typeof value.mode !== "string" || !["first", "all", "off"].includes(value.mode)))
-  )
-}
+export { DEFAULT_SETTINGS, hasInvalidManagedFields, normalizeQualityGate }
 
 export function qualityGateValue(value: unknown): QualityGate | undefined {
   return normalizeQualityGate(value)
@@ -98,6 +76,7 @@ export function resolveSettings(
     .map(path => ({ path, value: readJson(path) }))
     .filter((item): item is { path: string; value: JsonObject } => item.value !== undefined)
   const merged = Object.assign({}, ...values.map(item => item.value), options ?? {})
+  if (options && hasInvalidManagedFields(options)) invalidConfig = true
   const legacy = merged.mode === "first" || merged.mode === "all" || merged.mode === "off" ? merged.mode : undefined
   const behaviorEnv = env.PROMPT_OPTIMIZER_BEHAVIOR
   const scopeEnv = env.PROMPT_OPTIMIZER_SCOPE

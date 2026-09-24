@@ -3,6 +3,7 @@ import { Type } from "typebox"
 import { existsSync, readFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join } from "node:path"
+import { resolvePiProfile } from "./model-registry"
 
 type Behavior = "auto" | "preview" | "off"
 type Scope = "first" | "all"
@@ -87,7 +88,7 @@ function cfg(ctx: any): { behavior: Behavior; scope: Scope; qualityGate: Quality
     } catch { invalidConfig = true }
   }
   return {
-    behavior: sessionBehaviors.get(sid) ?? (invalidConfig ? "off" : (["auto","preview","off"].includes(data.behavior) ? data.behavior : "auto")),
+    behavior: invalidConfig ? "off" : sessionBehaviors.get(sid) ?? (["auto","preview","off"].includes(data.behavior) ? data.behavior : "auto"),
     scope: ["first","all"].includes(data.scope) ? data.scope : "all",
      qualityGate: normalizeQualityGate(data.qualityGate) ?? "adaptive",
     unsupportedModel: data.unsupportedModel === "generic" ? "generic" : "skip",
@@ -97,6 +98,7 @@ function hintFor(model:any): string | undefined {
   // Provider names are metadata, not model aliases. Matching them would make a
   // provider named "sol" or "luna" activate the wrong profile.
   const id = `${model?.id ?? ""}`.trim().toLowerCase().replace(/_/g,'-').split('/').at(-1)!.replace(/-latest$/, '')
+  if (!resolvePiProfile(model?.id) && id) return undefined
   for (const [re,h] of hints) if (re.test(id)) return h
   return undefined
 }

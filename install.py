@@ -13,10 +13,34 @@ import tempfile
 from contextlib import nullcontext
 from pathlib import Path
 
+from installer.catalog import load_catalog
+from installer.content import merge_json as _merge_json, merge_managed_block as _merge_managed_block
+from installer.filesystem import atomic_write_bytes as _atomic_write_bytes
+from installer.transaction import InstallTransaction, record_path as _record_path
+from installer.locking import InstallLock as _InstallLock
+from installer.domain import InstallRequest as _InstallRequest
+from installer.planning import plan_install as _plan_install
+from installer.executor import execute_plan as _execute_plan
+from installer.lifecycle import (
+    build_uninstall_plan as _build_uninstall_plan,
+    diagnose as _diagnose,
+    managed_file_map as _managed_file_map,
+    uninstall_targets as _uninstall_targets,
+)
+
+from config_contract import (
+    SCHEMA_VERSION,
+    invalid_fields,
+    managed_config,
+)
+
 PACKAGE_ROOT = Path(__file__).resolve().parent
 UI_LANG = 'en'
 VERSION = (PACKAGE_ROOT / 'VERSION').read_text(encoding='utf-8').strip()
-CONFIG_SCHEMA_VERSION = 1
+CONFIG_SCHEMA_VERSION = SCHEMA_VERSION
+
+ADAPTER_MANIFEST = json.loads((PACKAGE_ROOT / 'adapters' / 'manifest.json').read_text(encoding='utf-8'))
+AGENTS = load_catalog(PACKAGE_ROOT).ids
 
 def L(en: str, ru: str) -> str:
     return ru if UI_LANG == 'ru' else en
@@ -24,10 +48,9 @@ def L(en: str, ru: str) -> str:
 SKILLS_SRC = PACKAGE_ROOT / ".agents" / "skills"
 START = "<!-- prompt-optimizer:auto:start -->"
 END = "<!-- prompt-optimizer:auto:end -->"
-AGENTS = {"opencode","codex","cursor","pi","claude","gemini","copilot","windsurf"}
 MANAGED_HOOK_NAME = 'prompt-optimizer'
 MANAGED_HOOK_OWNER = 'universal-prompt-optimizer'
-ACTIVE_TRANSACTION = None
+_PLANNED_AUTO_ADAPTERS = frozenset({'opencode', 'pi', 'cursor', 'gemini', 'claude', 'codex', 'copilot', 'windsurf'})
 IGNORE_START = '# prompt-optimizer:runtime:start'
 IGNORE_END = '# prompt-optimizer:runtime:end'
 
@@ -38,68 +61,19 @@ def text(rel: str) -> str:
 def fail(message: str) -> None:
     raise SystemExit(message)
 
-class InstallTransaction:
-    """Keep file snapshots so a failed multi-agent install can be restored."""
-    def __init__(self) -> None:
-        self.snapshots: dict[Path, tuple[bytes, int] | None] = {}
-
-    def record(self, path: Path) -> None:
-        path = path.resolve()
-        if path in self.snapshots:
-            return
-        if path.exists():
-            if not path.is_file():
-                fail(L(f"Expected a file destination: {path}", f"Ожидался файл назначения: {path}"))
-            self.snapshots[path] = (path.read_bytes(), path.stat().st_mode)
-        else:
-            self.snapshots[path] = None
-
-    def rollback(self) -> None:
-        global ACTIVE_TRANSACTION
-        previous = ACTIVE_TRANSACTION
-        ACTIVE_TRANSACTION = None
-        try:
-            for path, snapshot in reversed(list(self.snapshots.items())):
-                if snapshot is None:
-                    if path.exists() and path.is_file():
-                        path.unlink()
-                    continue
-                content, mode = snapshot
-                atomic_write_bytes(path, content)
-                path.chmod(mode)
-        finally:
-            ACTIVE_TRANSACTION = previous
-
 def record_path(path: Path) -> None:
-    if ACTIVE_TRANSACTION is not None:
-        ACTIVE_TRANSACTION.record(path)
+    _record_path(path)
 
-class InstallLock:
-    """Prevent two installers from interleaving writes in one scope."""
+class InstallLock(_InstallLock):
+    """Compatibility wrapper retaining localized CLI errors."""
     def __init__(self, path: Path) -> None:
-        self.path = path
-        self.acquired = False
+        super().__init__(path, reject_symlink_components)
 
     def __enter__(self):
-        reject_symlink_components(self.path)
-        self.path.parent.mkdir(parents=True, exist_ok=True)
         try:
-            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
+            return super().__enter__()
+        except RuntimeError:
             fail(L(f"Another installation is already running: {self.path}", f"Другая установка уже выполняется: {self.path}"))
-        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
-            handle.write(f'{os.getpid()}\n')
-            handle.flush()
-            os.fsync(handle.fileno())
-        self.acquired = True
-        return self
-
-    def __exit__(self, _exc_type, _exc, _traceback):
-        if self.acquired:
-            try:
-                self.path.unlink()
-            except FileNotFoundError:
-                pass
 
 def reject_symlink(path: Path) -> None:
     if path.is_symlink():
@@ -112,18 +86,10 @@ def reject_symlink_components(path: Path) -> None:
 
 def atomic_write_bytes(path: Path, value: bytes) -> None:
     reject_symlink_components(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    fd, temp_name = tempfile.mkstemp(prefix=f'.{path.name}.', suffix='.tmp', dir=str(path.parent))
-    temp = Path(temp_name)
     try:
-        with os.fdopen(fd, 'wb') as handle:
-            handle.write(value)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(temp, path)
-    finally:
-        if temp.exists():
-            temp.unlink()
+        _atomic_write_bytes(path, value)
+    except ValueError as exc:
+        fail(L(str(exc), str(exc)))
 
 def atomic_write_text(path: Path, value: str) -> None:
     atomic_write_bytes(path, value.encode('utf-8'))
@@ -154,20 +120,10 @@ def load_json_object(path: Path, label: str) -> dict:
     return loaded
 
 def validate_managed_config(data: dict, path: Path, label: str) -> None:
-    def one_of(value, choices):
-        return isinstance(value, str) and value in choices
-
-    validators = {
-        'schemaVersion': lambda value: isinstance(value, int) and not isinstance(value, bool) and value == CONFIG_SCHEMA_VERSION,
-        'behavior': lambda value: one_of(value, {'auto', 'preview', 'off'}),
-        'scope': lambda value: one_of(value, {'first', 'all'}),
-        'qualityGate': lambda value: isinstance(value, bool) or (isinstance(value, str) and value in {'pass', 'light', 'full', 'adaptive'}),
-        'unsupportedModel': lambda value: one_of(value, {'skip', 'generic'}),
-        'mode': lambda value: one_of(value, {'first', 'all', 'off'}),
-    }
-    for key, validator in validators.items():
-        if key in data and not validator(data[key]):
-            fail(L(f"Invalid {key} in {label}: {path}", f"Некорректное поле {key} в {label}: {path}"))
+    invalid = invalid_fields(data)
+    if invalid:
+        fields = ", ".join(sorted(invalid))
+        fail(L(f"Invalid {fields} in {label}: {path}", f"Некорректные поля {fields} в {label}: {path}"))
 
 def is_managed_hook(item) -> bool:
     if not isinstance(item, dict):
@@ -257,13 +213,11 @@ def backup_once(path: Path) -> None:
 
 def merge_block(path: Path, block: str, *, backup=True, dry_run=False) -> str:
     path=path.expanduser(); reject_symlink_components(path); current=path.read_text(encoding='utf-8') if path.exists() else ''
-    if (START in current) != (END in current):
+    try:
+        new = _merge_managed_block(current, block, START, END)
+    except ValueError:
         fail(L(f"Incomplete managed block in {path}", f"Неполный управляемый блок в {path}"))
-    if START in current and END in current:
-        before,rest=current.split(START,1); _,after=rest.split(END,1)
-        new=before.rstrip()+"\n\n"+block.strip()+"\n"+after.lstrip('\n'); action=L('updated','обновлено')
-    else:
-        new=current.rstrip()+("\n\n" if current.strip() else '')+block.strip()+"\n"; action=L('created','создано') if not path.exists() else L('merged','объединено')
+    action = L('updated','обновлено') if START in current else (L('created','создано') if not path.exists() else L('merged','объединено'))
     if not dry_run:
         path.parent.mkdir(parents=True, exist_ok=True)
         record_path(path)
@@ -324,6 +278,8 @@ def remove_managed_block(path: Path, *, dry_run=False) -> str:
     _, after = rest.split(END, 1)
     before, after = before.rstrip(), after.lstrip('\n')
     new = before + ('\n\n' if before and after else '') + after
+    if before and not after:
+        new += '\n'
     if not dry_run:
         record_path(path)
         if new:
@@ -346,6 +302,8 @@ def remove_runtime_ignores(path: Path, *, dry_run=False) -> str:
     _, after = rest.split(IGNORE_END, 1)
     before, after = before.rstrip(), after.lstrip('\n')
     new = before + ('\n\n' if before and after else '') + after
+    if before and not after:
+        new += '\n'
     if not dry_run:
         record_path(path)
         if new:
@@ -464,41 +422,7 @@ def remove_json_hooks(path: Path, events: set[str], *, dry_run=False) -> list[st
 
 def installed_file_map(root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
     """Return logical managed files and their package source counterparts."""
-    if scope == 'project':
-        return {
-            'shared-skills': (SKILLS_SRC, root / '.agents/skills'),
-            'claude-skills': (SKILLS_SRC, root / '.claude/skills'),
-            'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.opencode/commands'),
-            'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.prompt-optimizer.json'),
-            'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.opencode/plugins/prompt-optimizer'),
-            'opencode-tui-plugin': (PACKAGE_ROOT / 'adapters/opencode/tui', root / '.opencode/plugins/prompt-optimizer-tui'),
-            'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.opencode/prompt-optimizer.json'),
-            'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/extensions/prompt-optimizer.ts'),
-            'cursor-hook': (PACKAGE_ROOT / 'adapters/cursor/hooks/prompt-optimizer-state.py', root / '.cursor/hooks/prompt-optimizer-state.py'),
-            'cursor-rule': (PACKAGE_ROOT / 'adapters/cursor/rules/prompt-optimizer.mdc', root / '.cursor/rules/prompt-optimizer.mdc'),
-            'gemini-hook': (PACKAGE_ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py', root / '.gemini/hooks/prompt-preflight.py'),
-            'claude-block': (PACKAGE_ROOT / 'auto/CLAUDE.snippet.md', root / 'CLAUDE.md'),
-            'gemini-block': (PACKAGE_ROOT / 'auto/GEMINI.snippet.md', root / 'GEMINI.md'),
-            'copilot-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.github/copilot-instructions.md'),
-            'codex-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / 'AGENTS.md'),
-            'windsurf-rule': (PACKAGE_ROOT / 'adapters/windsurf/prompt-optimizer-rule.md', root / '.windsurf/rules/prompt-optimizer.md'),
-        }
-    return {
-        'shared-skills': (SKILLS_SRC, root / '.agents/skills'),
-        'claude-skills': (SKILLS_SRC, root / '.claude/skills'),
-        'opencode-commands': (PACKAGE_ROOT / 'adapters/opencode/commands', root / '.config/opencode/commands'),
-        'shared-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/prompt-optimizer/config.json'),
-        'opencode-plugin': (PACKAGE_ROOT / 'adapters/opencode/plugin', root / '.config/opencode/plugins/prompt-optimizer'),
-        'opencode-tui-plugin': (PACKAGE_ROOT / 'adapters/opencode/tui', root / '.config/opencode/plugins/prompt-optimizer-tui'),
-        'opencode-config': (PACKAGE_ROOT / 'adapters/opencode/prompt-optimizer.auto.json', root / '.config/opencode/prompt-optimizer.json'),
-        'pi-extension': (PACKAGE_ROOT / 'adapters/pi/extensions/prompt-optimizer.ts', root / '.pi/agent/extensions/prompt-optimizer.ts'),
-        'gemini-hook': (PACKAGE_ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py', root / '.gemini/hooks/prompt-preflight.py'),
-        'claude-block': (PACKAGE_ROOT / 'auto/CLAUDE.snippet.md', root / '.claude/CLAUDE.md'),
-        'gemini-block': (PACKAGE_ROOT / 'auto/GEMINI.snippet.md', root / '.gemini/GEMINI.md'),
-        'copilot-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.copilot/copilot-instructions.md'),
-        'codex-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.codex/AGENTS.md'),
-        'windsurf-block': (PACKAGE_ROOT / 'auto/AGENTS.snippet.md', root / '.codeium/windsurf/memories/global_rules.md'),
-    }
+    return _managed_file_map(root, PACKAGE_ROOT, scope)
 
 def doctor(root: Path, scope: str) -> int:
     """Print a read-only installation diagnostic; return non-zero on errors."""
@@ -582,7 +506,11 @@ def doctor(root: Path, scope: str) -> int:
             except (OSError, UnicodeError, json.JSONDecodeError):
                 errors.append(f'invalid runtime state: {path}')
                 print(f'runtime state: invalid ({path})')
-    print(f'managed entries found: {found}')
+    report = _diagnose(root, PACKAGE_ROOT, scope)
+    for error in report.errors:
+        if error not in errors:
+            errors.append(error)
+    print(f'managed entries found: {max(found, report.found)}')
     if errors:
         for error in errors:
             print(f'ERROR: {error}', file=sys.stderr)
@@ -590,50 +518,30 @@ def doctor(root: Path, scope: str) -> int:
     print('status: healthy' if found else 'status: not installed')
     return 0
 
+def _describe_uninstall_operation(operation) -> str:
+    kind = operation.kind
+    if kind == 'delete_block':
+        return L(f'removed managed block: {operation.path}', f'удален управляемый блок: {operation.path}')
+    if kind == 'delete_json_fields':
+        return L(f'write managed config: {operation.path}', f'запись managed config: {operation.path}')
+    if kind == 'delete_json_hooks':
+        return L(f'write hook config: {operation.path}', f'запись hook config: {operation.path}')
+    if kind == 'delete_json_plugin_specs':
+        return L(f'write TUI config: {operation.path}', f'запись TUI config: {operation.path}')
+    if kind == 'delete_tree_if_matches':
+        return L(f'removed managed tree: {operation.path}', f'удалено управляемое дерево: {operation.path}')
+    return L(f'removed: {operation.path}', f'удален: {operation.path}')
+
 def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
     """Remove package-owned files/blocks without touching user modifications."""
-    out: list[str] = []
-    mapping = installed_file_map(root, scope)
-    for logical, (source, destination) in mapping.items():
-        if logical.endswith('-block') or logical == 'windsurf-block':
-            out.append(remove_managed_block(destination, dry_run=dry_run))
-        elif logical in {'shared-config', 'opencode-config'}:
-            out.append(remove_json_fields(destination, {'schemaVersion', 'behavior', 'scope', 'qualityGate', 'unsupportedModel'}, dry_run=dry_run))
-        elif logical in {'shared-skills', 'claude-skills', 'opencode-commands', 'opencode-plugin', 'opencode-tui-plugin'}:
-            if logical == 'opencode-tui-plugin':
-                # The registration is managed, but the plugin path may be a
-                # user-owned OpenCode TUI plugin with the same conventional name.
-                tui_config = root / ('.opencode/tui.json' if scope == 'project' else '.config/opencode/tui.json')
-                out.append(remove_json_plugin_specs(tui_config, {'./plugins/prompt-optimizer-tui/prompt-optimizer.tsx'}, dry_run=dry_run))
-                owner = destination / '.prompt-optimizer-owner.json'
-                owned = False
-                if owner.is_file():
-                    try:
-                        marker = load_json_object(owner, 'OpenCode TUI ownership marker')
-                        expected = hashlib.sha256(source.joinpath('prompt-optimizer.tsx').read_bytes()).hexdigest()
-                        owned = marker.get('schema') == 1 and marker.get('owned') is True and marker.get('sourceSha256') == expected
-                    except SystemExit:
-                        owned = False
-                if owned:
-                    out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
-                    out.append(remove_owned_file(owner, dry_run=dry_run))
-            else:
-                out.extend(remove_tree_if_matches(source, destination, dry_run=dry_run))
-        else:
-            out.append(remove_file_if_matches(source, destination, dry_run=dry_run))
-    if scope == 'project':
-        if (root / '.cursor/hooks.json').exists():
-            out.extend(remove_json_hooks(root / '.cursor/hooks.json', {'beforeSubmitPrompt'}, dry_run=dry_run))
-        if (root / '.gemini/settings.json').exists():
-            out.extend(remove_json_hooks(root / '.gemini/settings.json', {'BeforeAgent', 'BeforeModel'}, dry_run=dry_run))
-    else:
-        if (root / '.gemini/settings.json').exists():
-            out.extend(remove_json_hooks(root / '.gemini/settings.json', {'BeforeAgent', 'BeforeModel'}, dry_run=dry_run))
-    out.append(remove_runtime_ignores(root / '.gitignore', dry_run=dry_run))
-    for runtime in [root / '.cursor/.prompt-optimizer-runtime.json', root / '.cursor/.prompt-optimizer-session-state.json', root / '.gemini/.prompt-optimizer-model-state.json', root / '.gemini/.prompt-optimizer-session-state.json']:
-        if runtime.exists():
-            out.append(remove_owned_file(runtime, dry_run=dry_run))
-    return out
+    plan = _build_uninstall_plan(root, PACKAGE_ROOT, scope)
+    try:
+        _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=False)
+    except json.JSONDecodeError as exc:
+        fail(L(f"invalid managed JSON configuration: {exc}", f"некорректный managed JSON-конфиг: {exc}"))
+    except ValueError as exc:
+        fail(L(str(exc), str(exc)))
+    return [_describe_uninstall_operation(operation) for operation in plan.operations]
 
 def copy_file(src: Path, dst: Path, *, backup=True, dry_run=False, executable=False, label='file') -> str:
     if dry_run: return L(f"would install {label}: {dst}", f"будет установлено {label}: {dst}")
@@ -740,8 +648,7 @@ def merge_json_object(path: Path, updates: dict, *, backup=True, dry_run=False, 
     """Merge our settings into an existing JSON object without deleting unrelated future/user fields."""
     current = load_json_object(path, label)
     validate_managed_config(current, path, label)
-    current.update(updates)
-    return write_json(path,current,backup=backup,dry_run=dry_run,label=label)
+    return write_json(path,json.loads(_merge_json(json.dumps(current), updates)),backup=backup,dry_run=dry_run,label=label)
 
 def merge_json_hook(path: Path, event: str, hook: dict, *, backup=True, dry_run=False) -> str:
     current=load_json_object(path, f'{event} hook config')
@@ -763,15 +670,15 @@ def merge_json_hook(path: Path, event: str, hook: dict, *, backup=True, dry_run=
     return write_json(path,current,backup=backup,dry_run=dry_run,label=f'{event} hook config')
 
 def write_shared_config(path: Path, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, *, backup=True, dry_run=False) -> str:
-    return merge_json_object(path,{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='shared prompt-optimizer config')
+    return merge_json_object(path, managed_config(behavior, scope, unsupported, quality_gate), backup=backup, dry_run=dry_run, label='shared prompt-optimizer config')
 
 def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_tree(PACKAGE_ROOT/'adapters/opencode/plugin',base/'plugins/prompt-optimizer',backup=backup,dry_run=dry_run,label='OpenCode native plugin')]
-    out.append(merge_json_object(base/'prompt-optimizer.json',{'schemaVersion':CONFIG_SCHEMA_VERSION,'behavior':behavior,'scope':scope,'qualityGate':quality_gate,'unsupportedModel':unsupported},backup=backup,dry_run=dry_run,label='OpenCode prompt-optimizer config'))
+    out.append(merge_json_object(base/'prompt-optimizer.json', managed_config(behavior, scope, unsupported, quality_gate), backup=backup, dry_run=dry_run, label='OpenCode prompt-optimizer config'))
     return out
 
 def install_pi(base: Path, *, backup=True, dry_run=False) -> list[str]:
-    return [copy_file(PACKAGE_ROOT/'adapters/pi/extensions/prompt-optimizer.ts',base/'extensions/prompt-optimizer.ts',backup=backup,dry_run=dry_run,label='Pi native extension')]
+    return [copy_tree(PACKAGE_ROOT/'adapters/pi/extensions',base/'extensions',backup=backup,dry_run=dry_run,label='Pi native extension')]
 
 def install_cursor(root: Path, python_bin: str, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_file(PACKAGE_ROOT/'adapters/cursor/hooks/prompt-optimizer-state.py',root/'.cursor/hooks/prompt-optimizer-state.py',backup=backup,dry_run=dry_run,executable=True,label='Cursor model-state hook'),
@@ -787,8 +694,31 @@ def install_gemini(root: Path, python_bin: str, *, backup=True, dry_run=False) -
     out.append(merge_json_hook(root/'.gemini/settings.json','BeforeModel',hook,backup=backup,dry_run=dry_run))
     return out
 
+def _execute_plan_checked(plan, *, dry_run: bool, backup: bool) -> None:
+    """Execute a plan, converting data errors into a localized CLI failure."""
+    try:
+        _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
+    except json.JSONDecodeError as exc:
+        fail(L(f"invalid managed JSON configuration: {exc}", f"некорректный managed JSON-конфиг: {exc}"))
+    except ValueError as exc:
+        fail(L(str(exc), str(exc)))
+
 def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     validate_project_root(root)
+    if auto and selected <= _PLANNED_AUTO_ADAPTERS:
+        request = _InstallRequest(root, "project", frozenset(selected), automatic=True, behavior=behavior,
+                                  prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
+                                  dry_run=dry_run, backup=backup, python_bin=python_bin)
+        plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
+        _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
+        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
+    if not auto and selected <= {"opencode", "claude"}:
+        request = _InstallRequest(root, "project", frozenset(selected), automatic=False, behavior=behavior,
+                                  prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
+                                  dry_run=dry_run, backup=backup, python_bin=python_bin)
+        plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
+        _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
+        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
     out=[copy_skills(root/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(root/'.claude/skills',backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
@@ -817,7 +747,26 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
         out.append(merge_block(root/'AGENTS.md',configured_block('auto/AGENTS.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))
     return out
 
+_GLOBAL_PLANNED_AUTO_ADAPTERS = _PLANNED_AUTO_ADAPTERS - {'cursor'}
+
 def install_global(home: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
+    if auto and selected <= _GLOBAL_PLANNED_AUTO_ADAPTERS:
+        request = _InstallRequest(home, "global", frozenset(selected), automatic=True, behavior=behavior,
+                                  prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
+                                  dry_run=dry_run, backup=backup, python_bin=python_bin)
+        plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
+        _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
+        out = [f"installed composable plan: {operation.path}" for operation in plan.operations]
+        if 'cursor' in selected:
+            out.append(L('Cursor global hook/rule installation is intentionally not automated because global hooks/rules are user-environment specific; use adapters/cursor/README.md or project install', 'Глобальная установка hook/rule для Cursor намеренно не автоматизируется, потому что глобальные hooks/rules зависят от окружения пользователя; используйте adapters/cursor/README.md или установку в проект'))
+        return out
+    if not auto and selected <= {"opencode", "claude"}:
+        request = _InstallRequest(home, "global", frozenset(selected), automatic=False, behavior=behavior,
+                                  prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
+                                  dry_run=dry_run, backup=backup, python_bin=python_bin)
+        plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
+        _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
+        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
     out=[copy_skills(home/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(home/'.claude/skills',backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
@@ -883,24 +832,14 @@ def main():
         if selected != AGENTS:
             fail(L('Uninstall removes the complete Prompt Optimizer installation; omit --agents or use --agents all', 'Uninstall удаляет всю установку Prompt Optimizer; не указывайте --agents или используйте --agents all'))
     lock = InstallLock(root / '.prompt-optimizer-install.lock')
-    transaction = None if args.dry_run else InstallTransaction()
-    global ACTIVE_TRANSACTION
-    try:
-        with (nullcontext() if args.dry_run else lock):
-            ACTIVE_TRANSACTION = transaction
-            try:
-                if args.uninstall:
-                    results=uninstall(root,args.scope,dry_run=args.dry_run)
-                elif args.scope=='project':
-                    results=install_project(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)
-                else:
-                    results=install_global(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)
-            except BaseException:
-                if transaction is not None:
-                    transaction.rollback()
-                raise
-    finally:
-        ACTIVE_TRANSACTION = None
+    with (nullcontext() if args.dry_run else lock):
+        with (nullcontext() if args.dry_run else InstallTransaction()):
+            if args.uninstall:
+                results=uninstall(root,args.scope,dry_run=args.dry_run)
+            elif args.scope=='project':
+                results=install_project(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)
+            else:
+                results=install_global(root,selected,args.auto,behavior,scope,args.unsupported_model,quality_gate,backup,args.dry_run,args.python_bin)
     print(f'Universal Prompt Optimizer v{VERSION}')
     if UI_LANG == 'ru':
         print(f'область установки: {"проект" if args.scope == "project" else "глобально"}')

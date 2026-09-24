@@ -46,7 +46,7 @@ The v5.4 installer/runtime hardening remains included:
 - Pi `scope=first` state is session-scoped instead of process-global.
 - Gemini CLI no longer assumes Gemini 3.8 Flash. `BeforeModel` now observes the exact resolved `llm_request.model` without modifying the request; first-turn routing uses only explicit `GEMINI_MODEL` / `model.name` when visible and otherwise follows SKIP/GENERIC without guessing.
 - Stale v5.2/v5.3 runtime IDs were removed; version identity is centralized in `VERSION`.
-- `verify.sh` performs package self-checks for Bash/Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
+- `verify.sh` and `verify.mjs` are thin launchers over one shared checker, `tools/selfcheck.py`, covering Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
 - 23 model profiles and 23 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
 - Installation updates managed files atomically, preserves unrelated files in existing skill/command directories, rejects malformed managed JSON, and refuses to install inside the package source tree.
 
