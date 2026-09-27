@@ -57,6 +57,8 @@ class HttpProviderTests(unittest.TestCase):
                 attempts.append(1)
                 if len(attempts) == 1:
                     self.send_response(503)
+                    self.send_header("Content-Length", "0")
+                    self.send_header("Connection", "close")
                     self.end_headers()
                     return
                 response = {"choices": [{"message": {"content": "recovered"}}]}
