@@ -1,7 +1,7 @@
 ---
 trigger: always_on
 ---
-# Prompt Optimizer v5.7
+# Prompt Optimizer v5.8
 
 Use the installed `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight when automatic optimization is enabled. Respect the project's `.prompt-optimizer.json` settings.
 

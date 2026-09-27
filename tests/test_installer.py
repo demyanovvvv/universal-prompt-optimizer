@@ -7,6 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 SPEC = importlib.util.spec_from_file_location("installer", ROOT / "install.py")
 installer = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader
@@ -161,7 +162,7 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((root / ".codex/AGENTS.md").is_file())
             self.assertTrue((root / ".copilot/copilot-instructions.md").is_file())
             self.assertTrue((root / ".codeium/windsurf/memories/global_rules.md").is_file())
-            self.assertIn("## Prompt Optimizer v5.7 preflight", (root / ".codex/AGENTS.md").read_text(encoding="utf-8"))
+            self.assertIn(f"## Prompt Optimizer v{PACKAGE_VERSION} preflight", (root / ".codex/AGENTS.md").read_text(encoding="utf-8"))
 
     def test_automatic_global_gemini_install_uses_composable_plan_layout(self):
         with tempfile.TemporaryDirectory() as raw:

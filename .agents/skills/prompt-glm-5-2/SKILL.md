@@ -3,7 +3,7 @@ name: prompt-glm-5-2
 description: Optimize the user's raw task specifically for GLM-5.2, then execute it. Use when the user explicitly selects this model profile.
 compatibility: Agent Skills compatible coding agents
 metadata:
-  version: "5.7"
+  version: "5.8"
 ---
 
 Apply target profile `glm-5.2`.
