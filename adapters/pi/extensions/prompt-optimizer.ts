@@ -13,8 +13,8 @@ const sessionTurns = new Map<string, number>()
 const previewedTurns = new Map<string, number>()
 
 const BASE_COMMON = `Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; do not invent requirements. Keep prompts as lean as the task/model permits. Native Reasoning First: no hidden-CoT requests or generic 'think step by step'. User instructions override this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.8: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.8: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
+const BASE_GATE = `Prompt Optimizer v5.9: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
+const BASE_ALWAYS = `Prompt Optimizer v5.9: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
 const PREVIEW = `PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call prompt_optimizer_preview exactly once for this user-turn. Read-only context resolution may happen first. After tool approval, execute the returned approved/edited prompt; do not preview again in the same user-turn.`
 
 const hints: Array<[RegExp,string]> = [
@@ -144,15 +144,27 @@ export default function (pi: ExtensionAPI) {
       return { content:[{type:'text',text:'PROMPT_PREVIEW_REJECTED. Do not execute mutating/external work.'}], details:{approved:false} }
     }
   })
-  pi.registerCommand("prompt-auto", { description:"Prompt Optimizer: AUTO for this Pi session", handler: async (_a,ctx:any)=>{const sid=String(ctx.sessionManager?.getSessionId?.() ?? "__default__"); sessionBehaviors.set(sid,'auto');ctx.ui.notify('Prompt Optimizer: AUTO','info')} })
-  pi.registerCommand("prompt-preview", { description:"Prompt Optimizer: PREVIEW for this Pi session", handler: async (_a,ctx:any)=>{const sid=String(ctx.sessionManager?.getSessionId?.() ?? "__default__"); sessionBehaviors.set(sid,'preview');ctx.ui.notify('Prompt Optimizer: PREVIEW','info')} })
-  pi.registerCommand("prompt-off", { description:"Prompt Optimizer: OFF for this Pi session", handler: async (_a,ctx:any)=>{const sid=String(ctx.sessionManager?.getSessionId?.() ?? "__default__"); sessionBehaviors.set(sid,'off');ctx.ui.notify('Prompt Optimizer: OFF','info')} })
+  pi.registerCommand("prompt-optimizer", { description:"Prompt Optimizer settings: auto, preview, off, or status", handler: async (args:string,ctx:any)=>{
+    const sid=String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
+    const command=String(args ?? "").trim().toLowerCase()
+    if (command === "auto" || command === "preview" || command === "off") {
+      sessionBehaviors.set(sid, command as Behavior)
+      ctx.ui.notify(`Prompt Optimizer: ${command.toUpperCase()}`, "info")
+      return
+    }
+    if (command === "status" || !command) {
+      const settings=cfg(ctx)
+      ctx.ui.notify(`Prompt Optimizer: ${settings.behavior.toUpperCase()} (${settings.scope}, ${settings.qualityGate})`, "info")
+      return
+    }
+    ctx.ui.notify("Usage: /prompt-optimizer auto|preview|off|status", "warning")
+  } })
   pi.on("before_agent_start", async (event:any, ctx:any) => {
     const settings = cfg(ctx)
     const sid = String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
     if (settings.behavior === 'off') return
     const hint = hintFor(ctx.model)
-    if (!hint && settings.unsupportedModel === 'skip') return
+     if (!hint && settings.unsupportedModel === 'skip') return
     const userTurn = (sessionTurns.get(sid) ?? 0) + 1
     sessionTurns.set(sid, userTurn)
     previewedTurns.delete(sid)

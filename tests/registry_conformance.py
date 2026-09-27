@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Keep model registry, skills, commands, and native routing tables aligned."""
+"""Keep model registry and native routing tables aligned."""
 
 from __future__ import annotations
 
@@ -68,17 +68,6 @@ def check() -> list[str]:
             text = (REFERENCES / profile_file).read_text(encoding="utf-8")
             if "Provenance" not in text or "Official source" not in text and "Official sources" not in text:
                 errors.append(f"{profile_id}: profile is missing provenance/source")
-        skill_name = f"prompt-{profile_id.replace('.', '-') }"
-        skill = SKILLS / skill_name / "SKILL.md"
-        if not skill.is_file():
-            errors.append(f"{profile_id}: missing manual override skill {skill_name}")
-        else:
-            skill_text = skill.read_text(encoding="utf-8")
-            if f'version: "{VERSION}"' not in skill_text:
-                errors.append(f"{profile_id}: manual skill version is not {VERSION}")
-        command = ROOT / "adapters/opencode/commands" / f"{skill_name}.md"
-        if not command.is_file():
-            errors.append(f"{profile_id}: missing OpenCode command {command.name}")
         profile_aliases = item.get("aliases", [])
         if not isinstance(profile_aliases, list) or not profile_aliases:
             errors.append(f"{profile_id}: aliases must be a non-empty array")

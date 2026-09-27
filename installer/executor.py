@@ -50,12 +50,15 @@ def _copy_tree(operation: Operation, source_root: Path, transaction: InstallTran
     if operation.path.exists() and not operation.path.is_dir():
         raise ValueError(f"destination is not a directory: {operation.path}")
     operation.path.mkdir(parents=True, exist_ok=True)
+    include = set(operation.params.get("include", ())) if operation.params else None
     for source_file in source.rglob("*"):
         if source_file.is_symlink():
             raise ValueError(f"package tree contains symlink: {source_file}")
         if not source_file.is_file():
             continue
         relative = source_file.relative_to(source)
+        if include is not None and (relative.parts[0] if relative.parts else "") not in include:
+            continue
         destination = operation.path / relative
         _reject_symlink(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -84,9 +87,12 @@ def _copy_files(operation: Operation, source_root: Path, transaction: InstallTra
     _reject_symlink(operation.path)
     if operation.path.exists() and not operation.path.is_dir():
         raise ValueError(f"destination is not a directory: {operation.path}")
+    include = set(operation.params.get("include", ())) if operation.params else None
     for source_file in source.glob("*.md"):
         if source_file.is_symlink() or not source_file.is_file():
             raise ValueError(f"invalid package file: {source_file}")
+        if include is not None and source_file.name not in include:
+            continue
         destination = operation.path / source_file.name
         _reject_symlink(destination)
         destination.parent.mkdir(parents=True, exist_ok=True)
@@ -301,10 +307,20 @@ def _delete_tree_if_matches(operation: Operation, source_root: Path, transaction
     if operation.params and operation.params.get("requires_owner"):
         if not _is_owned_by_marker(operation.path, operation.params.get("owner_name", operation.path.name)):
             return
+        owned_name = operation.params.get("owner_name")
+        owned_path = operation.path / owned_name if isinstance(owned_name, str) else None
+        if owned_path is not None and owned_path.exists():
+            _reject_symlink(owned_path)
+            transaction.record(owned_path)
+            owned_path.unlink()
+    include = set(operation.params.get("include", ())) if operation.params else None
     for source_file in sorted(source.rglob("*")):
         if not source_file.is_file():
             continue
-        destination = operation.path / source_file.relative_to(source)
+        relative = source_file.relative_to(source)
+        if include is not None and (relative.parts[0] if relative.parts else "") not in include:
+            continue
+        destination = operation.path / relative
         if not destination.exists() or not destination.is_file():
             continue
         if destination.read_bytes() != source_file.read_bytes():
@@ -320,6 +336,34 @@ def _delete_tree_if_matches(operation: Operation, source_root: Path, transaction
         operation.path.rmdir()
     except OSError:
         pass
+
+
+def _delete_legacy_model_skill(operation: Operation, transaction: InstallTransaction) -> None:
+    if not operation.path.is_dir():
+        return
+    skill = operation.path / "SKILL.md"
+    if not skill.is_file():
+        return
+    expected = operation.params.get("name") if operation.params else None
+    text = skill.read_text(encoding="utf-8")
+    if not isinstance(expected, str) or f"name: {expected}" not in text or "Activate the canonical `prompt-optimizer` skill" not in text:
+        return
+    transaction.record(skill)
+    skill.unlink()
+    try:
+        operation.path.rmdir()
+    except OSError:
+        pass
+
+
+def _delete_legacy_model_command(operation: Operation, transaction: InstallTransaction) -> None:
+    if not operation.path.is_file():
+        return
+    text = operation.path.read_text(encoding="utf-8")
+    if "description: Optimize this task for " not in text or "Use the `prompt-" not in text:
+        return
+    transaction.record(operation.path)
+    operation.path.unlink()
 
 
 def _delete_json_fields(operation: Operation, transaction: InstallTransaction) -> None:
@@ -503,6 +547,12 @@ def _apply(operation: Operation, source_root: Path, transaction: InstallTransact
     if operation.kind == "delete_tree_if_matches":
         _delete_tree_if_matches(operation, source_root, transaction)
         return
+    if operation.kind == "delete_legacy_model_skill":
+        _delete_legacy_model_skill(operation, transaction)
+        return
+    if operation.kind == "delete_legacy_model_command":
+        _delete_legacy_model_command(operation, transaction)
+        return
     if operation.kind == "delete_json_fields":
         _delete_json_fields(operation, transaction)
         return
@@ -559,6 +609,7 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                 "write", "merge", "copy_tree", "copy_file", "copy_files", "merge_hook",
                 "merge_block", "copy_owned_file", "merge_tui", "merge_json_plugin_specs", "merge_ignore", "delete",
                 "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
+                "delete_legacy_model_skill", "delete_legacy_model_command",
                 "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
             }:
                 raise ValueError(f"unsupported operation kind: {operation.kind}")

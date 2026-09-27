@@ -586,6 +586,7 @@ def copy_skills(dst: Path, *, backup=True, dry_run=False) -> str:
     dst.mkdir(parents=True, exist_ok=True)
     for child in SKILLS_SRC.iterdir():
         if not child.is_dir(): continue
+        if child.name != 'prompt-optimizer': continue
         target=dst/child.name
         copy_tree(child, target, backup=backup, label=f'skill {child.name}')
     return L(f"installed skills: {dst}", f"установлены skills: {dst}")
@@ -596,7 +597,9 @@ def copy_commands(src: Path, dst: Path, *, backup=True, dry_run=False) -> str:
         fail(L(f"Commands destination is not a directory: {dst}", f"Назначение команд не является каталогом: {dst}"))
     reject_symlink_components(dst)
     dst.mkdir(parents=True, exist_ok=True)
-    for p in src.glob('*.md'): copy_file(p,dst/p.name,backup=backup,label='OpenCode command')
+    for p in src.glob('*.md'):
+        if p.name in {'prompt.md', 'prompt-only.md', 'prompt-optimizer.md'}:
+            copy_file(p,dst/p.name,backup=backup,label='OpenCode command')
     return L(f"installed OpenCode commands: {dst}", f"установлены команды OpenCode: {dst}")
 
 def install_opencode_tui(base: Path, *, backup=True, dry_run=False) -> list[str]:
@@ -810,7 +813,7 @@ def main():
     ap.add_argument('--behavior',choices=['auto','preview','off'],default='auto')
     ap.add_argument('--prompt-scope',choices=['first','all'],default='all')
     ap.add_argument('--quality-gate',choices=['on','off','pass','light','full','adaptive'],default='adaptive',help='Quality gate: adaptive, pass, light, full, or legacy on/off')
-    ap.add_argument('--unsupported-model',choices=['skip','generic'],default='skip')
+    ap.add_argument('--unsupported-model',choices=['skip','generic'],default='generic')
     ap.add_argument('--python-bin',default=sys.executable,help='Python command used by generated hooks')
     ap.add_argument('--opencode-mode',choices=['first','all','off'],help='Deprecated v4 compatibility: first/all map to behavior=auto and corresponding scope; off maps to behavior=off')
     ap.add_argument('--no-backup',action='store_true')

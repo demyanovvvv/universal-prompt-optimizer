@@ -91,15 +91,17 @@ class InstallerTests(unittest.TestCase):
                 installer.copy_commands = original_commands
             self.assertTrue((root / ".agents/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".claude/skills/prompt-optimizer/SKILL.md").is_file())
-            self.assertTrue((root / ".opencode/commands/prompt-luna.md").is_file())
-            self.assertTrue((root / ".opencode/commands/po-status.md").is_file())
+            self.assertTrue((root / ".opencode/commands/prompt.md").is_file())
+            self.assertTrue((root / ".opencode/commands/prompt-only.md").is_file())
+            self.assertTrue((root / ".opencode/commands/prompt-optimizer.md").is_file())
+            self.assertFalse((root / ".opencode/commands/prompt-luna.md").exists())
             self.assertFalse((root / ".opencode/plugins/prompt-optimizer").exists())
             self.assertFalse((root / ".opencode/opencode.json").exists())
 
     def test_nonautomatic_composable_install_keeps_first_backup_of_managed_command(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
-            command = root / ".opencode/commands/prompt-luna.md"
+            command = root / ".opencode/commands/prompt.md"
             command.parent.mkdir(parents=True)
             command.write_text("user version", encoding="utf-8")
             installer.install_project(root, {"opencode"}, False, "auto", "all", "skip", "adaptive", True, False, sys.executable)
@@ -283,7 +285,7 @@ class InstallerTests(unittest.TestCase):
                 "behavior": "auto",
                 "scope": "all",
                 "qualityGate": True,
-                "unsupportedModel": "skip",
+                "unsupportedModel": "generic",
                 "custom": "keep",
             }), encoding="utf-8")
             installer.remove_json_fields(path, {

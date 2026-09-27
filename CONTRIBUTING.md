@@ -22,7 +22,7 @@ Update all of these together:
 
 - `.agents/skills/prompt-optimizer/references/model-registry.json`;
 - the matching reference profile and provenance links;
-- the matching manual `prompt-*` skill;
+- the matching internal model reference used by automatic routing;
 - generated OpenCode routing artifacts and Pi routing table;
 - model-specific evaluation cases and negative/ambiguous aliases;
 - README, compatibility notes, and changelog when user-visible behavior

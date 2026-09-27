@@ -1,4 +1,4 @@
-# Choosing a configuration — v5.8
+# Choosing a configuration — v5.9
 
 This is the decision guide for the three user-facing questions: **which agent**,
 **which behavior**, and **which quality gate**. For the raw capability table see
@@ -7,7 +7,7 @@ This is the decision guide for the three user-facing questions: **which agent**,
 
 ## 1. Which agent should I install for?
 
-All eight agents share the same skill bundle and 23 model profiles. They differ only
+All eight agents share the canonical optimizer skill and the same internal model profiles. They differ only
 in how reliably the adapter can (a) discover the exact active model before the
 first call and (b) enforce an approval barrier in PREVIEW.
 

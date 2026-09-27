@@ -205,7 +205,8 @@ class InstallerModuleTests(unittest.TestCase):
             self.assertEqual(custom_skill.read_text(encoding="utf-8"), "user-owned")
             self.assertEqual(custom_command.read_text(encoding="utf-8"), "user-command")
             self.assertTrue((root / ".agents/skills/prompt-optimizer/SKILL.md").is_file())
-            self.assertTrue((root / ".opencode/commands/prompt-luna.md").is_file())
+            self.assertTrue((root / ".opencode/commands/prompt.md").is_file())
+            self.assertFalse((root / ".opencode/commands/prompt-luna.md").exists())
 
     def test_project_plan_contains_gemini_managed_block_and_opencode_tui_registration(self):
         request = InstallRequest(

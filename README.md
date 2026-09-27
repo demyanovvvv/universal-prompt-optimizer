@@ -1,4 +1,17 @@
-# Universal Prompt Optimizer v5.8
+# Universal Prompt Optimizer v5.9
+
+## v5.9 release highlights
+
+- Reduced user-facing commands to three general-purpose OpenCode commands:
+  `/prompt`, `/prompt-only`, and `/prompt-optimizer`.
+- Removed model-specific slash commands and manual model skills from user
+  installations while preserving internal model profiles for automatic routing.
+- Added one consolidated Pi settings command:
+  `/prompt-optimizer auto|preview|off|status`.
+- Unknown or unavailable models now use a model-neutral structured fallback by
+  default instead of being skipped or assigned an unrelated vendor profile.
+- Added safe migration cleanup for unchanged legacy model commands and skills;
+  user-modified and third-party files are preserved.
 
 ## v5.8 release highlights
 
@@ -8,7 +21,7 @@
   server/TUI integration.
 - OpenCode uninstall preserves user plugin entries, including entries with
   options, and removes only Prompt Optimizer-owned registration and files.
-- Added the `po-status` command and stable plugin IDs:
+- Added the `/prompt-optimizer` settings command and stable plugin IDs:
   `prompt-optimizer` and `prompt-optimizer.tui`.
 - GPT-6 Sol repository analysis now uses bounded inspection and current
   configuration evidence instead of open-ended exploration or stale docs.
@@ -72,7 +85,7 @@ The v5.5 verified lifecycle build remains included:
   progressive-disclosure, ambiguous-model,
   prompt-injection, destructive-action, and secret-preservation cases.
 - OpenCode now has a separate native TUI plugin. It is invisible by default apart
-  from a compact `PO + AUTO` indicator, with `/prompt-optimizer`, `/po-status`,
+  from a compact `PO + AUTO` indicator, with `/prompt-optimizer`,
   and `Ctrl+Shift+P` available for on-demand controls.
 - OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
   and `full`. Legacy boolean values remain readable; adapters without a native
@@ -92,7 +105,7 @@ The v5.4 installer/runtime hardening remains included:
 - Gemini CLI no longer assumes Gemini 3.8 Flash. `BeforeModel` now observes the exact resolved `llm_request.model` without modifying the request; first-turn routing uses only explicit `GEMINI_MODEL` / `model.name` when visible and otherwise follows SKIP/GENERIC without guessing.
 - Stale v5.2/v5.3 runtime IDs were removed; version identity is centralized in `VERSION`.
 - `verify.sh` and `verify.mjs` are thin launchers over one shared checker, `tools/selfcheck.py`, covering Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
-- 23 model profiles and 23 manual override skills remain developer-guidance-first, with prompt shaping kept separate from runtime reasoning/thinking/tool-loop configuration.
+- Model profiles remain internal developer-guidance data. User installations expose one canonical `prompt-optimizer` skill and automatic exact-model routing, with a neutral structured fallback for unknown or unavailable models.
 - Installation updates managed files atomically, preserves unrelated files in existing skill/command directories, rejects malformed managed JSON, and refuses to install inside the package source tree.
 
 ### Quick start
@@ -109,7 +122,7 @@ chmod +x install.sh verify.sh
 ### OpenAI
 GPT-6 Astra, Sol, and Luna (`gpt-6-sol`, `gpt-6-luna`; short aliases `sol`, `luna`). GPT-5.6 Terra remains `terra`; legacy GPT-5.6 Sol/Luna remain available as `gpt-5.6-sol` / `gpt-5.6-luna`, with `gpt-5.6` preserved as a GPT-5.6 Sol alias.
 
-**Migration:** `prompt-sol` / `prompt-luna` and session overrides `sol` / `luna` now select GPT-6. Use `prompt-gpt-5-6-sol` / `prompt-gpt-5-6-luna` or versioned profile overrides for GPT-5.6. Bare `gpt-6` is ambiguous and follows the configured unsupported-model policy. These profiles shape prompts; they do not switch the runtime model.
+**Migration:** model-specific slash commands and manual override skills are no longer installed. Model aliases remain internal routing data for automatic exact-model selection. Unknown or unavailable models use the neutral structured fallback and do not get assigned a vendor-specific profile.
 
 ### Z.ai / GLM
 GLM-5.2; GLM-5.3; GLM-5.3-Flash.
@@ -138,7 +151,7 @@ Shared config (project):
   "behavior": "auto",
   "scope": "all",
   "qualityGate": true,
-  "unsupportedModel": "skip"
+  "unsupportedModel": "generic"
 }
 ```
 
@@ -149,7 +162,7 @@ Shared config (project):
   "behavior": "preview",
   "scope": "all",
   "qualityGate": true,
-  "unsupportedModel": "skip"
+  "unsupportedModel": "generic"
 }
 ```
 
@@ -160,7 +173,7 @@ Shared config (project):
   "behavior": "off",
   "scope": "all",
   "qualityGate": true,
-  "unsupportedModel": "skip"
+  "unsupportedModel": "generic"
 }
 ```
 
@@ -342,9 +355,9 @@ See `DECISION-GUIDE.md` for a task-oriented guide to picking the agent,
 behavior, quality gate, scope, and unknown-model policy, plus troubleshooting.
 The machine-readable adapter contract is `adapters/capability-matrix.json`.
 
-## Manual model override skills
+## Automatic model routing
 
-`prompt-astra`, `prompt-sol`, `prompt-terra`, `prompt-luna`, `prompt-gpt-5-6-sol`, `prompt-gpt-5-6-luna`, `prompt-glm-5-2`, `prompt-glm-5-3`, `prompt-glm-5-3-flash`, `prompt-deepseek-v4-1-flash`, `prompt-deepseek-v4-flash`, `prompt-deepseek-v4-pro`, `prompt-claude-fable-5-1`, `prompt-claude-fable-5`, `prompt-claude-opus-5-5`, `prompt-claude-opus-5`, `prompt-claude-opus-4-8`, `prompt-claude-sonnet-5`, `prompt-kimi-k3`, `prompt-muse-spark-1-3`, `prompt-hy4-preview`, `prompt-qwen3-8-max`, `prompt-gemini-3-8-flash`, `prompt-grok-4-6`.
+Model profiles are selected automatically from the exact active model when the adapter exposes it. Unknown or unavailable models use the neutral structured fallback; they are never guessed into a vendor-specific profile. User installations expose only the general-purpose `prompt`, `prompt-only`, and `prompt-optimizer` commands.
 
 ## Developer-practice principle
 

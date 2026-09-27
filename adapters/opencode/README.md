@@ -1,4 +1,4 @@
-# OpenCode adapter — v5.8
+# OpenCode adapter — v5.9
 
 Strongest integration. The server plugin uses OpenCode v1 `chat.message` and
 `experimental.chat.system.transform` hooks, so the profile is selected from the
@@ -37,7 +37,7 @@ The TUI plugin is registered in `tui.json` as:
 {"plugin":["./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}
 ```
 
-It exposes `/prompt-optimizer`, `/po-status`, and `Ctrl+Shift+P`. Session control
+It exposes `/prompt-optimizer` and `Ctrl+Shift+P`. Session control
 commands are ephemeral and do not rewrite JSON configuration. The status output
 reports the resolved profile, match source, and that OpenCode v1 PREVIEW is
 model-guided rather than a host-enforced execution barrier. The GPT-6 Sol

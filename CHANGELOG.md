@@ -1,5 +1,19 @@
 # Changelog
 
+## 5.9 — 2026-09-27
+
+- Reduced the user-facing command surface to `/prompt`, `/prompt-only`, and
+  `/prompt-optimizer` for OpenCode.
+- Removed model-specific OpenCode slash commands and manual model skills from
+  user installations; model profiles remain available internally for exact
+  automatic routing.
+- Consolidated Pi session controls into `/prompt-optimizer auto|preview|off|status`.
+- Made the neutral structured fallback the default for unknown or unavailable
+  models, without guessing a vendor-specific profile.
+- Added safe migration cleanup for unchanged legacy model commands and skills
+  while preserving user-modified and third-party files.
+- Updated installer, compatibility, README, and conformance documentation.
+
 ## 5.8 — 2026-09-27
 
 - Fixed OpenCode server-plugin registration for nested local plugins so the
@@ -8,9 +22,13 @@
   native OpenCode server/TUI integration.
 - Hardened uninstall for OpenCode plugin entries with options and separated
   server-plugin cleanup from owner-aware TUI cleanup.
-- Added the `po-status` command, stable plugin IDs, bounded GPT-6 Sol
+- Added the `/prompt-optimizer` settings command, stable plugin IDs, bounded GPT-6 Sol
   repository-analysis guidance, and explicit advisory PREVIEW documentation.
 - Added installer, lifecycle, metadata, runtime, and OpenCode regression tests.
+- Reduced user-facing commands to general-purpose controls and removed model-specific
+  slash commands and skills from installations. Exact model profiles remain internal
+  routing data; unknown or unavailable models use the neutral structured fallback.
+- Pi now exposes one `/prompt-optimizer auto|preview|off|status` settings command.
 - Completed the v5.8 version alignment across capability metadata, manual
   profile skills, installer expectations, and adapter documentation so Ubuntu
   and Windows CI verify the same release contract.

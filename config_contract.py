@@ -20,7 +20,7 @@ DEFAULTS: dict[str, Any] = {
     "behavior": "auto",
     "scope": "all",
     "qualityGate": "adaptive",
-    "unsupportedModel": "skip",
+    "unsupportedModel": "generic",
 }
 
 

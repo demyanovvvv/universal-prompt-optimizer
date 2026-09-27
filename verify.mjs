@@ -83,8 +83,8 @@ if (hasBash()) {
 // 2. Shared cross-platform checks (single source of truth).
 const SHARED_CHECKS = [
   ["python-syntax", "Python syntax", "Синтаксис Python"],
-  ["package-hygiene", "JSON, registry, 24 profiles/override skills, version alignment and package hygiene",
-    "JSON, registry, 24 профиля/override skills, версии и чистота пакета"],
+  ["package-hygiene", "JSON, registry, internal profiles, canonical skill, version alignment and package hygiene",
+    "JSON, реестр, внутренние профили, canonical skill, версии и чистота пакета"],
   ["generated-registry", "Generated model registry artifacts", "Сгенерированные model registry artifacts"],
   ["registry-conformance", "Registry and adapter conformance", "Согласованность registry и адаптеров"],
   ["adapter-conformance", "Adapter capability matrix conformance", "Согласованность adapter capability matrix"],

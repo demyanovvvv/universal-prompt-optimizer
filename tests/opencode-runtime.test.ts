@@ -119,6 +119,22 @@ test("decision engine honors duplicate, off, scope, and generic fallback", () =>
   assert.match(generic.warning ?? "", /neutral guidance/)
 })
 
+test("unknown or missing models use generic structured guidance by default", () => {
+  const base = {
+    settings: { ...settings, unsupportedModel: "generic" as const },
+    model: { providerID: "unknown", modelID: "big-pickle" },
+    profile: undefined,
+    taskType: "implementation" as const,
+    risk: "none" as const,
+    executionIntent: "explain" as const,
+    duplicate: false,
+    scopeEligible: true,
+  }
+  assert.equal(decide(base, "Build the feature").action, "apply")
+  assert.equal(decide(base, "Build the feature").profile, "generic")
+  assert.equal(decide({ ...base, model: { providerID: "", modelID: "" } }, "Build the feature").profile, "generic")
+})
+
 test("session pruning expires stale entries and caps the map", () => {
   const now = Date.now()
   const sessions = new Map<string, { state: { userPromptCount: number; active: boolean; lastSeenAt: number } }>()

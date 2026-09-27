@@ -16,7 +16,7 @@ class InstallRequest:
     behavior: Literal["auto", "preview", "off"] = "auto"
     prompt_scope: Literal["first", "all"] = "all"
     quality_gate: str = "adaptive"
-    unsupported_model: Literal["skip", "generic"] = "skip"
+    unsupported_model: Literal["skip", "generic"] = "generic"
     dry_run: bool = False
     backup: bool = True
     python_bin: str = "python3"
@@ -28,6 +28,7 @@ class Operation:
         "write", "delete", "merge", "copy_tree", "copy_file", "copy_files",
         "merge_hook", "merge_block", "copy_owned_file", "merge_tui", "merge_ignore",
         "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
+        "delete_legacy_model_skill", "delete_legacy_model_command",
         "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
         "merge_json_plugin_specs",
     ]

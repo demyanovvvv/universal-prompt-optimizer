@@ -2,6 +2,6 @@
   "schemaVersion": 1,
   "behavior": "auto",
   "scope": "all",
-  "unsupportedModel": "skip",
+  "unsupportedModel": "generic",
   "qualityGate": true
 }

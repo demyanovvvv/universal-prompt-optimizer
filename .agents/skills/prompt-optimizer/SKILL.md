@@ -4,10 +4,10 @@ description: Adapt a user task to the active model only when useful. Use for aut
 compatibility: Agent Skills compatible coding agents; native routing in OpenCode/Pi and rules or hook adapters elsewhere.
 metadata:
   author: developer-guidance-based
-  version: "5.8"
+  version: "5.9"
 ---
 
-# Universal Prompt Optimizer v5.8
+# Universal Prompt Optimizer v5.9
 
 Preserve the user's task while applying only model guidance that materially improves execution. A short, clear request should stay short.
 

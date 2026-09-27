@@ -105,13 +105,8 @@ def package_hygiene() -> tuple[bool, str]:
         if "Provenance" not in text or ("Official source" not in text and "Official sources" not in text):
             return False, f"profile missing provenance/source: {item['file']}"
     skill_root = ROOT / ".agents/skills"
-    expected_overrides = {f"prompt-{item['id'].replace('.', '-')}" for item in profiles}
-    overrides = [p for p in skill_root.iterdir() if p.is_dir() and p.name in expected_overrides]
-    if len(overrides) != 24:
-        return False, f"expected 24 override skills, got {len(overrides)}"
-    for name in expected_overrides:
-        if not (skill_root / name / "SKILL.md").is_file():
-            return False, f"missing {skill_root / name}/SKILL.md"
+    if not (skill_root / "prompt-optimizer/SKILL.md").is_file():
+        return False, "missing canonical prompt-optimizer skill"
     contract = json.loads((ROOT / "adapters/opencode/plugin/profile-contract.json").read_text(encoding="utf-8"))
     expected_contract = [{"id": item["id"], "aliases": item["aliases"]} for item in profiles]
     if contract.get("schemaVersion") != 1 or contract.get("profiles") != expected_contract:

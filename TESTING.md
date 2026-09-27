@@ -1,4 +1,4 @@
-# v5.8 build verification
+# v5.9 build verification
 
 Verified on **2026-09-16** after the lifecycle, CI, schema, conformance, and eval audit.
 
@@ -55,7 +55,7 @@ both the portable and bash self-checks.
 - JSON and JSONL syntax: every package file.
 - TypeScript compile check: OpenCode plugin and Pi extension via the pinned local `tsc`
   when dependencies are installed, or a compatible global `tsc`.
-- Registry alignment: exactly 23 model profiles and 23 manual override skills; OpenCode profile union matches registry IDs.
+- Registry alignment: model profiles and native routing artifacts match the registry; user installs contain only the canonical optimizer skill and general commands.
 - Archive hygiene: no `__pycache__` / `.pyc`.
 - Stale runtime IDs from v5.2/v5.3 rejected.
 - All-eight-agent installation dry-run.

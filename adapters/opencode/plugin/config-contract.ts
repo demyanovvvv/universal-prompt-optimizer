@@ -5,7 +5,7 @@ export const DEFAULT_SETTINGS = {
   behavior: "auto",
   scope: "all",
   qualityGate: "adaptive",
-  unsupportedModel: "skip",
+  unsupportedModel: "generic",
 } as const satisfies {
   behavior: Behavior
   scope: Scope

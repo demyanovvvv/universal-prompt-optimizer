@@ -44,12 +44,31 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
     validate_request(request, catalog)
     operations: list[Operation] = []
     root = request.root
-    operations.append(Operation("copy_tree", root / ".agents/skills", source=Path(".agents/skills"), label="shared skills"))
+    package_root = catalog.root
+    if package_root is not None:
+        registry_path = package_root / ".agents/skills/prompt-optimizer/references/model-registry.json"
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        model_skills = [f"prompt-{item['id'].replace('.', '-')}" for item in registry.get("profiles", [])]
+        if model_skills:
+            for skill_name in model_skills:
+                operations.append(Operation("delete_legacy_model_skill", root / ".agents/skills" / skill_name,
+                                            label="obsolete model skill", params={"name": skill_name}))
+            if "claude" in request.adapters:
+                for skill_name in model_skills:
+                    operations.append(Operation("delete_legacy_model_skill", root / ".claude/skills" / skill_name,
+                                                label="obsolete Claude model skill", params={"name": skill_name}))
+    skill_params = {"include": ["prompt-optimizer"]}
+    operations.append(Operation("copy_tree", root / ".agents/skills", source=Path(".agents/skills"), label="shared skills", params=skill_params))
     if "claude" in request.adapters:
-        operations.append(Operation("copy_tree", root / ".claude/skills", source=Path(".agents/skills"), label="Claude skills"))
+        operations.append(Operation("copy_tree", root / ".claude/skills", source=Path(".agents/skills"), label="Claude skills", params=skill_params))
     if "opencode" in request.adapters:
         commands_dest = root / (".opencode/commands" if request.scope == "project" else ".config/opencode/commands")
-        operations.append(Operation("copy_files", commands_dest, source=Path("adapters/opencode/commands"), label="OpenCode commands"))
+        if package_root is not None:
+            for command in [*model_skills, "po-status"]:
+                operations.append(Operation("delete_legacy_model_command", commands_dest / f"{command}.md",
+                                            label="obsolete OpenCode command"))
+        operations.append(Operation("copy_files", commands_dest, source=Path("adapters/opencode/commands"), label="OpenCode commands",
+                                    params={"include": ["prompt.md", "prompt-only.md", "prompt-optimizer.md"]}))
         opencode_base = root / (".opencode" if request.scope == "project" else ".config/opencode")
         if request.automatic:
             operations.append(Operation("copy_tree", opencode_base / "plugins/prompt-optimizer",
