@@ -12,6 +12,7 @@ from installer.locking import InstallLock
 from installer.planning import validate_request
 
 ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
 
 
 class InstallerModuleTests(unittest.TestCase):
@@ -286,10 +287,10 @@ class InstallerModuleTests(unittest.TestCase):
             execute_plan(plan, source_root=ROOT)
             document = claude_doc.read_text(encoding="utf-8")
             self.assertTrue(document.startswith("User notes"))
-            self.assertIn("## Prompt Optimizer v5.7", document)
+            self.assertIn(f"## Prompt Optimizer v{PACKAGE_VERSION}", document)
             self.assertIn("canonical `.agents/skills/prompt-optimizer/SKILL.md`", document)
             agents = (root / "AGENTS.md").read_text(encoding="utf-8")
-            self.assertIn("## Prompt Optimizer v5.7 preflight", agents)
+            self.assertIn(f"## Prompt Optimizer v{PACKAGE_VERSION} preflight", agents)
             self.assertTrue((root / ".github/copilot-instructions.md").is_file())
             self.assertTrue((root / ".windsurf/rules/prompt-optimizer.md").is_file())
 

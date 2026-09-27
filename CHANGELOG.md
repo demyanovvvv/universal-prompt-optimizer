@@ -11,6 +11,9 @@
 - Added the `po-status` command, stable plugin IDs, bounded GPT-6 Sol
   repository-analysis guidance, and explicit advisory PREVIEW documentation.
 - Added installer, lifecycle, metadata, runtime, and OpenCode regression tests.
+- Completed the v5.8 version alignment across capability metadata, manual
+  profile skills, installer expectations, and adapter documentation so Ubuntu
+  and Windows CI verify the same release contract.
 
 ## 5.7 — 2026-09-24
 

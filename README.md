@@ -1,4 +1,21 @@
-# Universal Prompt Optimizer v5.7
+# Universal Prompt Optimizer v5.8
+
+## v5.8 release highlights
+
+- OpenCode nested server plugins are now explicitly registered in
+  `opencode.json`, so the native integration is loaded reliably by OpenCode v1.
+- Non-automatic installs no longer silently install or register native OpenCode
+  server/TUI integration.
+- OpenCode uninstall preserves user plugin entries, including entries with
+  options, and removes only Prompt Optimizer-owned registration and files.
+- Added the `po-status` command and stable plugin IDs:
+  `prompt-optimizer` and `prompt-optimizer.tui`.
+- GPT-6 Sol repository analysis now uses bounded inspection and current
+  configuration evidence instead of open-ended exploration or stale docs.
+- OpenCode PREVIEW safety is documented accurately as advisory in v1 because
+  the current plugin API has no cancellable tool hook or host mutation barrier.
+
+Full release notes: [CHANGELOG.md](CHANGELOG.md).
 
 Model-aware adaptive Agent Skill that lets you write normal short human prompts while the active agent silently converts them **only when useful** into the prompt shape recommended for the selected model.
 

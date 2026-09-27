@@ -1,4 +1,4 @@
-# Gemini CLI adapter — v5.7
+# Gemini CLI adapter — v5.8
 
 The adapter registers the same observation/preflight script for two native Gemini CLI events:
 
