@@ -29,6 +29,7 @@ class Operation:
         "merge_hook", "merge_block", "copy_owned_file", "merge_tui", "merge_ignore",
         "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
         "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
+        "merge_json_plugin_specs",
     ]
     path: Path
     content: bytes | None = None

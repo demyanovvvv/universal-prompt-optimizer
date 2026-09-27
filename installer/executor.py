@@ -384,7 +384,7 @@ def _delete_json_hooks(operation: Operation, transaction: InstallTransaction) ->
 
 
 def _delete_json_plugin_specs(operation: Operation, transaction: InstallTransaction) -> None:
-    specs = set(operation.params.get("specs", ())) if operation.params else set()
+    specs = list(operation.params.get("specs", ())) if operation.params else []
     if not operation.path.exists():
         return
     current = _load_json(operation.path, "TUI config")
@@ -393,7 +393,7 @@ def _delete_json_plugin_specs(operation: Operation, transaction: InstallTransact
         return
     if not isinstance(plugins, list):
         raise ValueError(f"plugin must be an array: {operation.path}")
-    remaining = [item for item in plugins if item not in specs]
+    remaining = [item for item in plugins if all(item != spec for spec in specs)]
     if remaining == plugins:
         return
     if remaining:
@@ -403,6 +403,27 @@ def _delete_json_plugin_specs(operation: Operation, transaction: InstallTransact
     if not current:
         _delete_owned_file(operation, transaction)
         return
+    transaction.record(operation.path)
+    atomic_write_bytes(operation.path, (json.dumps(current, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
+
+
+def _merge_json_plugin_specs(operation: Operation, transaction: InstallTransaction, backup: bool) -> None:
+    if operation.content is None:
+        raise ValueError(f"merge_json_plugin_specs operation has no content: {operation.path}")
+    _reject_symlink(operation.path)
+    current = _load_json(operation.path, "OpenCode config") if operation.path.exists() else {}
+    plugins = current.get("plugin", [])
+    if not isinstance(plugins, list):
+        raise ValueError(f"plugin must be an array: {operation.path}")
+    update = json.loads(operation.content.decode("utf-8"))
+    spec = update.get("plugin") if isinstance(update, dict) else None
+    if not isinstance(spec, str) or not spec:
+        raise ValueError(f"plugin registration must contain a non-empty string: {operation.path}")
+    if spec in plugins:
+        return
+    plugins.append(spec)
+    current["plugin"] = plugins
+    _backup_once(operation.path, transaction, backup)
     transaction.record(operation.path)
     atomic_write_bytes(operation.path, (json.dumps(current, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
 
@@ -457,6 +478,9 @@ def _apply(operation: Operation, source_root: Path, transaction: InstallTransact
         return
     if operation.kind == "merge_tui":
         _merge_tui(operation, transaction, backup)
+        return
+    if operation.kind == "merge_json_plugin_specs":
+        _merge_json_plugin_specs(operation, transaction, backup)
         return
     if operation.kind == "merge_ignore":
         _merge_ignore(operation, transaction, backup)
@@ -516,7 +540,7 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                     raise ValueError(f"missing package directory: {source}")
             elif operation.kind == "copy_owned_file":
                 _source_file(operation, source_root)
-            elif operation.kind in {"merge_block", "merge_tui"} and operation.content is None:
+            elif operation.kind in {"merge_block", "merge_tui", "merge_json_plugin_specs"} and operation.content is None:
                 raise ValueError(f"{operation.kind} operation has no content: {operation.path}")
             elif operation.kind == "merge_ignore" and operation.content is None:
                 raise ValueError("merge_ignore operation has no content")
@@ -533,7 +557,7 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                     raise ValueError(f"missing package {'file' if operation.kind == 'delete_file_if_matches' else 'directory'}: {source}")
             elif operation.kind not in {
                 "write", "merge", "copy_tree", "copy_file", "copy_files", "merge_hook",
-                "merge_block", "copy_owned_file", "merge_tui", "merge_ignore", "delete",
+                "merge_block", "copy_owned_file", "merge_tui", "merge_json_plugin_specs", "merge_ignore", "delete",
                 "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
                 "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
             }:

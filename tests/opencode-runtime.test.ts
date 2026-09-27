@@ -7,6 +7,7 @@ import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
 import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
 import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
+import { PREVIEW, PROFILE_HINTS } from "../adapters/opencode/plugin/prompt-builder"
 import type { Settings } from "../adapters/opencode/plugin/types"
 
 const settings: Settings = {
@@ -137,6 +138,28 @@ test("hash duplicate fallback ignores the prompt reserved for the current turn",
   const state = { userPromptCount: 1, active: true, metrics: emptyMetrics(), lastPromptHash: "ignored", lastProcessedEventId: "event-1" }
   assert.equal(isDuplicate(state, "event-1", "same"), true)
   assert.equal(isDuplicate({ ...state, lastProcessedEventId: undefined, pendingPromptHash: "reserved" }, undefined, "same"), false)
+})
+
+test("GPT-6 Sol repository analysis is explicitly bounded at observable completion", () => {
+  assert.match(PROFILE_HINTS.sol, /bounded inspection/i)
+  assert.match(PROFILE_HINTS.sol, /stop.*tool/i)
+  assert.match(PROFILE_HINTS.sol, /acceptance criteria/i)
+})
+
+test("PREVIEW explicitly stops before mutation when approval is unavailable", () => {
+  assert.match(PREVIEW, /Do not call mutation-capable tools before approval/i)
+  assert.match(PREVIEW, /stop/i)
+  assert.match(PREVIEW, /Never pretend approval occurred|explicit confirmation/i)
+})
+
+test("OpenCode system transform carries Sol bounded-analysis and preview safety guidance", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, { behavior: "preview", scope: "all", qualityGate: "adaptive", unsupportedModel: "skip" })
+  const output = { system: [] as string[] }
+  await hooks["chat.message"]({ sessionID: "sol-preview", messageID: "m1" }, { parts: [{ type: "text", text: "Analyze the repository and report the three highest-risk integration issues." }] })
+  await hooks["experimental.chat.system.transform"]({ sessionID: "sol-preview", model: { providerID: "omniroute", id: "vilao/gpt-6-sol" } }, output)
+  assert.equal(output.system.length, 1)
+  assert.match(output.system[0], /bounded inspection/i)
+  assert.match(output.system[0], /Do not call mutation-capable tools before approval/i)
 })
 
 test("OpenCode hook leaves adaptive PASS out of model context and respects scope=first", async () => {

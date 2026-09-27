@@ -19,6 +19,38 @@ CONTRACT_SPEC.loader.exec_module(config_contract)
 
 
 class InstallerTests(unittest.TestCase):
+    def test_legacy_opencode_install_registers_server_plugin(self):
+        with tempfile.TemporaryDirectory() as raw:
+            base = Path(raw) / ".opencode"
+            base.mkdir(parents=True)
+            (base / "opencode.json").write_text(json.dumps({"plugin": [
+                ["./plugins/user.js", {"enabled": True}],
+            ]}), encoding="utf-8")
+            installer.install_opencode(base, "auto", "all", "skip", "adaptive", backup=False)
+            value = json.loads((base / "opencode.json").read_text(encoding="utf-8"))
+            self.assertEqual(value["plugin"], [
+                ["./plugins/user.js", {"enabled": True}],
+                "./plugins/prompt-optimizer/index.ts",
+            ])
+
+    def test_opencode_install_registers_server_plugin_without_replacing_existing_plugins(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            config = root / ".opencode" / "opencode.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(json.dumps({"plugin": ["./plugins/user.js"]}), encoding="utf-8")
+
+            plan = installer._plan_install(installer._InstallRequest(
+                root=root,
+                scope="project",
+                adapters=frozenset({"opencode"}),
+                automatic=True,
+            ), installer.load_catalog(installer.PACKAGE_ROOT))
+            installer._execute_plan(plan, source_root=installer.PACKAGE_ROOT, backup=False)
+
+            value = json.loads(config.read_text(encoding="utf-8"))
+            self.assertEqual(value["plugin"], ["./plugins/user.js", "./plugins/prompt-optimizer/index.ts"])
+
     def test_config_contract_preserves_unknown_fields_and_normalizes_legacy_gate(self):
         value = config_contract.normalize({
             "schemaVersion": 1,
@@ -59,6 +91,9 @@ class InstallerTests(unittest.TestCase):
             self.assertTrue((root / ".agents/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".claude/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".opencode/commands/prompt-luna.md").is_file())
+            self.assertTrue((root / ".opencode/commands/po-status.md").is_file())
+            self.assertFalse((root / ".opencode/plugins/prompt-optimizer").exists())
+            self.assertFalse((root / ".opencode/opencode.json").exists())
 
     def test_nonautomatic_composable_install_keeps_first_backup_of_managed_command(self):
         with tempfile.TemporaryDirectory() as raw:

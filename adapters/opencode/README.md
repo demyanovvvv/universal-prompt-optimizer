@@ -23,7 +23,7 @@ Off:
 {"schemaVersion":1,"behavior":"off","scope":"all","qualityGate":"adaptive","unsupportedModel":"skip"}
 ```
 
-Legacy `mode: first|all|off` remains accepted. PREVIEW instructs the active model to use OpenCode's `question` tool with `Выполнить` first/default; if the tool is unavailable it falls back to textual confirmation. No extra optimizer LLM call is made.
+Legacy `mode: first|all|off` remains accepted. PREVIEW instructs the active model to use OpenCode's `question` tool with `Выполнить` first/default; if the tool is unavailable it falls back to textual confirmation. No extra optimizer LLM call is made. In OpenCode v1 this remains advisory: the plugin API has no cancellable `tool.execute.before` result or host-level mutation barrier, so a model that ignores the preview instruction cannot be blocked by this adapter alone.
 
 `qualityGate` accepts `adaptive`, `pass`, `light`, `full`, and legacy booleans.
 The server stores only bounded, process-local session state and aggregate counters;
@@ -40,4 +40,7 @@ The TUI plugin is registered in `tui.json` as:
 It exposes `/prompt-optimizer`, `/po-status`, and `Ctrl+Shift+P`. Session control
 commands are ephemeral and do not rewrite JSON configuration. The status output
 reports the resolved profile, match source, and that OpenCode v1 PREVIEW is
-model-guided rather than a host-enforced execution barrier.
+model-guided rather than a host-enforced execution barrier. The GPT-6 Sol
+profile also applies bounded inspection for long repository analysis and must
+emit the requested report or an explicit blocking reason once its acceptance
+evidence is sufficient.

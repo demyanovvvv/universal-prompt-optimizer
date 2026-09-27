@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.8 — 2026-09-27
+
+- Fixed OpenCode server-plugin registration for nested local plugins so the
+  native integration is loaded by OpenCode v1 while preserving user plugins.
+- Fixed non-automatic installs so they do not silently install or register the
+  native OpenCode server/TUI integration.
+- Hardened uninstall for OpenCode plugin entries with options and separated
+  server-plugin cleanup from owner-aware TUI cleanup.
+- Added the `po-status` command, stable plugin IDs, bounded GPT-6 Sol
+  repository-analysis guidance, and explicit advisory PREVIEW documentation.
+- Added installer, lifecycle, metadata, runtime, and OpenCode regression tests.
+
 ## 5.7 — 2026-09-24
 
 - Added the DeepSeek V4.1 Flash profile (`deepseek-v4.1-flash`, `deepseek-flash`)

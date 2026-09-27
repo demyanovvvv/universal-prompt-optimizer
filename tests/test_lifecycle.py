@@ -4,6 +4,8 @@ import unittest
 from pathlib import Path
 
 from installer import lifecycle
+from installer.executor import execute_plan
+from installer.domain import InstallPlan, Operation
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_ROOT = ROOT
@@ -30,6 +32,23 @@ class ManagedFileMapTests(unittest.TestCase):
 
 
 class UninstallPlanTests(unittest.TestCase):
+    def test_delete_json_plugin_specs_handles_plugin_entries_with_options(self):
+        with tempfile.TemporaryDirectory() as raw:
+            config = Path(raw) / "opencode.json"
+            config.write_text(json.dumps({"plugin": [
+                "./plugins/user.js",
+                "./plugins/prompt-optimizer/index.ts",
+                ["./plugins/patchline/dist/plugin.js", {"mode": "compatibility"}],
+            ]}), encoding="utf-8")
+            operation = Operation("delete_json_plugin_specs", config, params={
+                "specs": ["./plugins/prompt-optimizer/index.ts"],
+            })
+            execute_plan(InstallPlan((operation,)), source_root=PACKAGE_ROOT, backup=False)
+            self.assertEqual(json.loads(config.read_text(encoding="utf-8"))["plugin"], [
+                "./plugins/user.js",
+                ["./plugins/patchline/dist/plugin.js", {"mode": "compatibility"}],
+            ])
+
     def test_build_uninstall_plan_targets_managed_destinations(self):
         plan = lifecycle.build_uninstall_plan(Path("/tmp/project"), PACKAGE_ROOT, "project")
         kinds = {(operation.kind, operation.path.as_posix()) for operation in plan.operations}
@@ -37,6 +56,15 @@ class UninstallPlanTests(unittest.TestCase):
         self.assertIn(("delete_block", "/tmp/project/GEMINI.md"), kinds)
         self.assertIn(("delete_file_if_matches", "/tmp/project/.gemini/hooks/prompt-preflight.py"), kinds)
         self.assertIn(("delete_json_fields", "/tmp/project/.prompt-optimizer.json"), kinds)
+
+    def test_uninstall_uses_plain_tree_cleanup_for_server_plugin_and_owned_cleanup_for_tui(self):
+        plan = lifecycle.build_uninstall_plan(Path("/tmp/project"), PACKAGE_ROOT, "project")
+        server = [operation for operation in plan.operations if operation.label == "opencode-plugin"]
+        tui = [operation for operation in plan.operations if operation.label == "opencode-tui-plugin"]
+        self.assertEqual(len(server), 1)
+        self.assertEqual(server[0].kind, "delete_tree_if_matches")
+        self.assertEqual(server[0].params, None)
+        self.assertTrue(any(operation.kind == "delete_tree_if_matches" and operation.params for operation in tui))
 
     def test_build_uninstall_plan_includes_runtime_cleanup(self):
         plan = lifecycle.build_uninstall_plan(Path("/tmp/project"), PACKAGE_ROOT, "project")
@@ -51,6 +79,7 @@ class UninstallPlanTests(unittest.TestCase):
         self.assertIn(("delete_json_hooks", "/tmp/project/.cursor/hooks.json"), project_kinds)
         self.assertIn(("delete_json_hooks", "/tmp/project/.gemini/settings.json"), project_kinds)
         self.assertIn(("delete_json_plugin_specs", "/tmp/project/.opencode/tui.json"), project_kinds)
+        self.assertIn(("delete_json_plugin_specs", "/tmp/project/.opencode/opencode.json"), project_kinds)
         owner = next(operation for operation in project.operations if operation.label == "opencode-tui-owner")
         self.assertEqual(owner.kind, "delete_owned_file")
 

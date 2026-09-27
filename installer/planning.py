@@ -50,7 +50,13 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
     if "opencode" in request.adapters:
         commands_dest = root / (".opencode/commands" if request.scope == "project" else ".config/opencode/commands")
         operations.append(Operation("copy_files", commands_dest, source=Path("adapters/opencode/commands"), label="OpenCode commands"))
+        opencode_base = root / (".opencode" if request.scope == "project" else ".config/opencode")
         if request.automatic:
+            operations.append(Operation("copy_tree", opencode_base / "plugins/prompt-optimizer",
+                                        source=Path("adapters/opencode/plugin"), label="OpenCode plugin"))
+            operations.append(Operation("merge_json_plugin_specs", opencode_base / "opencode.json",
+                                        content=json.dumps({"plugin": "./plugins/prompt-optimizer/index.ts"}).encode("utf-8"),
+                                        label="OpenCode server plugin registration"))
             tui_base = root / (".opencode" if request.scope == "project" else ".config/opencode")
             tui_plugin = tui_base / "plugins/prompt-optimizer-tui/prompt-optimizer.tsx"
             operations.append(Operation("copy_owned_file", tui_plugin, source=Path("adapters/opencode/tui/prompt-optimizer.tsx"), label="OpenCode TUI plugin"))
@@ -103,10 +109,7 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
                     label="Windsurf managed block",
                 ))
     if "opencode" in request.adapters:
-        base = root / (".opencode" if request.scope == "project" else ".config/opencode")
-        plugin = Path("adapters/opencode/plugin")
-        operations.append(Operation("copy_tree", base / "plugins/prompt-optimizer", source=plugin, label="OpenCode plugin"))
-        config_path = base / "prompt-optimizer.json"
+        config_path = opencode_base / "prompt-optimizer.json"
         updates = {"schemaVersion": 1, "behavior": request.behavior, "scope": request.prompt_scope,
                    "qualityGate": request.quality_gate, "unsupportedModel": request.unsupported_model}
         operations.append(plan_config_write(config_path, updates))

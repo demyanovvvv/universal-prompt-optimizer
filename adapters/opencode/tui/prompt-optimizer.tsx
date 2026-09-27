@@ -18,7 +18,7 @@ function statusFromConfig(api: any, sessionID?: string): { status: Status; label
   if (override?.behavior === "off") return { status: "off", label: "PO x OFF" }
   if (override?.behavior === "preview") return { status: "preview", label: "PO o PREVIEW" }
   if (override?.profile === "generic") return { status: "generic", label: "PO ? GENERIC" }
-  if (config?.plugin_enabled?.["prompt-optimizer-v5-5"] === false || config?.plugin_enabled?.["prompt-optimizer-v5-5.tui"] === false) return { status: "off", label: "PO x OFF" }
+  if (config?.plugin_enabled?.["prompt-optimizer"] === false || config?.plugin_enabled?.["prompt-optimizer.tui"] === false || config?.plugin_enabled?.["prompt-optimizer-v5-5"] === false || config?.plugin_enabled?.["prompt-optimizer-v5-5.tui"] === false) return { status: "off", label: "PO x OFF" }
   if (decision?.action === "preview") return { status: "preview", label: "PO o PREVIEW" }
   if (decision?.profile === "generic") return { status: "generic", label: "PO ? GENERIC" }
   return { status: "enabled", label: "PO + AUTO" }
@@ -27,7 +27,8 @@ function statusFromConfig(api: any, sessionID?: string): { status: Status; label
 function statusDetails(api: any, sessionID?: string): string {
   const current = statusFromConfig(api, sessionID)
   const decision = sessionDecision(api, sessionID)
-  const parts = [current.label, "PREVIEW advisory"]
+  const parts = [current.label]
+  if (current.status === "preview") parts.push("PREVIEW advisory")
   if (decision?.profile) parts.push(`profile=${decision.profile}`)
   if (decision?.gate) parts.push(`gate=${decision.gate}`)
   if (decision?.reason) parts.push(`reason=${decision.reason}`)
@@ -102,7 +103,7 @@ const tui: TuiPlugin = async (api) => {
 }
 
 const plugin: TuiPluginModule & { id: string } = {
-  id: "prompt-optimizer-v5-5.tui",
+  id: "prompt-optimizer.tui",
   tui,
 }
 

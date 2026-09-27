@@ -6,7 +6,7 @@ import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./ses
 import { EXACT_MODEL_ALIASES } from "./model-registry"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
-// Universal Prompt Optimizer v5.7
+// Universal Prompt Optimizer v5.8
 
 type Settings = import("./types").Settings
 
@@ -288,4 +288,4 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
   }
 }
 
-export default { id: "prompt-optimizer-v5-5", server }
+export default { id: "prompt-optimizer", server }

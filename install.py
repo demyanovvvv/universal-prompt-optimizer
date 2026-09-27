@@ -674,6 +674,15 @@ def write_shared_config(path: Path, behavior: str, scope: str, unsupported: str,
 
 def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_tree(PACKAGE_ROOT/'adapters/opencode/plugin',base/'plugins/prompt-optimizer',backup=backup,dry_run=dry_run,label='OpenCode native plugin')]
+    config = load_json_object(base/'opencode.json', 'OpenCode config')
+    plugins = config.get('plugin', [])
+    if not isinstance(plugins, list):
+        fail(L(f'plugin must be an array in {base / "opencode.json"}', f'Поле plugin должно быть массивом в {base / "opencode.json"}'))
+    spec = './plugins/prompt-optimizer/index.ts'
+    if spec not in plugins:
+        plugins = [*plugins, spec]
+    config['plugin'] = plugins
+    out.append(write_json(base/'opencode.json', config, backup=backup, dry_run=dry_run, label='OpenCode server plugin registration'))
     out.append(merge_json_object(base/'prompt-optimizer.json', managed_config(behavior, scope, unsupported, quality_gate), backup=backup, dry_run=dry_run, label='OpenCode prompt-optimizer config'))
     return out
 

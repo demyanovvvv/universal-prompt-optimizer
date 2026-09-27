@@ -1,5 +1,5 @@
 <!-- prompt-optimizer:auto:start -->
-## Prompt Optimizer v5.7 preflight
+## Prompt Optimizer v5.8 preflight
 
 For each eligible user task, use `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight unless a native Prompt Optimizer adapter already handles this turn. The native adapter wins. `qualityGate=pass` forces the leanest normalization; `light` adds only a missing high-value field; `full` builds a concise task-relevant execution brief; only `adaptive` selects PASS/LIGHT/FULL according to task need.
 
