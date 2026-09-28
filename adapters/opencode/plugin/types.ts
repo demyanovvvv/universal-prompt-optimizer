@@ -14,7 +14,7 @@ export type Settings = {
   unsupportedModel: UnsupportedModel
 }
 
-export type SessionOverride = Partial<Pick<Settings, "behavior" | "scope" | "qualityGate">> & {
+export type SessionOverride = Partial<Settings> & {
   profile?: Profile | "auto" | "generic"
 }
 

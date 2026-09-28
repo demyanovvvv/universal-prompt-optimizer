@@ -4,6 +4,7 @@ import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
 import { EXACT_MODEL_ALIASES } from "./model-registry"
+import { loadSessionSettings } from "./tui-config"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
 // Universal Prompt Optimizer v5.9
@@ -156,8 +157,9 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
   const loadSettings = () => resolveSettings(projectRoot, options)
   const getSession = (sessionID: string): RuntimeSession => {
     const current = sessions.get(sessionID)
-    if (current) return current
-    return { state: { userPromptCount: 0, active: false, metrics: emptyMetrics() } }
+    const external = loadSessionSettings(sessionID.replace(/^prompt-optimizer\/session\//, ""))
+    if (current) return { ...current, state: { ...current.state, override: { ...current.state.override, ...external } } }
+    return { state: { userPromptCount: 0, active: false, metrics: emptyMetrics(), override: external } }
   }
   const touchSession = (key: string, session: RuntimeSession): void => {
     session.state.lastSeenAt = Date.now()
@@ -202,6 +204,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         behavior: settings.invalidConfig ? "off" : stored.override?.behavior ?? settings.behavior,
         scope: stored.override?.scope ?? settings.scope,
         qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
+        unsupportedModel: stored.override?.unsupportedModel ?? settings.unsupportedModel,
       }
       if (effectiveSettings.behavior === "off") return
       const scopeEligible = effectiveSettings.scope === "all" || stored.userPromptCount === 0

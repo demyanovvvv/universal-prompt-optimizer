@@ -200,17 +200,19 @@ under `.opencode/plugins/prompt-optimizer-tui/`, and registers the latter in
 `.opencode/tui.json`. Global installation uses the corresponding paths under
 `~/.config/opencode/`.
 
-- `PO + AUTO` is the default compact indicator.
-- `PO o PREVIEW`, `PO x OFF`, and `PO ? GENERIC` show the active persistent or
-  session-level mode when known.
+- `● PO AUTO`, `◐ PO PREVIEW`, `○ PO OFF`, and `◇ PO GENERIC` are compact,
+  color-coded indicators. `! PO CONFIG` marks an invalid configuration and the
+  safe OFF fallback. A trailing `*` marks a session override.
 - `/prompt-optimizer status` shows resolved settings and privacy-safe counters.
 - `/prompt-optimizer explain` shows the latest action and reason without prompt
   text or hidden reasoning.
 - `/prompt-optimizer on|off|preview|first|all|pass|light|full|adaptive|reset`
   changes only the current OpenCode session; edit JSON explicitly for persistent
   configuration.
-- `Ctrl+Shift+P` opens the same command-palette entry. The widget does not claim
-  to expose server session state that the TUI API cannot read directly.
+- `Ctrl+P` → `Prompt Optimizer · Settings` opens the native settings dialog.
+  `Ctrl+Shift+P` remains a shortcut. Behavior, scope, quality gate, and
+  unsupported-model handling can be saved to the current session, the project,
+  or the global OpenCode configuration.
 
 ## How AUTO behaves
 

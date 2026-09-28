@@ -9,6 +9,10 @@ import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
 import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
 import { PREVIEW, PROFILE_HINTS } from "../adapters/opencode/plugin/prompt-builder"
 import type { Settings } from "../adapters/opencode/plugin/types"
+import { configPathForTarget, loadManagedConfig, loadSessionSettings, updateManagedConfig } from "../adapters/opencode/plugin/tui-config"
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 
 const settings: Settings = {
   behavior: "auto",
@@ -16,6 +20,37 @@ const settings: Settings = {
   qualityGate: "adaptive",
   unsupportedModel: "skip",
 }
+
+test("TUI config targets resolve to project and global paths", () => {
+  const projectRoot = "C:/workspace/demo"
+  assert.equal(configPathForTarget(projectRoot, "project", "C:/Users/test"), join(projectRoot, ".opencode", "prompt-optimizer.json"))
+  assert.equal(configPathForTarget(projectRoot, "global", "C:/Users/test"), join("C:/Users/test", ".config", "opencode", "prompt-optimizer.json"))
+  assert.equal(configPathForTarget(projectRoot, "session", "C:/Users/test"), undefined)
+})
+
+test("managed config updates preserve unknown fields and write atomically", () => {
+  const root = mkdtempSync(join(tmpdir(), "prompt-optimizer-tui-"))
+  const path = join(root, "prompt-optimizer.json")
+  writeFileSync(path, JSON.stringify({ schemaVersion: 1, behavior: "off", custom: { keep: true } }), "utf8")
+
+  const next = updateManagedConfig(path, { behavior: "auto", scope: "all" })
+
+  assert.deepEqual(next, { schemaVersion: 1, behavior: "auto", custom: { keep: true }, scope: "all" })
+  assert.deepEqual(loadManagedConfig(path), next)
+  assert.equal(readFileSync(path, "utf8").endsWith("\n"), true)
+})
+
+test("session settings load by session ID and ignore invalid managed values", () => {
+  const home = mkdtempSync(join(tmpdir(), "prompt-optimizer-session-"))
+  const folder = join(home, ".config", "opencode", "prompt-optimizer-sessions")
+  mkdirSync(folder, { recursive: true })
+  const path = join(folder, `${encodeURIComponent("session/demo")}.json`)
+  writeFileSync(path, JSON.stringify({ schemaVersion: 1, behavior: "preview", scope: "first" }))
+  assert.deepEqual(loadSessionSettings("session/demo", home), { behavior: "preview", scope: "first" })
+  writeFileSync(path, JSON.stringify({ schemaVersion: 1, behavior: "unknown" }))
+  assert.deepEqual(loadSessionSettings("session/demo", home), {})
+})
+
 
 test("model resolution preserves variant precedence and reports its source", () => {
   assert.deepEqual(resolveModel("anthropic", "claude-fable-5.1"), {

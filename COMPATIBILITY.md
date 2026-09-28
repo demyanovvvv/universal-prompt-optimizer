@@ -2,7 +2,7 @@
 
 | Agent | Shared skills | Exact active model routing | AUTO | PREVIEW | OFF | Mechanism |
 |---|---:|---:|---:|---:|---:|---|
-| OpenCode | Yes | **Yes** | **Native** | **Advisory native question-tool flow** | **Yes** | v1 chat/system-transform plugin + native TUI plugin |
+| OpenCode | Yes | **Yes** | **Native** | **Advisory native question-tool flow** | **Yes** | v1 chat/system-transform plugin + native TUI plugin + Ctrl+P settings |
 | Pi | Yes | **Yes** (`ctx.model`) | **Native** | **Native confirm/editor tool** | **Yes** | Pi extension |
 | Cursor | Yes | **Yes** (`model`/`model_id` hook payload) | Yes | Ask Question / fallback | Yes | beforeSubmitPrompt state bridge + always rule |
 | Gemini CLI | Yes | **Exact after BeforeModel observation; explicit configured model before first call when visible** | Yes | **ask_user** / fallback | Yes | BeforeAgent + observation-only BeforeModel hook + GEMINI.md |
