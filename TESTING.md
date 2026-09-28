@@ -1,4 +1,4 @@
-# v5.9 build verification
+# v5.10 build verification
 
 Verified on **2026-09-16** after the lifecycle, CI, schema, conformance, and eval audit.
 

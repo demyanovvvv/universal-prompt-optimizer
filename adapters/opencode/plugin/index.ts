@@ -7,7 +7,7 @@ import { EXACT_MODEL_ALIASES } from "./model-registry"
 import { loadSessionSettings } from "./tui-config"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
-// Universal Prompt Optimizer v5.9
+// Universal Prompt Optimizer v5.10
 
 type Settings = import("./types").Settings
 

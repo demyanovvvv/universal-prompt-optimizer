@@ -1,4 +1,4 @@
 <!-- prompt-optimizer:auto:start -->
-## Prompt Optimizer v5.9
+## Prompt Optimizer v5.10
 Use the canonical `.agents/skills/prompt-optimizer/SKILL.md` (or `.claude/skills/prompt-optimizer/SKILL.md`) as an adaptive preflight. Apply only the exact current model profile when the runtime exposes it; otherwise use the model-neutral structured fallback. PASS a clear request unchanged, use LIGHT for a small missing boundary, and load the FULL or PREVIEW workflow only when selected. Preserve user/project requirements and keep runtime effort/thinking separate from prompt text. AUTO executes silently; OFF skips auto optimization. User instructions override this block.
 <!-- prompt-optimizer:auto:end -->

@@ -1,4 +1,4 @@
-# Prompt Optimizer — Gemini CLI adapter v5.9
+# Prompt Optimizer — Gemini CLI adapter v5.10
 
 Use the installed `prompt-optimizer` skill as an adaptive preflight only when the native hook marks the turn eligible. Preserve user intent, exact literals, hard constraints, project rules, required verification, output requirements and approval boundaries; never invent requirements.
 

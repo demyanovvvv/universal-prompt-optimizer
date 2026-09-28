@@ -1,4 +1,18 @@
-# Universal Prompt Optimizer v5.9
+# Universal Prompt Optimizer v5.10
+
+[Русская версия документации](README.ru.md)
+
+## v5.10 release highlights
+
+- Added a compact color-coded OpenCode TUI indicator: `● PO AUTO`,
+  `◐ PO PREVIEW`, `○ PO OFF`, `◇ PO GENERIC`, and `! PO CONFIG`.
+- Added native `Ctrl+P` → `Prompt Optimizer · Settings` controls.
+- Settings can be saved for the current session, the project, or globally.
+- Added atomic, symlink-aware config writes with preservation of custom JSON
+  fields and fail-safe handling of malformed configuration.
+- Added a per-session bridge shared by the OpenCode TUI and server plugin.
+
+Full release notes: [CHANGELOG.md](CHANGELOG.md).
 
 ## v5.9 release highlights
 

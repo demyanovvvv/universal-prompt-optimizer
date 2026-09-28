@@ -1,5 +1,17 @@
 # Changelog
 
+## 5.10 — 2026-09-28
+
+- Added a compact, color-coded OpenCode TUI status chip for AUTO, PREVIEW, OFF,
+  GENERIC, and invalid-configuration states.
+- Added native `Ctrl+P` → `Prompt Optimizer · Settings` controls with
+  session, project, and global save targets.
+- Added atomic, symlink-aware configuration writes that preserve unknown JSON
+  fields and keep malformed configuration fail-safe.
+- Added a per-session settings bridge shared by the TUI and OpenCode server
+  plugin without triggering an extra model turn.
+- Added `README.ru.md` and expanded OpenCode configuration documentation.
+
 ## 5.9 — 2026-09-27
 
 - Reduced the user-facing command surface to `/prompt`, `/prompt-only`, and
