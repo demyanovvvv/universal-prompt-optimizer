@@ -1,6 +1,6 @@
 # Universal Prompt Optimizer v5.10
 
-[Русская версия документации](README.ru.md)
+**Documentation:** [English README](README.md) · [Русский README](README.ru.md) · [Changelog](CHANGELOG.md) · [v5.10.0 Release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.10.0)
 
 ## v5.10 release highlights
 
