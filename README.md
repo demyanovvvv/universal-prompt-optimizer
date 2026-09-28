@@ -1,6 +1,8 @@
 # Universal Prompt Optimizer v5.10
 
-**Documentation:** [English README](README.md) · [Русский README](README.ru.md) · [Changelog](CHANGELOG.md) · [v5.10.0 Release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.10.0)
+**Language:** English · [Русский README](README.ru.md)
+
+**Quick links:** [Installation](#installation) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md) · [v5.10.0 release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.10.0)
 
 ## v5.10 release highlights
 
