@@ -250,6 +250,23 @@ No second “prompt rewriting model” call is required.
 
 ## Installation
 
+### Commands at a glance
+
+| Task | Linux / macOS | Windows PowerShell | Notes |
+|---|---|---|---|
+| English installation | `./install.sh` | `py -3 install.py --agents all --auto` | Shell wizard detects agents; Python backend runs automatically |
+| Russian installation | `./install.sh --ru` | `py -3 install.ru.py --agents all --auto` | Same installer API and adapter contents |
+| Non-interactive installation | `./install.sh --agents all --auto --yes` | `py -3 install.py --agents all --auto` | Suitable for CI and scripts |
+| Preview / dry-run | `./install.sh --agents all --dry-run --yes` | `py -3 install.py --agents all --dry-run` | Shows planned changes without writing |
+| Uninstall | `./install.sh --uninstall --yes` | `py -3 install.py --uninstall` | Removes only unchanged managed files/blocks |
+| Verification | `./verify.sh` | `py -3 tools/selfcheck.py` | Full project self-check; see checks below |
+
+Python 3.10 or newer is required. On Linux and macOS, the shell launcher is
+the recommended interactive entry point; on Windows, the Python commands run
+without prompts and install all listed adapters. To use the wizard on Windows,
+run `./install.sh` from Git Bash. Add `--lang ru` to `install.py` when a script
+needs to select the Russian UI without using the dedicated wrapper.
+
 ### Normal installation — no flags
 
 ```bash
@@ -280,6 +297,14 @@ Found: OpenCode, Cursor, Claude Code
 ```
 
 So the common case is just **Enter**: all agents actually found on the machine are preselected automatically. If no supported agent is detected, the installer does not fail; it immediately offers manual multi-select or installation for all supported agents.
+
+The launcher checks Python and the adapter manifest before the wizard presents
+adapter detection/selection, installation location, settings and final review.
+Installation then prints a result summary. Cancellation
+at a prompt exits without applying changes. Re-running the installer is
+idempotent: managed entries are merged without duplicating them and unrelated
+user content is preserved. Use `--dry-run` to preview either a first or repeat
+installation.
 
 ### Manual multi-select
 
@@ -337,7 +362,8 @@ Normal users do not need these. They are retained for repeatable automation and 
 
 Run `./install.sh --help` for the automation interface.
 
-`install.py` is an internal backend; the supported human-facing entry point is `install.sh`.
+`install.py` is the non-interactive backend; `install.sh` provides the wizard.
+On Windows, `install.ru.py` is a localized direct entry point to the same API.
 
 ### Diagnose and uninstall
 

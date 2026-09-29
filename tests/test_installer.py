@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -20,6 +21,21 @@ CONTRACT_SPEC.loader.exec_module(config_contract)
 
 
 class InstallerTests(unittest.TestCase):
+    def test_russian_entry_point_uses_same_dry_run_without_writes(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            outputs = []
+            for script in ("install.py", "install.ru.py"):
+                run = subprocess.run(
+                    [sys.executable, "-B", str(ROOT / script), "--project", str(root),
+                     "--agents", "opencode", "--dry-run"],
+                    capture_output=True, text=True, check=True,
+                )
+                outputs.append(run.stdout)
+            self.assertIn("scope: project", outputs[0])
+            self.assertIn("область установки: проект", outputs[1])
+            self.assertFalse(any(root.iterdir()))
+
     def test_legacy_opencode_install_registers_server_plugin(self):
         with tempfile.TemporaryDirectory() as raw:
             base = Path(raw) / ".opencode"
