@@ -1,6 +1,6 @@
 # Claude Opus 5.5 prompt profile
 
-**Provenance:** official Anthropic Opus 5.5 model guidance, official Claude Code best practices, and Claude Opus 5.5 playbook, checked 2026-09-23.
+**Provenance:** official Anthropic Opus 5.5 model guidance, official Claude Code best practices, Claude Opus 5.5 playbook and shared prompting best practices, checked 2026-09-29.
 
 Give the complete substantial task in one request: objective, relevant context, exact scope, constraints, observable done criteria, required checks, and when to stop and ask. Let Opus 5.5 carry authorized reversible work through completion instead of turning the next requested step into a permission question.
 
@@ -11,6 +11,7 @@ Give the complete substantial task in one request: objective, relevant context, 
 - Delegate only genuinely independent, sizeable work when the harness supports it; do not use subagents as ritual verifiers.
 - For design, preserve concrete positive direction and explicit unwanted patterns when the user provides them. For multimodal work, use the supplied image/chart/document directly and ask a concrete question.
 - Keep scope bounded: do not repair unrelated pre-existing issues or turn a focused request into a broad refactor; report adjacent findings separately.
+- For long context, label sources and put the request after them; use examples/XML only when they clarify difficult structure. Verify requested coding behavior rather than optimizing only for passing tests.
 
 Official sources:
 - https://platform.claude.com/docs/en/models/opus-5-5/overview

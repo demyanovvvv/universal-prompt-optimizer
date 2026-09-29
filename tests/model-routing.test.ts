@@ -22,6 +22,9 @@ const routes = [
   ["claude-opus-5.5", "claude-opus-5.5", "Claude Opus 5.5"],
   ["claude-opus-5", "claude-opus-5", "Claude Opus 5"],
   ["claude-opus-4.8", "claude-opus-4.8", "Claude Opus 4.8"],
+  ["claude-sonnet-5.5", "claude-sonnet-5.5", "Claude Sonnet 5.5"],
+  ["claude-sonnet-5-5", "claude-sonnet-5.5", "Claude Sonnet 5.5"],
+  ["gpt-6.1-sol", "gpt-6.1-sol", "GPT-6.1 Sol"],
   ["deepseek-v4.1-flash", "deepseek-v4.1-flash", "DeepSeek V4.1 Flash"],
   ["deepseek-v4-1-flash", "deepseek-v4.1-flash", "DeepSeek V4.1 Flash"],
   ["deepseek-flash", "deepseek-v4.1-flash", "DeepSeek V4.1 Flash"],
@@ -33,6 +36,7 @@ const unsupported = [
   "gpt-6", "gpt-6-terra", "gpt-60-sol", "gpt-5.60-sol",
   "gpt-6-sol-extra", "gpt-6-sol-2026", "gpt-5.6-luna-extra", "solvent", "unknown-model",
   "claude-opus-5.50", "claude-opus-5-50", "claude-opus-5-2026", "claude-opus-5.5-extra",
+  "claude-sonnet-5.50", "claude-sonnet-5-50", "claude-sonnet-5.5-extra", "gpt-6.1-sol-extra", "gpt-6.1-sol-2026",
   "deepseek-v4", "deepseek-v4.1", "deepseek-v4.10-flash", "deepseek-v4-flash-extra",
 ]
 

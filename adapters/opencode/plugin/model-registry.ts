@@ -2,6 +2,7 @@
 export type Profile =
   | "astra"
   | "sol"
+  | "gpt-6.1-sol"
   | "terra"
   | "luna"
   | "gpt-5.6-sol"
@@ -18,6 +19,7 @@ export type Profile =
   | "claude-opus-5"
   | "claude-opus-4.8"
   | "claude-sonnet-5"
+  | "claude-sonnet-5.5"
   | "kimi-k3"
   | "muse-spark-1.3"
   | "hy4-preview"
@@ -28,6 +30,7 @@ export type Profile =
 export const PROFILE_IDS = [
   "astra",
   "sol",
+  "gpt-6.1-sol",
   "terra",
   "luna",
   "gpt-5.6-sol",
@@ -44,6 +47,7 @@ export const PROFILE_IDS = [
   "claude-opus-5",
   "claude-opus-4.8",
   "claude-sonnet-5",
+  "claude-sonnet-5.5",
   "kimi-k3",
   "muse-spark-1.3",
   "hy4-preview",
@@ -57,6 +61,7 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "astra": "astra",
   "gpt-6-sol": "sol",
   "sol": "sol",
+  "gpt-6.1-sol": "gpt-6.1-sol",
   "gpt-5.6-terra": "terra",
   "terra": "terra",
   "gpt-6-luna": "luna",
@@ -85,6 +90,8 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "claude-opus-4.8": "claude-opus-4.8",
   "claude-opus-4-8": "claude-opus-4.8",
   "claude-sonnet-5": "claude-sonnet-5",
+  "claude-sonnet-5.5": "claude-sonnet-5.5",
+  "claude-sonnet-5-5": "claude-sonnet-5.5",
   "kimi-k3": "kimi-k3",
   "muse-spark-1.3": "muse-spark-1.3",
   "muse-spark-1-3": "muse-spark-1.3",

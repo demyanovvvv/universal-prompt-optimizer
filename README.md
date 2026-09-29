@@ -136,7 +136,7 @@ chmod +x install.sh verify.sh
 ## Models
 
 ### OpenAI
-GPT-6 Astra, Sol, and Luna (`gpt-6-sol`, `gpt-6-luna`; short aliases `sol`, `luna`). GPT-5.6 Terra remains `terra`; legacy GPT-5.6 Sol/Luna remain available as `gpt-5.6-sol` / `gpt-5.6-luna`, with `gpt-5.6` preserved as a GPT-5.6 Sol alias.
+GPT-6 Astra, GPT-6.1 Sol (`gpt-6.1-sol`), GPT-6 Sol (`gpt-6-sol`, short alias `sol`), and GPT-6 Luna (`gpt-6-luna`, short alias `luna`). GPT-5.6 Terra remains `terra`; legacy GPT-5.6 Sol/Luna remain available as `gpt-5.6-sol` / `gpt-5.6-luna`, with `gpt-5.6` preserved as a GPT-5.6 Sol alias.
 
 **Migration:** model-specific slash commands and manual override skills are no longer installed. Model aliases remain internal routing data for automatic exact-model selection. Unknown or unavailable models use the neutral structured fallback and do not get assigned a vendor-specific profile.
 
@@ -149,7 +149,7 @@ DeepSeek V4.1 Flash; DeepSeek V4 Flash; DeepSeek V4 Pro.
 V4.1 Flash is the canonical `deepseek-flash` model. The retired `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` IDs still resolve to it on the official API, so they map to the V4.1 Flash profile for routing; `deepseek-v4-pro` remains its own profile. A bare `deepseek-v4` is ambiguous and follows the configured unsupported-model policy.
 
 ### Anthropic / Claude
- Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.
+  Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.5; Sonnet 5.
 
 ### Other
 Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Grok 4.6.

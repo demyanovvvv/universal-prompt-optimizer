@@ -13,6 +13,7 @@ A benchmark/default runtime parameter is not silently converted into a universal
 
 ## OpenAI
 - GPT-6 family model/prompt guidance: https://developers.openai.com/api/docs/guides/latest-model
+- GPT-6.1 Sol model: https://developers.openai.com/api/docs/models/gpt-6.1-sol
 - GPT-6 prompting best practices: https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices
 - GPT-6 Astra skills, repository instructions, decision boundaries, and persistence: https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra
 - GPT-5.6 prompt guidance: https://developers.openai.com/api/docs/guides/prompt-guidance-gpt-5p6
@@ -29,6 +30,7 @@ A benchmark/default runtime parameter is not silently converted into a universal
 - Claude Code best practices: https://code.claude.com/docs/en/best-practices
 - Claude Opus 4.8: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-opus-4-8
 - Claude Sonnet 5: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5
+- Claude Sonnet 5.5: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/prompting-claude-sonnet-5-5
 
 ## Z.ai / GLM
 - Prompt engineering: https://docs.bigmodel.cn/cn/guide/platform/prompt

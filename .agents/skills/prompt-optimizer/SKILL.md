@@ -27,6 +27,7 @@ Profiles:
 
 - GPT-6 Astra -> `references/gpt-6-astra.md`
 - GPT-6 Sol / `sol` -> `references/gpt-6-sol.md`
+- GPT-6.1 Sol -> `references/gpt-6.1-sol.md`
 - GPT-6 Luna / `luna` -> `references/gpt-6-luna.md`
 - GPT-5.6 Terra / `terra` -> `references/gpt-5.6-terra.md`
 - GPT-5.6 Sol / `gpt-5.6-sol` / `gpt-5.6` -> `references/gpt-5.6-sol.md`
@@ -43,6 +44,7 @@ Profiles:
 - Claude Opus 5 -> `references/claude-opus-5.md`
 - Claude Opus 4.8 -> `references/claude-opus-4.8.md`
 - Claude Sonnet 5 -> `references/claude-sonnet-5.md`
+- Claude Sonnet 5.5 -> `references/claude-sonnet-5.5.md`
 - Kimi K3 -> `references/kimi-k3.md`
 - Muse Spark 1.3 -> `references/muse-spark-1.3.md`
 - Hy4-preview -> `references/hy4-preview.md`

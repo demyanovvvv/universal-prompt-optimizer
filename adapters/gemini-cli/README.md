@@ -17,7 +17,7 @@ Before the first model call it can safely use only an explicit model visible to 
 
 Gemini CLI command-line `--model` has higher precedence but is not exposed to `BeforeAgent`. As soon as `BeforeModel` fires, the exact resolved `llm_request.model` is stored for that session and takes precedence on later user turns.
 
-Only an unambiguous `gemini-3.8-flash` ID selects the installed Gemini 3.8 Flash profile. Aliases such as `auto`, `pro`, or `flash` are not guessed. Unknown models follow the configured `unsupportedModel=skip|generic` behavior.
+Only unambiguous installed model IDs select profiles. This includes the shared OpenAI profiles (`gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-astra`, `gpt-6-luna`) and Claude profiles, including `claude-sonnet-5.5`; aliases such as `auto`, `pro`, or `flash` are not guessed. Unknown models follow the configured `unsupportedModel=skip|generic` behavior.
 
 ## PREVIEW
 

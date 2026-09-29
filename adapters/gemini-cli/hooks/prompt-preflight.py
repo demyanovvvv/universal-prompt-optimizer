@@ -186,10 +186,23 @@ def exact_profile_for(model: str | None) -> str | None:
     if not model:
         return None
     mid = model.lower().replace("_", "-")
-    # Only map an unambiguous ID. Aliases such as auto/pro/flash are deliberately
-    # not treated as Gemini 3.8 Flash because routing can resolve them elsewhere.
-    if re.search(r"(?:^|/)gemini[-_. ]*3[.-]8[-_]flash(?:[-_](?:latest|\d[\w.-]*))?$", mid):
-        return "gemini-3.8-flash"
+    leaf = mid.rsplit("/", 1)[-1]
+    if leaf.endswith("-latest"):
+        leaf = leaf[:-7]
+    profiles = {
+        "gpt-6-astra": "astra", "astra": "astra",
+        "gpt-6-sol": "sol", "sol": "sol", "gpt-6.1-sol": "gpt-6.1-sol",
+        "gpt-5.6-terra": "terra", "terra": "terra",
+        "gpt-6-luna": "luna", "luna": "luna",
+        "gpt-5.6": "gpt-5.6-sol", "gpt-5.6-sol": "gpt-5.6-sol", "gpt-5.6-luna": "gpt-5.6-luna",
+        "claude-fable-5.1": "claude-fable-5.1", "claude-fable-5-1": "claude-fable-5.1", "claude-fable-5": "claude-fable-5",
+        "claude-opus-5.5": "claude-opus-5.5", "claude-opus-5-5": "claude-opus-5.5", "claude-opus-5": "claude-opus-5",
+        "claude-opus-4.8": "claude-opus-4.8", "claude-opus-4-8": "claude-opus-4.8",
+        "claude-sonnet-5": "claude-sonnet-5", "claude-sonnet-5.5": "claude-sonnet-5.5", "claude-sonnet-5-5": "claude-sonnet-5.5",
+        "gemini-3.8-flash": "gemini-3.8-flash",
+    }
+    if leaf in profiles:
+        return profiles[leaf]
     return None
 
 
@@ -285,6 +298,14 @@ if profile == "gemini-3.8-flash":
         "Resolved model profile: Gemini 3.8 Flash. Prefer concise direct instructions and aggressively PASS/LIGHT. "
         "For long context put source data first and the specific task at the end; avoid verbose legacy prompt frameworks. "
     )
+elif profile == "gpt-6.1-sol":
+    base += "Resolved model profile: GPT-6.1 Sol. Preserve decisive context, scope, approval boundaries and observable completion; continue authorized work through relevant validation, use bounded current evidence, and keep reasoning effort in runtime rather than prompt text. "
+elif profile == "sol":
+    base += "Resolved model profile: GPT-6 Sol. Preserve decisive context, hard constraints, approval boundaries and observable completion; follow through on authorized work with proportionate validation. "
+elif profile == "claude-sonnet-5.5":
+    base += "Resolved model profile: Claude Sonnet 5.5. Use a bounded objective, scope, initiative boundary, deliverable and verification; continue authorized work without premature check-ins, batch independent tools, and report completed versus verified versus unconfirmed work. "
+elif profile in {"claude-sonnet-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-fable-5.1", "claude-fable-5"}:
+    base += f"Resolved Claude profile: {profile}. Use clear scope, concrete completion criteria, relevant tool evidence and behavior verification; use examples/XML and long-context source ordering only when they materially clarify the task. Keep effort and thinking in runtime. "
 elif model:
     base += f"Observed/configured model: {model}. No exact installed model profile matches it; use the neutral model-agnostic optimizer profile and do not invent model-specific behavior. "
 else:

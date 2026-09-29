@@ -1,6 +1,6 @@
 # Claude Fable 5.1 prompt profile
 
-**Provenance:** official Anthropic model-specific guide + shared Claude best practices, checked 2026-09-06.
+**Provenance:** official Anthropic model-specific guide + shared Claude best practices, checked 2026-09-29.
 
 Start from the Fable 5 end-to-end framing, then apply these 5.1-specific rules when relevant:
 
@@ -14,6 +14,7 @@ Start from the Fable 5 end-to-end framing, then apply these 5.1-specific rules w
 - At xhigh/max, leave adequate output room for long deliverables in runtime.
 - For dense visual inputs, crop/zoom/inspect relevant regions if the harness supports it.
 - If writing density/format matters, say so explicitly.
+- For long context, label sources and put the request after them; use examples/XML only when they clarify difficult output or boundaries. For coding, verify behavior rather than optimizing only for passing tests.
 
 Preserved thinking blocks/history are a harness concern and must be returned unchanged where required.
 

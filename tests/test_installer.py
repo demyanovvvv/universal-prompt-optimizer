@@ -330,6 +330,19 @@ class InstallerTests(unittest.TestCase):
         self.assertIn("fresh", pruned)
         self.assertIn("legacy", pruned)
 
+    def test_gemini_hook_resolves_shared_latest_model_profiles(self):
+        gemini_path = ROOT / "adapters/gemini-cli/hooks/prompt-preflight.py"
+        source = gemini_path.read_text(encoding="utf-8").split("inp = json.load(sys.stdin)", 1)[0]
+        namespace = {"__name__": "gemini_hook_model_test"}
+        exec(compile(source, str(gemini_path), "exec"), namespace)
+        resolve = namespace["exact_profile_for"]
+        self.assertEqual(resolve("gpt-6.1-sol"), "gpt-6.1-sol")
+        self.assertEqual(resolve("vendor/GPT_6.1_SOL-latest"), "gpt-6.1-sol")
+        self.assertEqual(resolve("claude-sonnet-5-5"), "claude-sonnet-5.5")
+        self.assertEqual(resolve("vendor/CLAUDE_SONNET_5.5-latest"), "claude-sonnet-5.5")
+        self.assertEqual(resolve("claude-opus-5.5"), "claude-opus-5.5")
+        self.assertIsNone(resolve("gpt-6.1-sol-extra"))
+
     def test_global_install_uninstall_lifecycle(self):
         with tempfile.TemporaryDirectory() as raw:
             home = Path(raw)
