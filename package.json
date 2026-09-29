@@ -1,7 +1,7 @@
 {
   "name": "universal-prompt-optimizer",
   "private": true,
-  "version": "5.10.0",
+  "version": "5.11.0",
   "description": "Model-aware adaptive prompt preflight for coding agents",
   "engines": {
     "node": ">=20"

@@ -1,8 +1,19 @@
-# Universal Prompt Optimizer v5.10
+# Universal Prompt Optimizer v5.11
 
 **Language:** English · [Русский README](README.ru.md)
 
-**Quick links:** [Installation](#installation) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md) · [v5.10.0 release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.10.0)
+**Quick links:** [Installation](#installation) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md) · [v5.11.0 release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.11.0)
+
+## v5.11 release highlights
+
+- Added exact routing and model guidance for GPT-6.1 Sol (`gpt-6.1-sol`).
+- Added exact routing and a dedicated prompt profile for Claude Sonnet 5.5 (`claude-sonnet-5.5`, alias `claude-sonnet-5-5`).
+- Updated Claude family guidance from Anthropic's current prompting best practices: bounded autonomy, useful tool progress, long-context ordering, targeted examples/XML, behavior verification, and no hidden-CoT scaffolding.
+- Propagated the new profiles across all eight adapters: OpenCode, Pi, Gemini CLI, Cursor, Claude Code, Codex, GitHub Copilot CLI, and Windsurf.
+- Gemini CLI now resolves supported OpenAI and Claude model IDs after model observation while preserving neutral fallback for unknown or ambiguous IDs.
+- Added routing and installer coverage for the new profiles and updated package hygiene checks for 26 model profiles.
+
+Full release notes: [CHANGELOG.md](CHANGELOG.md).
 
 ## v5.10 release highlights
 

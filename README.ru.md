@@ -1,6 +1,17 @@
-# Universal Prompt Optimizer v5.10
+# Universal Prompt Optimizer v5.11
 
 [English version](README.md)
+
+## Что нового в v5.11
+
+- Добавлена точная маршрутизация и профиль для GPT-6.1 Sol (`gpt-6.1-sol`).
+- Добавлена точная маршрутизация и отдельный prompt-профиль для Claude Sonnet 5.5 (`claude-sonnet-5.5`, alias `claude-sonnet-5-5`).
+- Обновлены рекомендации для всех поддерживаемых моделей Claude на основе актуальных Anthropic Prompting Best Practices: ограниченная автономность, полезный прогресс при работе с инструментами, порядок long-context данных, уместные examples/XML, проверка поведения и отсутствие скрытого CoT.
+- Новые профили распространены на все восемь адаптеров: OpenCode, Pi, Gemini CLI, Cursor, Claude Code, Codex, GitHub Copilot CLI и Windsurf.
+- Gemini CLI теперь распознаёт поддерживаемые model ID OpenAI и Claude после наблюдения за фактической моделью, сохраняя нейтральный fallback для неизвестных и неоднозначных ID.
+- Добавлены тесты маршрутизации и installer-проверки; registry теперь содержит 26 профилей моделей.
+
+Полное описание изменений: [CHANGELOG.md](CHANGELOG.md).
 
 ## Что нового в v5.10
 
