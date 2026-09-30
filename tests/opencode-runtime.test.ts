@@ -28,6 +28,16 @@ test("TUI config targets resolve to project and global paths", () => {
   assert.equal(configPathForTarget(projectRoot, "session", "C:/Users/test"), undefined)
 })
 
+test("/po-status is implemented as a native TUI information dialog", () => {
+  const source = readFileSync(join(process.cwd(), "adapters/opencode/tui/prompt-optimizer.tsx"), "utf8")
+  const statusCommand = source.indexOf('slashName: "po-status"')
+  assert.notEqual(statusCommand, -1)
+  const commandBlock = source.slice(statusCommand, source.indexOf("\n        },", statusCommand))
+  assert.match(commandBlock, /api\.ui\.dialog\.replace\(\(\) => <api\.ui\.DialogAlert/)
+  assert.doesNotMatch(commandBlock, /api\.ui\.toast/)
+  assert.match(source, /Status: \$\{current\.label\}/)
+})
+
 test("managed config updates preserve unknown fields and write atomically", () => {
   const root = mkdtempSync(join(tmpdir(), "prompt-optimizer-tui-"))
   const path = join(root, "prompt-optimizer.json")

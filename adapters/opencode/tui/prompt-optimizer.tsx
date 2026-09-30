@@ -128,12 +128,26 @@ function statusFromConfig(api: any, sessionID?: string): { status: Status; label
 function statusDetails(api: any, sessionID?: string): string {
   const current = statusFromConfig(api, sessionID)
   const decision = sessionDecision(api, sessionID)
-  const parts = [current.label]
-  if (current.status === "preview") parts.push("PREVIEW advisory")
-  if (decision?.profile) parts.push(`profile=${decision.profile}`)
-  if (decision?.gate) parts.push(`gate=${decision.gate}`)
-  if (decision?.reason) parts.push(`reason=${decision.reason}`)
-  return parts.join("; ")
+  const resolved = resolvedSettings(api)
+  const override = sessionOverride(api, sessionID)
+  const settings = { ...resolved.settings, ...override }
+  const lines = [
+    "Prompt Optimizer",
+    "",
+    `Status: ${current.label}`,
+    `Mode: ${settings.behavior.toUpperCase()} (${resolved.source})`,
+    `Scope: ${settings.scope.toUpperCase()} (${resolved.source})`,
+    `Quality gate: ${settings.qualityGate.toUpperCase()} (${resolved.source})`,
+    `Unsupported model: ${settings.unsupportedModel.toUpperCase()}`,
+  ]
+  if (current.status === "preview") lines.push("Preview: advisory (model-guided)")
+  if (decision?.model) lines.push(`Model: ${decision.model}`)
+  if (decision?.profile) lines.push(`Profile: ${decision.profile}`)
+  if (decision?.gate) lines.push(`Gate: ${decision.gate}`)
+  if (decision?.reason) lines.push(`Reason: ${decision.reason}`)
+  if (resolved.invalid) lines.push("Warning: invalid managed configuration forced safe OFF mode.")
+  lines.push("", "Press Esc to close.")
+  return lines.join("\n")
 }
 
 function statusTone(status: Status): string {
@@ -259,21 +273,14 @@ const tui: TuiPlugin = async (api) => {
         description: "Show current optimizer status",
         category: "Plugin",
         namespace: "palette",
-        slashName: "po-status",
-        run() {
-           const route = api.route?.current as { name?: string; params?: Record<string, unknown> } | undefined
-           const sessionID = route?.name === "session" ? String(route.params?.sessionID ?? "") : undefined
-           const current = statusFromConfig(api, sessionID)
-          api.ui.toast({
-            variant: current.status === "error" ? "error" : current.status === "generic" ? "warning" : "info",
-            title: "Prompt Optimizer",
-             message: `${statusDetails(api, sessionID)}. Use /prompt-optimizer status for detailed session state.`,
-            duration: 3500,
-          })
-        },
+         slashName: "po-status",
+         run() {
+           const sessionID = currentSessionID(api)
+           api.ui.dialog.replace(() => <api.ui.DialogAlert title="Prompt Optimizer status" message={statusDetails(api, sessionID)} />)
+         },
       },
     ],
-      bindings: [{ key: "ctrl+shift+p", cmd: "prompt-optimizer.open", desc: "Open Prompt Optimizer settings" }],
+    bindings: [{ key: "ctrl+shift+p", cmd: "prompt-optimizer.open", desc: "Open Prompt Optimizer settings" }],
   })
 }
 

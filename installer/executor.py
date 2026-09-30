@@ -360,7 +360,14 @@ def _delete_legacy_model_command(operation: Operation, transaction: InstallTrans
     if not operation.path.is_file():
         return
     text = operation.path.read_text(encoding="utf-8")
-    if "description: Optimize this task for " not in text or "Use the `prompt-" not in text:
+    legacy_status = """---
+description: Show Prompt Optimizer status for the current OpenCode session.
+---
+Use the Prompt Optimizer server plugin state for this session. Report the
+resolved mode, scope, quality gate, model/profile and privacy-safe counters.
+Do not edit persistent configuration and do not reveal hidden reasoning.
+"""
+    if text != legacy_status and ("description: Optimize this task for " not in text or "Use the `prompt-" not in text):
         return
     transaction.record(operation.path)
     operation.path.unlink()

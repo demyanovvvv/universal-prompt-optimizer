@@ -208,6 +208,26 @@ class InstallerModuleTests(unittest.TestCase):
             self.assertTrue((root / ".opencode/commands/prompt.md").is_file())
             self.assertFalse((root / ".opencode/commands/prompt-luna.md").exists())
 
+    def test_install_removes_only_unchanged_legacy_po_status_command(self):
+        legacy = """---
+description: Show Prompt Optimizer status for the current OpenCode session.
+---
+Use the Prompt Optimizer server plugin state for this session. Report the
+resolved mode, scope, quality gate, model/profile and privacy-safe counters.
+Do not edit persistent configuration and do not reveal hidden reasoning.
+"""
+        for content, removed in [(legacy, True), (legacy + "Custom instructions.\n", False)]:
+            with self.subTest(removed=removed), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                command = root / ".opencode/commands/po-status.md"
+                command.parent.mkdir(parents=True)
+                command.write_text(content, encoding="utf-8")
+                plan = plan_install(InstallRequest(root, "project", frozenset({"opencode"}), automatic=True), catalog.load_catalog(ROOT))
+                execute_plan(plan, source_root=ROOT)
+                self.assertEqual(command.exists(), not removed)
+                if not removed:
+                    self.assertEqual(command.read_text(encoding="utf-8"), content)
+
     def test_project_plan_contains_gemini_managed_block_and_opencode_tui_registration(self):
         request = InstallRequest(
             Path("/tmp/project"), "project", frozenset({"gemini", "opencode"}), automatic=True,
