@@ -48,7 +48,11 @@ test("OpenCode routes GPT generations separately and injects the matching profil
       const output = { system: [] as string[] }
       await hooks["chat.message"]({ sessionID: model, messageID: "1" }, { parts: [{ type: "text", text: "Fix this parser bug." }] })
       await hooks["experimental.chat.system.transform"]({ sessionID: model, model: { providerID: "proxy", id: model } }, output)
-      assert.ok(output.system.join("\n").includes(`${label}:`), model)
+      const rendered = output.system.join("\n")
+      assert.ok(rendered.includes(`${label}:`), model)
+      assert.match(rendered, /Objective:/)
+      assert.match(rendered, /Validation:/)
+      assert.match(rendered, /Completion:/)
     }
   }
   for (const model of unsupported) assert.equal(resolveModel("sol", model).profile, undefined, model)

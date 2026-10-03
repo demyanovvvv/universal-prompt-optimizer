@@ -7,7 +7,7 @@ import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
 import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
 import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
-import { PREVIEW, PROFILE_HINTS } from "../adapters/opencode/plugin/prompt-builder"
+import { PREVIEW, PROFILE_HINTS, analyzePrompt, buildPromptPlan, renderPromptPlan } from "../adapters/opencode/plugin/prompt-builder"
 import type { Settings } from "../adapters/opencode/plugin/types"
 import { configPathForTarget, loadManagedConfig, loadSessionSettings, updateManagedConfig } from "../adapters/opencode/plugin/tui-config"
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
@@ -133,6 +133,87 @@ test("prompt extraction preserves ordered text parts without duplicating message
       { type: "text", text: "Only edit src/auth and run the security tests." },
     ],
   }), "Fix the auth bug.\n\nOnly edit src/auth and run the security tests.")
+})
+
+test("prompt analysis preserves explicit scope, constraints, and deliverables", () => {
+  const analysis = analyzePrompt("Fix src/auth/callback.ts, preserve the public API, run tests/auth.test.ts, and report the root cause.")
+  assert.equal(analysis.primaryTask, "bugfix")
+  assert.equal(analysis.hasScope, true)
+  assert.equal(analysis.hasConstraints, true)
+  assert.equal(analysis.hasValidation, true)
+  assert.equal(analysis.hasDeliverable, true)
+  assert.match(analysis.exactLiterals.join(" "), /src\/auth\/callback\.ts/)
+})
+
+test("prompt plan creates a bounded bugfix execution brief without generic chain of thought", () => {
+  const plan = buildPromptPlan({
+    prompt: "Fix the failing auth callback and run the affected test.",
+    profile: "sol",
+    behavior: "auto",
+    qualityGate: "light",
+    gate: "light",
+    taskType: "bugfix",
+  })
+  const rendered = renderPromptPlan(plan)
+  assert.match(rendered, /Objective/i)
+  assert.match(rendered, /Validation/i)
+  assert.match(rendered, /root cause/i)
+  assert.doesNotMatch(rendered, /think step by step|chain.of.thought/i)
+  assert.ok(rendered.length < 2400)
+})
+
+test("prompt plan keeps user data out of system authority and preserves a long request in its original message", () => {
+  const prompt = "USER_DATA_SENTINEL " + "context ".repeat(1000) + "do not deploy"
+  const plan = buildPromptPlan({ prompt, profile: "sol", behavior: "preview", qualityGate: "full", gate: "full", taskType: "bugfix" })
+  const rendered = renderPromptPlan(plan)
+  assert.equal(plan.prompt, prompt)
+  assert.doesNotMatch(rendered, /USER_DATA_SENTINEL/)
+  assert.match(rendered, /PREVIEW MODE/)
+  assert.match(rendered, /Lifecycle:/)
+  assert.ok(rendered.length <= 5000)
+})
+
+test("read-only and explanation briefs never prescribe code changes", () => {
+  for (const prompt of ["Plan only: fix the bug, do not modify files", "Объясни ошибку, ничего не менять"]) {
+    const plan = buildPromptPlan({ prompt, profile: "generic", behavior: "auto", qualityGate: "full", gate: "full", taskType: "bugfix" })
+    const rendered = renderPromptPlan(plan)
+    assert.match(rendered, /read-only/i)
+    assert.doesNotMatch(rendered, /before changing code|fix issues caused by the change/)
+  }
+})
+
+test("Russian completeness signals and off mode are respected", () => {
+  const analysis = analyzePrompt("Исправь src/auth.ts, сохрани API, запусти тесты и составь отчёт")
+  assert.equal(analysis.hasConstraints, true)
+  assert.equal(analysis.hasValidation, true)
+  assert.equal(analysis.hasDeliverable, true)
+  assert.equal(renderPromptPlan(buildPromptPlan({ prompt: "Fix it", profile: "sol", behavior: "off", qualityGate: "full", gate: "full", taskType: "bugfix" })), "")
+})
+
+test("pass prompt plan stays empty in automatic mode", () => {
+  const plan = buildPromptPlan({
+    prompt: "Rename foo to bar.",
+    profile: "sol",
+    behavior: "auto",
+    qualityGate: "adaptive",
+    gate: "pass",
+    taskType: "refactor",
+  })
+  assert.equal(renderPromptPlan(plan), "")
+})
+
+test("review plan forbids mutation unless explicitly requested", () => {
+  const plan = buildPromptPlan({
+    prompt: "Review src/auth for security issues and do not modify files.",
+    profile: "sol",
+    behavior: "auto",
+    qualityGate: "full",
+    gate: "full",
+    taskType: "review",
+  })
+  const rendered = renderPromptPlan(plan)
+  assert.match(rendered, /findings first/i)
+  assert.match(rendered, /do not modify files/i)
 })
 
 test("adaptive gate chooses pass, light, and full from deterministic signals", () => {

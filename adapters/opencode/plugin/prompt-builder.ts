@@ -1,4 +1,5 @@
-import type { Profile, QualityGate, Settings } from "./types"
+import type { Profile, QualityGate, Settings, TaskType, Behavior } from "./types"
+import { classifyTask } from "./task-classifier"
 
 export const BASE_COMMON = `Preserve the user's intent, language, exact literals, hard constraints, requested output, project rules, required verification and approval boundaries. Do not invent requirements. Resolve shorthand from relevant conversation/repository context without copying irrelevant history. State instructions once and keep the final execution brief as short as the task/model permits. For implementation, do authorized in-scope local work and proportionate non-destructive validation; confirm destructive, irreversible, external, costly, credential/security-sensitive or materially scope-expanding actions unless already authorized. Native Reasoning First: never request hidden chain-of-thought or inject generic 'think step by step/think harder/show reasoning' scaffolding. User instructions outrank this preflight.`
 export const BASE_GATE = `Prompt Optimizer v5.11 preflight. Apply a positive-value quality gate before acting: PASS if the user's request is already precise; LIGHT if only scope/constraint/done criteria need normalization; FULL only for genuinely complex/ambiguous work. ${BASE_COMMON}`
@@ -42,4 +43,103 @@ export function buildLifecycle(settings: Settings): string {
 
 export function qualityText(gate: Exclude<QualityGate, "adaptive">): string {
   return `Selected quality gate: ${gate.toUpperCase()}.`
+}
+
+export type PromptAnalysis = {
+  primaryTask: TaskType
+  hasScope: boolean
+  hasConstraints: boolean
+  hasValidation: boolean
+  hasDeliverable: boolean
+  exactLiterals: string[]
+  readOnly: boolean
+  consequential: boolean
+}
+
+export type PromptPlanInput = {
+  prompt: string
+  profile: Profile | "generic"
+  behavior: Behavior
+  qualityGate: QualityGate
+  gate: Exclude<QualityGate, "adaptive">
+  taskType: TaskType
+  settings?: Settings
+}
+
+export type PromptPlan = PromptPlanInput & {
+  analysis: PromptAnalysis
+  sections: Array<{ id: string; text: string }>
+}
+
+const pathPattern = /(?:[A-Za-z]:[\\/]|\.\.?[\\/]|(?:src|test|tests|app|lib|packages|docs)[\\/])[A-Za-z0-9_.@\\/-]+/g
+const literalPattern = /`[^`]+`|"[^"\n]+"|'[^'\n]+'/g
+
+export function analyzePrompt(prompt: string): PromptAnalysis {
+  const normalized = prompt.trim()
+  const exactLiterals = [...new Set([
+    ...(normalized.match(pathPattern) ?? []),
+    ...(normalized.match(literalPattern) ?? []).map(value => value.slice(1, -1)),
+  ])]
+  const readOnly = /\b(?:plan only|read[- ]only|do not (?:change|modify|edit|delete)|without changing|no changes)\b|только план|только чт|ничего не менять|без изменений/i.test(normalized)
+  const consequential = /\b(?:delete|remove|drop|destroy|deploy|publish|production|prod|credentials?|secrets?)\b|удал\w*|продакшн|боев\w*|секрет\w*/i.test(normalized) && !readOnly
+  const hasScope = exactLiterals.length > 0 || /\b(?:in|from|under|within|across|file|files|module|repo|repository)\b|папк|файл|проект/i.test(normalized)
+  const hasConstraints = /\b(?:only|must|keep|preserve|without|don't|do not|avoid|exactly)\b|только|сохрани|сохран|без|не измен|не добав/i.test(normalized)
+  const hasValidation = /\b(?:test|tests|testing|verify|validate|check|coverage|assert)\b|проверь|тест|провер/i.test(normalized)
+  const hasDeliverable = /\b(?:report|document|explain|output|return|provide|show)\b|отч[её]т|документ|объясни|покажи|предложи/i.test(normalized)
+  return { primaryTask: classifyTask(normalized).type, hasScope, hasConstraints, hasValidation, hasDeliverable, exactLiterals, readOnly, consequential }
+}
+
+function taskPolicy(taskType: TaskType, analysis: PromptAnalysis): string[] {
+  if (taskType === "review" || taskType === "security") return ["Report findings first with location, evidence, impact, and confidence.", analysis.readOnly ? "Do not modify files or perform remediation." : "Do not modify files unless remediation is explicitly requested."]
+  if (taskType === "bugfix") return analysis.readOnly
+    ? ["Use read-only inspection and explain the observed cause or proposed fix without changing files."]
+    : ["Identify the observable failure and root cause before changing code.", "Keep the fix in scope and address regressions caused by the change."]
+  if (taskType === "refactor") return ["Preserve public behavior and contracts; update affected references and verify the result."]
+  if (taskType === "migration") return ["Account for compatibility, data or schema impact, recovery considerations, and proportionate validation."]
+  if (taskType === "research" || taskType === "planning") return ["Use bounded investigation, distinguish evidence from assumptions, and stop when the requested deliverable is supported."]
+  if (taskType === "documentation") return ["Preserve the requested audience, source of truth, exact commands and examples, and avoid unrelated rewrites."]
+  return []
+}
+
+export function buildPromptPlan(input: PromptPlanInput): PromptPlan {
+  const analysis = analyzePrompt(input.prompt)
+  analysis.primaryTask = input.taskType
+  if (input.behavior === "off" || (input.behavior === "auto" && input.gate === "pass" && input.qualityGate === "adaptive")) return { ...input, analysis, sections: [] }
+  const sections: Array<{ id: string; text: string }> = []
+  const gateMode = input.qualityGate === "pass"
+    ? `Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief. Selected quality gate: ${input.gate.toUpperCase()}.`
+    : `Prompt Optimizer preflight. Selected quality gate: ${input.gate.toUpperCase()}.`
+  const preservation = "Preserve the user's intent, language, exact literals, explicit constraints, requested output, and authorized scope. Do not invent requirements or request hidden reasoning instructions."
+  sections.push({ id: "preservation", text: `${gateMode} ${preservation}` })
+  sections.push({ id: "execution-mode", text: input.behavior === "preview" ? PREVIEW : "AUTO MODE: apply this execution brief internally and proceed in the same user turn. Do not print a rewritten prompt unless requested." })
+  sections.push({ id: "objective", text: "Objective: fulfill the user's requested outcome as stated. The original user message remains authoritative; preserve its exact literals, scope, constraints, and requested deliverable." })
+  const policy = taskPolicy(input.taskType, analysis)
+  if (policy.length) sections.push({ id: "task-policy", text: `Task guidance:\n- ${policy.join("\n- ")}` })
+  if (!analysis.hasValidation || input.gate === "full") sections.push({ id: "validation", text: "Validation: perform proportionate checks for the affected result and report what was verified; do not expand into unrelated testing." })
+  if (analysis.consequential) sections.push({ id: "approval", text: "Approval boundary: confirm destructive, irreversible, external, production, credential-sensitive, or materially scope-expanding actions unless the user explicitly authorized them." })
+  if (input.gate === "full") sections.push({ id: "sequence", text: analysis.readOnly
+    ? "Execution sequence: resolve only the context needed to answer; inspect the requested scope; distinguish evidence from assumptions; validate the answer; stop when the requested deliverable is supported."
+    : "Execution sequence: resolve only the context needed to act; perform the smallest in-scope work; inspect the result; fix issues caused by the change; validate; stop when completion criteria are met." })
+  sections.push({ id: "completion", text: "Completion: report the outcome, changed or inspected scope, validation evidence, and any concrete blocker or remaining uncertainty." })
+  if (input.profile !== "generic" && PROFILE_HINTS[input.profile]) sections.push({ id: "profile", text: PROFILE_HINTS[input.profile] })
+  const lifecycleSettings = input.settings ?? { scope: "all", behavior: input.behavior, qualityGate: input.qualityGate, unsupportedModel: "generic" }
+  sections.push({ id: "lifecycle", text: buildLifecycle(lifecycleSettings) })
+  return { ...input, analysis, sections }
+}
+
+export function renderPromptPlan(plan: PromptPlan): string {
+  if (!plan.sections.length) return ""
+  const seen = new Set<string>()
+  const sections = plan.sections.filter(section => {
+    if (!section.text.trim() || seen.has(section.id)) return false
+    seen.add(section.id)
+    return true
+  })
+  const render = (items: typeof sections) => items.map(section => section.text.trim()).join("\n\n")
+  let rendered = render(sections)
+  if (rendered.length <= 5000) return rendered
+  const optional = new Set(["profile", "lifecycle", "completion"])
+  rendered = render(sections.filter(section => !optional.has(section.id)))
+  if (rendered.length <= 5000) return rendered
+  return render(sections.filter(section => !optional.has(section.id) && section.id !== "sequence"))
 }

@@ -1,5 +1,5 @@
 import { classifyTask } from "./task-classifier"
-import { buildLifecycle, GENERIC, BASE_ALWAYS, BASE_GATE, PREVIEW, PROFILE_HINTS, qualityText } from "./prompt-builder"
+import { buildPromptPlan, renderPromptPlan } from "./prompt-builder"
 import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
@@ -10,10 +10,6 @@ import type { ModelResolution, Profile, SessionOverride, SessionState } from "./
 // Universal Prompt Optimizer v5.11
 
 type Settings = import("./types").Settings
-
-const AUTO_GATE = "AUTO MODE. Optimize internally only when the quality gate says it helps, keep the rewritten brief hidden, and execute immediately in this same user-turn."
-const AUTO_ALWAYS = "AUTO MODE. Normalize the in-scope request internally using the selected model profile, keep the rewritten brief hidden, and execute immediately in this same user-turn."
-
 
 function normalizeModelID(value: string): string {
   return value.trim().toLowerCase().replace(/_/g, "-")
@@ -40,7 +36,7 @@ export function detectProfile(_providerID: string, modelID: string): Profile | u
   return matchedModel(modelID)?.profile
 }
 
-export function resolveModel(providerID: string, modelID: string): ModelResolution {
+export function resolveModel(_providerID: string, modelID: string): ModelResolution {
   const normalizedModelID = normalizeModelID(modelID)
   const exactMatch = matchedModel(modelID)
   if (exactMatch) {
@@ -252,11 +248,17 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       // decision observable without spending model context restating it.
       if (decision.behavior === "auto" && effectiveSettings.qualityGate === "adaptive" && decision.gate === "pass") return
 
-      const hint = decision.profile === "generic" ? GENERIC : PROFILE_HINTS[decision.profile]
-      const base = effectiveSettings.qualityGate === "pass" ? BASE_ALWAYS : BASE_GATE
-      const behaviorText = decision.behavior === "preview" ? PREVIEW : (effectiveSettings.qualityGate === "pass" ? AUTO_ALWAYS : AUTO_GATE)
-      const selectedGate = decision.gate ? `${qualityText(decision.gate)}\n` : ""
-      output.system.push(`${base}\n${selectedGate}${hint}\n${behaviorText}\n${buildLifecycle(effectiveSettings)}`)
+      const plan = buildPromptPlan({
+        prompt,
+        profile: decision.profile === "none" ? "generic" : decision.profile,
+        behavior: decision.behavior,
+        qualityGate: effectiveSettings.qualityGate,
+        gate: decision.gate ?? "light",
+        taskType: decision.taskType,
+        settings: effectiveSettings,
+      })
+      const rendered = renderPromptPlan(plan)
+      if (rendered) output.system.push(rendered)
     },
 
     "command.execute.before": async (input: any, output: any) => {
@@ -264,7 +266,6 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       if (command !== "prompt-optimizer" && command !== "po" && command !== "po-status") return
       const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
-      const settings = loadSettings()
       const argument = String(input.arguments ?? "").trim().toLowerCase()
       const tokens = argument.split(/\s+/).filter(Boolean)
       const operation = command === "po-status" ? "status" : tokens[0] ?? "status"
