@@ -201,6 +201,16 @@ test("turn store keeps interleaved turns correlated and consumes each turn once"
   assert.equal(store.size("session-1"), 1)
 })
 
+test("turn store preserves distinct fallback turns with identical timestamps and prompt prefixes", () => {
+  const store = new TurnStore()
+  store.admit("session-1", { prompt: "Repeated prompt with the same prefix" }, 1000)
+  store.admit("session-1", { prompt: "Repeated prompt with the same prefix" }, 1000)
+  assert.equal(store.size("session-1"), 2)
+  assert.equal(store.consume("session-1", undefined, 1001)?.prompt, "Repeated prompt with the same prefix")
+  assert.equal(store.consume("session-1", undefined, 1002)?.prompt, "Repeated prompt with the same prefix")
+  assert.equal(store.consume("session-1"), undefined)
+})
+
 test("prompt plan creates a bounded bugfix execution brief without generic chain of thought", () => {
   const plan = buildPromptPlan({
     prompt: "Fix the failing auth callback and run the affected test.",

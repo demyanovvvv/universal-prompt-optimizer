@@ -3,10 +3,11 @@ type SessionTurns = Map<string, PendingTurn>
 
 export class TurnStore {
   private readonly sessions = new Map<string, SessionTurns>()
+  private fallbackSequence = 0
   constructor(private readonly maxTurnsPerSession = 16, private readonly ttlMs = 5 * 60 * 1000) {}
   admit(sessionID: string, turn: { messageID?: string; prompt: string }, now = Date.now()): void {
     const turns = this.sessions.get(sessionID) ?? new Map<string, PendingTurn>()
-    const key = turn.messageID ?? `${now}:${turn.prompt.slice(0, 32)}`
+    const key = turn.messageID ?? `fallback:${now}:${this.fallbackSequence++}`
     turns.set(key, { ...turn, admittedAt: now })
     while (turns.size > this.maxTurnsPerSession) turns.delete(turns.keys().next().value as string)
     this.sessions.set(sessionID, turns)
