@@ -5,6 +5,7 @@ import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
 import { EXACT_MODEL_ALIASES } from "./model-registry"
 import { loadSessionSettings } from "./tui-config"
+import { TurnStore } from "./turn-store"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
 // Universal Prompt Optimizer v5.11
@@ -97,8 +98,6 @@ function mergeState(previous: SessionState | undefined, patch: Partial<SessionSt
 
 type RuntimeSession = {
   state: SessionState
-  pendingPrompt?: string
-  pendingMessageId?: string
 }
 
 function settingLine(name: string, value: string, source: string): string {
@@ -150,6 +149,7 @@ export function formatDecision(decision: ReturnType<typeof decide>, settings: Re
 const server = async (ctx: any, options?: Record<string, unknown>) => {
   const projectRoot = typeof ctx?.directory === "string" ? ctx.directory : process.cwd()
   const sessions = new Map<string, RuntimeSession>()
+  const turns = new TurnStore()
   const loadSettings = () => resolveSettings(projectRoot, options)
   const getSession = (sessionID: string): RuntimeSession => {
     const current = sessions.get(sessionID)
@@ -169,7 +169,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const current = getSession(key)
       const stored = current.state
       const messageID = typeof input.messageID === "string" ? input.messageID : undefined
-      if (messageID && current.pendingMessageId === messageID) return
+      if (messageID && turns.resolve(key, messageID)) return
       const priorCount = stored.userPromptCount
       const prompt = promptText({ message: output?.message, parts: output?.parts })
       const settings = loadSettings()
@@ -182,16 +182,18 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
          lastSeenAt: Date.now(),
          pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
        })
-       touchSession(key, { state: next, pendingPrompt: prompt, pendingMessageId: messageID })
+       if (prompt) turns.admit(key, { messageID, prompt })
+       touchSession(key, { state: next })
     },
 
     "experimental.chat.system.transform": async (input: any, output: any) => {
       const key = stateKey(sessionIDOf(input.sessionID))
       const current = getSession(key)
       const stored = current.state
-      const prompt = current.pendingPrompt
+      const pending = turns.resolve(key)
+      const prompt = pending?.prompt
       if (!stored.active || !prompt) return
-      if (current.pendingMessageId && stored.lastProcessedEventId === current.pendingMessageId) return
+      if (pending?.messageID && stored.lastProcessedEventId === pending.messageID) return
 
       const settings = loadSettings()
       const effectiveSettings: Settings = {
@@ -236,11 +238,12 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         lastResolution: resolution,
         lastTaskType: task.type,
         metrics: nextMetrics,
-        lastProcessedEventId: current.pendingMessageId ?? stored.lastProcessedEventId,
+        lastProcessedEventId: pending?.messageID ?? stored.lastProcessedEventId,
         lastPromptHash: hashPrompt(prompt),
         pendingPromptHash: undefined,
         lastDecision: decision,
       })
+      turns.consume(key, pending?.messageID)
       touchSession(key, { state: nextState })
       if (decision.action === "skip") return
 

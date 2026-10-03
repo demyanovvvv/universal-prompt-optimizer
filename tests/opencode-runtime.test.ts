@@ -5,7 +5,9 @@ import plugin, { promptText, resolveModel } from "../adapters/opencode/plugin/in
 import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
 import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
-import { classifyTask } from "../adapters/opencode/plugin/task-classifier"
+import { classifyTask, analyzeTask } from "../adapters/opencode/plugin/task-classifier"
+import { assessRisk } from "../adapters/opencode/plugin/risk-analysis"
+import { TurnStore } from "../adapters/opencode/plugin/turn-store"
 import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
 import { PREVIEW, PROFILE_HINTS, analyzePrompt, buildPromptPlan, renderPromptPlan } from "../adapters/opencode/plugin/prompt-builder"
 import type { Settings } from "../adapters/opencode/plugin/types"
@@ -145,6 +147,60 @@ test("prompt analysis preserves explicit scope, constraints, and deliverables", 
   assert.match(analysis.exactLiterals.join(" "), /src\/auth\/callback\.ts/)
 })
 
+test("multi-axis analysis preserves mixed migration, security, planning, and implementation intent", () => {
+  const analysis = analyzeTask("Plan and implement the schema migration, review security impact, preserve compatibility, and run the affected tests.")
+  assert.equal(analysis.primaryType, "migration")
+  assert.deepEqual(analysis.types, ["migration", "security", "review", "testing", "planning", "implementation"])
+  assert.equal(analysis.executionIntent, "execute")
+  assert.equal(analysis.confidence, "high")
+})
+
+test("policy precedence keeps safety and explicit read-only boundaries above task guidance", () => {
+  const plan = buildPromptPlan({
+    prompt: "Review the production deletion logic; do not modify files.",
+    profile: "sol",
+    behavior: "auto",
+    qualityGate: "adaptive",
+    gate: "full",
+    taskType: "security",
+  })
+  const rendered = renderPromptPlan(plan)
+  assert.match(rendered, /do not modify files/i)
+  assert.match(rendered, /approval boundary/i)
+  assert.doesNotMatch(rendered, /perform the smallest in-scope work/i)
+})
+
+test("risk analysis distinguishes negated dangerous words from authorized consequences", () => {
+  assert.deepEqual(assessRisk("Review the deletion logic; do not delete anything"), {
+    level: "none",
+    categories: [],
+    requiresApproval: false,
+    evidence: [],
+  })
+  const production = assessRisk("Delete all production records")
+  assert.equal(production.level, "consequential")
+  assert.equal(production.requiresApproval, true)
+  assert.deepEqual(production.categories.sort(), ["destructive", "production"])
+})
+
+test("prompt analysis exposes missing high-value signals without copying the prompt", () => {
+  const analysis = analyzePrompt("Fix the auth callback")
+  assert.deepEqual(analysis.missingSignals, ["scope", "constraints", "validation", "deliverable"])
+  const complete = analyzePrompt("Fix src/auth/callback.ts, preserve the API, run tests/auth.test.ts, and report the root cause")
+  assert.deepEqual(complete.missingSignals, [])
+})
+
+test("turn store keeps interleaved turns correlated and consumes each turn once", () => {
+  const store = new TurnStore()
+  store.admit("session-1", { messageID: "a", prompt: "Fix A" })
+  store.admit("session-1", { messageID: "b", prompt: "Fix B" })
+  assert.equal(store.resolve("session-1", "a")?.prompt, "Fix A")
+  assert.equal(store.resolve("session-1", "b")?.prompt, "Fix B")
+  assert.equal(store.consume("session-1", "a")?.prompt, "Fix A")
+  assert.equal(store.consume("session-1", "a"), undefined)
+  assert.equal(store.size("session-1"), 1)
+})
+
 test("prompt plan creates a bounded bugfix execution brief without generic chain of thought", () => {
   const plan = buildPromptPlan({
     prompt: "Fix the failing auth callback and run the affected test.",
@@ -216,7 +272,8 @@ test("review plan forbids mutation unless explicitly requested", () => {
   assert.match(rendered, /do not modify files/i)
 })
 
-test("adaptive gate chooses pass, light, and full from deterministic signals", () => {
+test("adaptive gate escalates underspecified implementation requests without using length as complexity", () => {
+  assert.equal(chooseQualityGate("adaptive", { prompt: "Fix the auth callback", taskType: "bugfix" }), "light")
   assert.equal(chooseQualityGate("adaptive", { prompt: "Rename foo to bar." }), "pass")
   assert.equal(chooseQualityGate("adaptive", { prompt: "Review this change", taskType: "review" }), "light")
   assert.equal(chooseQualityGate("adaptive", { prompt: "Migrate every production schema", taskType: "migration" }), "full")

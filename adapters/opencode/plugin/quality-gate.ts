@@ -1,5 +1,6 @@
 import type { QualityGate, TaskType } from "./types"
-import { classifyTask } from "./task-classifier"
+import { analyzeTask } from "./task-classifier"
+import { analyzePrompt } from "./prompt-analysis"
 
 export type GateSignals = {
   prompt: string
@@ -10,17 +11,21 @@ export type GateSignals = {
 
 export function chooseQualityGate(configured: QualityGate, signals: GateSignals): Exclude<QualityGate, "adaptive"> {
   if (configured !== "adaptive") return configured
-  const inferred = classifyTask(signals.prompt)
+  const inferred = analyzeTask(signals.prompt)
   const risk = signals.risk ?? inferred.risk
-  const taskType = signals.taskType ?? inferred.type
+  const taskType = signals.taskType ?? inferred.primaryType
+  const taskTypes = new Set(inferred.types)
+  taskTypes.add(taskType)
   const executionIntent = signals.executionIntent ?? inferred.executionIntent
   if (risk === "consequential") return "full"
-  if (executionIntent === "plan" || executionIntent === "explain") return "light"
-  if (taskType === "security" || taskType === "migration") return "full"
-  if (taskType === "review" || taskType === "research" || taskType === "planning") return "light"
+  if (executionIntent === "plan" || executionIntent === "explain" || taskType === "planning" || taskType === "research" || taskType === "review") return "light"
+  if (taskTypes.has("security") || taskTypes.has("migration")) return "full"
+  if (taskTypes.has("review") || taskTypes.has("research") || taskTypes.has("planning")) return "light"
   const prompt = signals.prompt.trim()
-  if (taskType === "implementation" || taskType === "bugfix" || taskType === "refactor") {
-    if (/\b(?:test|tests|testing|verify|validate|check|passing|pass)\b|тест\w*|провер\w*/i.test(prompt)) return "light"
+  const analysis = analyzePrompt(prompt)
+  if (analysis.consequential) return "full"
+  if (taskType === "implementation" || taskType === "bugfix") {
+    if (analysis.missingSignals.length > 0 || /\b(?:test|tests|testing|verify|validate|check|passing|pass)\b|тест\w*|провер\w*/i.test(prompt)) return "light"
   }
   if (prompt.length < 80 && !/[?]$/.test(prompt) && !/\b(maybe|somehow|better|improve|etc)\b/i.test(prompt)) return "pass"
   if (/\b(all|every|entire|across|multiple|architecture|integration|production)\b/i.test(prompt) || prompt.length > 280) return "full"
