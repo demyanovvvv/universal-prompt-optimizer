@@ -34,6 +34,9 @@ export class TurnStore {
     this.expire(now)
     return this.sessions.get(sessionID)?.size ?? 0
   }
+  clear(sessionID: string): void {
+    this.sessions.delete(sessionID)
+  }
   expire(now = Date.now()): void {
     for (const [sessionID, turns] of this.sessions) {
       for (const [key, turn] of turns) if (now - turn.admittedAt > this.ttlMs) turns.delete(key)

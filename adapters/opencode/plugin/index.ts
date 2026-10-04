@@ -4,7 +4,7 @@ import { resolveSettings, configSourceLabel } from "./config"
 import { decide } from "./decision-engine"
 import { emptyMetrics, hashPrompt, incrementMetrics, pruneSessions } from "./session-state"
 import { EXACT_MODEL_ALIASES } from "./model-registry"
-import { loadSessionSettings } from "./tui-config"
+import { clearSessionSettings, loadSessionSettings } from "./tui-config"
 import { TurnStore } from "./turn-store"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
@@ -154,7 +154,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
   const getSession = (sessionID: string): RuntimeSession => {
     const current = sessions.get(sessionID)
     const external = loadSessionSettings(sessionID.replace(/^prompt-optimizer\/session\//, ""))
-    if (current) return { ...current, state: { ...current.state, override: { ...current.state.override, ...external } } }
+    if (current) return { ...current, state: { ...current.state, override: { ...external, ...current.state.override } } }
     return { state: { userPromptCount: 0, active: false, metrics: emptyMetrics(), override: external } }
   }
   const touchSession = (key: string, session: RuntimeSession): void => {
@@ -182,7 +182,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
          lastSeenAt: Date.now(),
          pendingPromptHash: prompt ? hashPrompt(prompt) : undefined,
        })
-       if (prompt) turns.admit(key, { messageID, prompt })
+       if (prompt && next.active) turns.admit(key, { messageID, prompt })
        touchSession(key, { state: next })
     },
 
@@ -192,7 +192,10 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const stored = current.state
       const pending = turns.resolve(key)
       const prompt = pending?.prompt
-      if (!stored.active || !prompt) return
+      if (!stored.active || !prompt) {
+        if (stored.active === false) turns.clear(key)
+        return
+      }
       if (pending?.messageID && stored.lastProcessedEventId === pending.messageID) return
 
       const settings = loadSettings()
@@ -204,9 +207,15 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
         qualityGate: stored.override?.qualityGate ?? settings.qualityGate,
         unsupportedModel: stored.override?.unsupportedModel ?? settings.unsupportedModel,
       }
-      if (effectiveSettings.behavior === "off") return
+      if (effectiveSettings.behavior === "off") {
+        turns.clear(key)
+        return
+      }
       const scopeEligible = effectiveSettings.scope === "all" || stored.userPromptCount === 0
-      if (!scopeEligible) return
+      if (!scopeEligible) {
+        turns.clear(key)
+        return
+      }
       const model = {
         providerID: String(input.model?.providerID ?? ""),
         modelID: String(input.model?.id ?? input.model?.modelID ?? ""),
@@ -273,9 +282,16 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const tokens = argument.split(/\s+/).filter(Boolean)
       const operation = command === "po-status" ? "status" : tokens[0] ?? "status"
       const override: SessionOverride = { ...(current.state.override ?? {}) }
-      if (operation === "reset") current.state.override = undefined
+      if (operation === "reset") {
+        current.state.override = undefined
+        turns.clear(key)
+        clearSessionSettings(sessionIDOf(input.sessionID))
+      }
       else if (operation === "on" || operation === "auto") override.behavior = "auto"
-      else if (operation === "off") override.behavior = "off"
+      else if (operation === "off") {
+        override.behavior = "off"
+        turns.clear(key)
+      }
       else if (operation === "preview") override.behavior = "preview"
       else if (operation === "first" || operation === "all") override.scope = operation
       else if (operation === "pass" || operation === "light" || operation === "full" || operation === "adaptive") override.qualityGate = operation

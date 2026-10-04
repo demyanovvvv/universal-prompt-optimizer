@@ -4,14 +4,14 @@ import test from "node:test"
 import plugin, { promptText, resolveModel } from "../adapters/opencode/plugin/index"
 import { decide } from "../adapters/opencode/plugin/decision-engine"
 import { chooseQualityGate } from "../adapters/opencode/plugin/quality-gate"
-import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, pruneSessions } from "../adapters/opencode/plugin/session-state"
+import { MAX_SESSIONS, STATE_TTL_MS, emptyMetrics, isDuplicate, isSessionExpired, normalizeState, pruneSessions } from "../adapters/opencode/plugin/session-state"
 import { classifyTask, analyzeTask } from "../adapters/opencode/plugin/task-classifier"
 import { assessRisk } from "../adapters/opencode/plugin/risk-analysis"
 import { TurnStore } from "../adapters/opencode/plugin/turn-store"
 import { hasInvalidManagedFields, qualityGateFromEnvironment, resolveSettings } from "../adapters/opencode/plugin/config"
 import { PREVIEW, PROFILE_HINTS, analyzePrompt, buildPromptPlan, renderPromptPlan } from "../adapters/opencode/plugin/prompt-builder"
 import type { Settings } from "../adapters/opencode/plugin/types"
-import { configPathForTarget, loadManagedConfig, loadSessionSettings, updateManagedConfig } from "../adapters/opencode/plugin/tui-config"
+import { clearSessionSettings, configPathForTarget, loadManagedConfig, loadSessionSettings, updateManagedConfig } from "../adapters/opencode/plugin/tui-config"
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
@@ -177,6 +177,9 @@ test("risk analysis distinguishes negated dangerous words from authorized conseq
     requiresApproval: false,
     evidence: [],
   })
+  const mixed = assessRisk("Do not delete logs; remove the cache")
+  assert.equal(mixed.level, "consequential")
+  assert.ok(mixed.categories.includes("destructive"))
   const production = assessRisk("Delete all production records")
   assert.equal(production.level, "consequential")
   assert.equal(production.requiresApproval, true)
@@ -188,6 +191,13 @@ test("prompt analysis exposes missing high-value signals without copying the pro
   assert.deepEqual(analysis.missingSignals, ["scope", "constraints", "validation", "deliverable"])
   const complete = analyzePrompt("Fix src/auth/callback.ts, preserve the API, run tests/auth.test.ts, and report the root cause")
   assert.deepEqual(complete.missingSignals, [])
+})
+
+test("corrupt metric enum values are discarded during state normalization", () => {
+  const state = normalizeState({ userPromptCount: 1, active: true, metrics: { lastAction: "corrupt", lastGate: "corrupt", lastProfile: "corrupt" } })
+  assert.equal(state?.metrics?.lastAction, undefined)
+  assert.equal(state?.metrics?.lastGate, undefined)
+  assert.equal(state?.metrics?.lastProfile, undefined)
 })
 
 test("turn store keeps interleaved turns correlated and consumes each turn once", () => {
@@ -423,6 +433,33 @@ test("scope=first is reserved until a supported model turn is processed", async 
   const supported = { system: [] as string[] }
   await hooks["experimental.chat.system.transform"]({ sessionID: "scope-late", model: { providerID: "openai", id: "gpt-5.6" } }, supported)
   assert.equal(supported.system.length, 1)
+})
+
+test("disabled pending turns cannot contaminate a later enabled turn", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, { behavior: "auto", scope: "all", qualityGate: "full", unsupportedModel: "generic" })
+  await hooks["command.execute.before"]({ sessionID: "off-then-on", command: "po", arguments: "off" }, { parts: [] })
+  await hooks["chat.message"]({ sessionID: "off-then-on", messageID: "old" }, { parts: [{ type: "text", text: "Review the security impact of this change." }] })
+  const disabled = { system: [] as string[] }
+  await hooks["experimental.chat.system.transform"]({ sessionID: "off-then-on", model: { providerID: "openai", id: "gpt-5.6" } }, disabled)
+  assert.equal(disabled.system.length, 0)
+
+  await hooks["command.execute.before"]({ sessionID: "off-then-on", command: "po", arguments: "auto" }, { parts: [] })
+  await hooks["chat.message"]({ sessionID: "off-then-on", messageID: "new" }, { parts: [{ type: "text", text: "Implement the requested change." }] })
+  const enabled = { system: [] as string[] }
+  await hooks["experimental.chat.system.transform"]({ sessionID: "off-then-on", model: { providerID: "openai", id: "gpt-5.6" } }, enabled)
+  assert.equal(enabled.system.length, 1)
+  assert.doesNotMatch(enabled.system[0], /Report findings first/)
+})
+
+test("session settings can be cleared without leaving a persistent override", () => {
+  const home = mkdtempSync(join(tmpdir(), "upo-session-reset-"))
+  const sessionID = "persistent-reset"
+  const sessionFile = join(home, ".config", "opencode", "prompt-optimizer-sessions", `${encodeURIComponent(sessionID)}.json`)
+  mkdirSync(join(home, ".config", "opencode", "prompt-optimizer-sessions"), { recursive: true })
+  writeFileSync(sessionFile, JSON.stringify({ schemaVersion: 1, behavior: "off" }))
+  assert.equal(loadSessionSettings(sessionID, home).behavior, "off")
+  clearSessionSettings(sessionID, home)
+  assert.equal(loadSessionSettings(sessionID, home).behavior, undefined)
 })
 
 test("OpenCode injects lean LIGHT guidance without session diagnostics", async () => {

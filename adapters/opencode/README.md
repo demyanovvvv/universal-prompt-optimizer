@@ -44,8 +44,9 @@ session override. The settings dialog can save Behavior, Scope, Quality gate,
 and Unsupported model to Session, Project, or Global targets. Project settings
 are stored in `.opencode/prompt-optimizer.json`, global settings in
 `~/.config/opencode/prompt-optimizer.json`, and session settings in the bounded
-per-session bridge under `~/.config/opencode/prompt-optimizer-sessions/`.
-Session control commands remain available. `/po-status` opens a native TUI
+per-session bridge under `~/.config/opencode/prompt-optimizer-sessions/`; a saved session override remains
+active until changed or cleared with `/prompt-optimizer reset`. Session control
+commands remain available. `/po-status` opens a native TUI
 information dialog with the resolved settings and available model/profile
 diagnostics instead of writing the status into the chat. The status output
 reports the resolved profile, match source, and that OpenCode v1 PREVIEW is

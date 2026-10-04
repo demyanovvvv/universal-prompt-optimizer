@@ -1,8 +1,10 @@
 /** @jsxImportSource @opentui/solid */
-import { existsSync, lstatSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { dirname, join } from "node:path"
 import type { TuiPlugin, TuiPluginModule, TuiSlotPlugin } from "@opencode-ai/plugin/tui"
+import { resolveSettings } from "../plugin/config"
+import { rejectSymlinkComponents } from "../plugin/tui-config"
 
 export type Status = "enabled" | "preview" | "off" | "generic" | "error"
 export function formatStatusChip(input: { status: Status; behavior: Behavior; sessionOverride: boolean }): { label: string; tone: "success" | "info" | "muted" | "warning" | "error"; marker: string } {
@@ -52,29 +54,24 @@ function paths(api: any): { global: string; project: string } {
 }
 
 function resolvedSettings(api: any): { settings: Settings; invalid: boolean; source: Target | "default" } {
-  const locations = paths(api)
-  const global = readConfig(locations.global)
-  const project = readConfig(locations.project)
-  const invalid = [global, project].some(value => value.schemaVersion === -1 || (value.schemaVersion !== undefined && value.schemaVersion !== 1))
-  const merged = { ...DEFAULTS, ...global, ...project }
-  const settings: Settings = {
-    behavior: ["auto", "preview", "off"].includes(String(merged.behavior)) ? merged.behavior as Behavior : DEFAULTS.behavior,
-    scope: ["first", "all"].includes(String(merged.scope)) ? merged.scope as Scope : DEFAULTS.scope,
-    qualityGate: typeof merged.qualityGate === "boolean" ? (merged.qualityGate ? "adaptive" : "pass") : ["pass", "light", "full", "adaptive"].includes(String(merged.qualityGate)) ? merged.qualityGate as QualityGate : DEFAULTS.qualityGate,
-    unsupportedModel: ["skip", "generic"].includes(String(merged.unsupportedModel)) ? merged.unsupportedModel as UnsupportedModel : DEFAULTS.unsupportedModel,
-  }
-  return { settings, invalid, source: Object.keys(project).length ? "project" : Object.keys(global).length ? "global" : "default" }
+  const projectRoot = api.state?.path?.directory || process.cwd()
+  const resolved = resolveSettings(projectRoot, undefined)
+  const source = resolved.sources.behavior === "project" || resolved.sources.scope === "project" || resolved.sources.qualityGate === "project" || resolved.sources.unsupportedModel === "project"
+    ? "project"
+    : resolved.sources.behavior === "global" || resolved.sources.scope === "global" || resolved.sources.qualityGate === "global" || resolved.sources.unsupportedModel === "global"
+      ? "global"
+      : "default"
+  return { settings: resolved, invalid: resolved.invalidConfig, source }
 }
 
 function updateConfig(path: string, patch: Partial<Settings>): void {
-  if (existsSync(path) && lstatSync(path).isSymbolicLink()) throw new Error("Refusing to overwrite a symlink")
+  rejectSymlinkComponents(path)
   const current: Record<string, unknown> = readConfig(path)
   if (current.schemaVersion === -1) throw new Error("Invalid Prompt Optimizer configuration")
   const next = { ...current, schemaVersion: 1, ...patch }
   const temp = `${path}.tmp-${process.pid}-${Date.now()}`
   try {
     mkdirSync(dirname(path), { recursive: true })
-    if (lstatSync(dirname(path)).isSymbolicLink()) throw new Error("Refusing to write through a symlink")
     writeFileSync(temp, `${JSON.stringify(next, null, 2)}\n`, { encoding: "utf8", mode: 0o600 })
     renameSync(temp, path)
   } finally {

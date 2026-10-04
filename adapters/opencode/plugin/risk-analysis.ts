@@ -21,10 +21,11 @@ export function assessRisk(prompt: string, _taskType?: TaskType): RiskAssessment
   const categories = new Set<RiskCategory>()
   const evidence = new Set<string>()
   for (const [category, pattern] of categoryPatterns) {
-    const match = pattern.exec(prompt)
-    if (!match || isNegated(prompt, match[0], match.index)) continue
-    categories.add(category)
-    evidence.add(match[0])
+    for (const match of prompt.matchAll(new RegExp(pattern.source, pattern.flags.replace("g", "") + "g"))) {
+      if (isNegated(prompt, match[0], match.index ?? 0)) continue
+      categories.add(category)
+      evidence.add(match[0])
+    }
   }
   const ordered = categoryPatterns.map(([category]) => category).filter(category => categories.has(category) && (category !== "scope-expansion" || /across the organization|unrelated|организац\w*/i.test(prompt)))
   const level: RiskLevel = ordered.includes("destructive") || ordered.includes("production") || ordered.includes("external") || ordered.includes("credentials") || ordered.includes("irreversible") ? "consequential" : ordered.length ? "review" : "none"

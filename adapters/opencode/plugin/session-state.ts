@@ -86,11 +86,12 @@ function normalizeMetrics(value: unknown): SessionMetrics | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined
   const input = value as Record<string, unknown>
   const number = (key: string) => typeof input[key] === "number" ? Math.max(0, Math.floor(input[key] as number)) : 0
+  const profiles = new Set(["astra", "sol", "gpt-6.1-sol", "terra", "luna", "gpt-5.6-sol", "gpt-5.6-luna", "glm-5.2", "glm-5.3", "glm-5.3-flash", "deepseek-v4.1-flash", "deepseek-v4-flash", "deepseek-v4-pro", "claude-fable-5.1", "claude-fable-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-sonnet-5", "claude-sonnet-5.5", "kimi-k3", "muse-spark-1.3", "hy4-preview", "qwen3.8-max", "gemini-3.8-flash", "grok-4.6", "generic"])
   return {
     processed: number("processed"), optimized: number("optimized"), skipped: number("skipped"), previewed: number("previewed"), genericFallback: number("genericFallback"), pass: number("pass"), light: number("light"), full: number("full"),
-    lastProfile: typeof input.lastProfile === "string" ? input.lastProfile as SessionMetrics["lastProfile"] : undefined,
-    lastGate: typeof input.lastGate === "string" ? input.lastGate as SessionMetrics["lastGate"] : undefined,
-    lastAction: typeof input.lastAction === "string" ? input.lastAction as SessionMetrics["lastAction"] : undefined,
+    lastProfile: typeof input.lastProfile === "string" && profiles.has(input.lastProfile) ? input.lastProfile as SessionMetrics["lastProfile"] : undefined,
+    lastGate: input.lastGate === "pass" || input.lastGate === "light" || input.lastGate === "full" ? input.lastGate : undefined,
+    lastAction: input.lastAction === "apply" || input.lastAction === "preview" || input.lastAction === "skip" ? input.lastAction : undefined,
   }
 }
 

@@ -118,9 +118,10 @@ The v5.5 verified lifecycle build remains included:
   and `full`. Legacy boolean values remain readable; adapters without a native
   gate API preserve the richer value in runtime state and degrade only at the
   host instruction boundary.
-- OpenCode session overrides are ephemeral, bounded process-local state expires after
-  30 days and is capped at 200 sessions; privacy-safe aggregate metrics never store
-  prompt content. Use `/prompt-optimizer reset` to return to persistent config.
+- OpenCode runtime state is process-local, bounded, expires after 30 days and is
+  capped at 200 sessions; privacy-safe aggregate metrics never store prompt content.
+  TUI session overrides use a separate per-session bridge file and remain active until
+  changed or cleared with `/prompt-optimizer reset`.
 
 The v5.4 installer/runtime hardening remains included:
 
