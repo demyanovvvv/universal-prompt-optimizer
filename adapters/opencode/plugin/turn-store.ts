@@ -13,12 +13,14 @@ export class TurnStore {
     this.sessions.set(sessionID, turns)
     this.expire(now)
   }
-  resolve(sessionID: string, messageID?: string): PendingTurn | undefined {
+  resolve(sessionID: string, messageID?: string, now = Date.now()): PendingTurn | undefined {
+    this.expire(now)
     const turns = this.sessions.get(sessionID)
     if (!turns) return undefined
     return messageID ? turns.get(messageID) : turns.values().next().value
   }
   consume(sessionID: string, messageID?: string, now = Date.now()): PendingTurn | undefined {
+    this.expire(now)
     const turns = this.sessions.get(sessionID)
     const key = messageID ?? turns?.keys().next().value
     if (!turns || !key) return undefined
@@ -28,7 +30,10 @@ export class TurnStore {
     if (!turns.size) this.sessions.delete(sessionID)
     return { ...turn, consumedAt: now }
   }
-  size(sessionID: string): number { return this.sessions.get(sessionID)?.size ?? 0 }
+  size(sessionID: string, now = Date.now()): number {
+    this.expire(now)
+    return this.sessions.get(sessionID)?.size ?? 0
+  }
   expire(now = Date.now()): void {
     for (const [sessionID, turns] of this.sessions) {
       for (const [key, turn] of turns) if (now - turn.admittedAt > this.ttlMs) turns.delete(key)

@@ -205,10 +205,34 @@ test("turn store preserves distinct fallback turns with identical timestamps and
   const store = new TurnStore()
   store.admit("session-1", { prompt: "Repeated prompt with the same prefix" }, 1000)
   store.admit("session-1", { prompt: "Repeated prompt with the same prefix" }, 1000)
-  assert.equal(store.size("session-1"), 2)
+  assert.equal(store.size("session-1", 1000), 2)
   assert.equal(store.consume("session-1", undefined, 1001)?.prompt, "Repeated prompt with the same prefix")
   assert.equal(store.consume("session-1", undefined, 1002)?.prompt, "Repeated prompt with the same prefix")
   assert.equal(store.consume("session-1"), undefined)
+})
+
+test("turn store expires stale turns when they are read", () => {
+  const store = new TurnStore(16, 10)
+  store.admit("session-1", { messageID: "stale", prompt: "Expired" }, 1000)
+  assert.equal(store.resolve("session-1", "stale"), undefined)
+  assert.equal(store.resolve("session-1", "stale"), undefined)
+  assert.equal(store.size("session-1"), 0)
+  assert.equal(store.consume("session-1", "stale"), undefined)
+})
+
+test("duplicate message delivery does not block a later turn", async () => {
+  const hooks = await plugin.server({ directory: process.cwd() }, { behavior: "auto", scope: "all", qualityGate: "light", unsupportedModel: "generic" })
+  const first = { system: [] as string[] }
+  await hooks["chat.message"]({ sessionID: "duplicate-queue", messageID: "a" }, { parts: [{ type: "text", text: "Fix the auth callback." }] })
+  await hooks["experimental.chat.system.transform"]({ sessionID: "duplicate-queue", model: { providerID: "openai", id: "gpt-5.6" } }, first)
+  assert.equal(first.system.length, 1)
+
+  await hooks["chat.message"]({ sessionID: "duplicate-queue", messageID: "a" }, { parts: [{ type: "text", text: "Fix the auth callback." }] })
+  await hooks["chat.message"]({ sessionID: "duplicate-queue", messageID: "b" }, { parts: [{ type: "text", text: "Implement the cache helper." }] })
+  const second = { system: [] as string[] }
+  await hooks["experimental.chat.system.transform"]({ sessionID: "duplicate-queue", model: { providerID: "openai", id: "gpt-5.6" } }, second)
+  assert.equal(second.system.length, 1)
+  assert.match(second.system[0], /Implement the smallest coherent change/i)
 })
 
 test("prompt plan creates a bounded bugfix execution brief without generic chain of thought", () => {

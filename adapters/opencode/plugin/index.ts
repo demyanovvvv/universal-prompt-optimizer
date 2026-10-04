@@ -169,7 +169,7 @@ const server = async (ctx: any, options?: Record<string, unknown>) => {
       const current = getSession(key)
       const stored = current.state
       const messageID = typeof input.messageID === "string" ? input.messageID : undefined
-      if (messageID && turns.resolve(key, messageID)) return
+      if (messageID && (stored.lastProcessedEventId === messageID || turns.resolve(key, messageID))) return
       const priorCount = stored.userPromptCount
       const prompt = promptText({ message: output?.message, parts: output?.parts })
       const settings = loadSettings()
