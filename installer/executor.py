@@ -313,18 +313,29 @@ def _delete_tree_if_matches(operation: Operation, source_root: Path, transaction
             _reject_symlink(owned_path)
             transaction.record(owned_path)
             owned_path.unlink()
-    include = set(operation.params.get("include", ())) if operation.params else None
+    include = set(operation.params["include"]) if operation.params and "include" in operation.params else None
+    remove_modified = bool(operation.params and operation.params.get("remove_modified"))
+    remove_unlisted = bool(operation.params and operation.params.get("remove_unlisted"))
+    candidates = []
+    if remove_unlisted:
+        for destination in operation.path.rglob("*"):
+            if destination.is_file():
+                relative = destination.relative_to(operation.path)
+                if include is None or (relative.parts and relative.parts[0] in include):
+                    candidates.append((None, relative, destination))
     for source_file in sorted(source.rglob("*")):
         if not source_file.is_file():
             continue
         relative = source_file.relative_to(source)
         if include is not None and (relative.parts[0] if relative.parts else "") not in include:
             continue
-        destination = operation.path / relative
+        candidates.append((source_file, relative, operation.path / relative))
+    for source_file, relative, destination in candidates:
         if not destination.exists() or not destination.is_file():
             continue
-        if destination.read_bytes() != source_file.read_bytes():
+        if source_file is not None and not remove_modified and destination.read_bytes() != source_file.read_bytes():
             continue
+        _reject_symlink(destination)
         transaction.record(destination)
         destination.unlink()
     for directory in sorted((p for p in operation.path.rglob("*") if p.is_dir()), reverse=True):

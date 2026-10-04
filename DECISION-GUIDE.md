@@ -105,9 +105,10 @@ Runtime state files are bounded and expire after 30 days. Delete
 `.gemini/.prompt-optimizer-*-state.json` to reset, or re-run the installer.
 
 **A user file or custom config was changed.**
-`--uninstall` and updates preserve user text, custom JSON fields, hooks, and
-modified files. Run `./install.sh --uninstall --dry-run --yes` to see exactly
-what would be removed before removing it.
+Updates refresh installer-owned files. `--uninstall` removes them even after
+local edits, including installer backups. Both preserve unrelated user text,
+custom JSON fields, and hooks. Run `./install.sh --uninstall --dry-run --yes`
+to preview the removal.
 
 **Config file is rejected.**
 Malformed JSON fails safe and is never overwritten. Fix the syntax in

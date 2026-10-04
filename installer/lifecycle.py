@@ -85,14 +85,16 @@ def uninstall_targets(root: Path, package_root: Path, scope: str) -> dict[str, t
     mapping = managed_file_map(root, package_root, scope)
     targets: dict[str, tuple[Path, Path, str]] = {}
     for logical, (source, destination) in mapping.items():
-        if logical in _BLOCK_LOGICAL:
+        if logical == 'windsurf-block' and scope == 'project':
+            targets[logical] = (source, destination, "file")
+        elif logical in _BLOCK_LOGICAL:
             targets[logical] = (source, destination, "block")
         elif logical in _CONFIG_LOGICAL:
             targets[logical] = (source, destination, "config")
         elif logical in _DIR_LOGICAL:
             targets[logical] = (source, destination, "dir")
         else:
-            targets[logical] = (source, destination, "file")
+            targets[logical] = (source, destination, "owned_file")
     return targets
 
 
@@ -106,10 +108,10 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
     """Return a declarative uninstall plan over managed destinations.
 
     Markdown entries use ``delete_block`` (removes only the installer-owned
-    block), regular files use ``delete_file_if_matches`` (preserves user-modified
-    content), directory trees use ``delete_tree_if_matches``. Managed JSON config
-    fields, hooks and the TUI registration are cleaned explicitly. Runtime state
-    and gitignore cleanup are appended last.
+    block), regular files use ``delete_owned_file`` (removes the installer
+    artifact even if it was edited), directory trees remove only managed
+    entries. Managed JSON config fields, hooks and the TUI registration are
+    cleaned explicitly. Runtime state and gitignore cleanup are appended last.
     """
     targets = uninstall_targets(root, package_root, scope)
     operations: list[Operation] = []
@@ -128,22 +130,42 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                 opencode_config = root / (".opencode/opencode.json" if scope == "project" else ".config/opencode/opencode.json")
                 operations.append(Operation("delete_json_plugin_specs", opencode_config, label="opencode-server-registration",
                                             params={"specs": [_SERVER_PLUGIN_SPEC]}))
-                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical))
+                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
+                                            params={"remove_modified": True, "remove_unlisted": True}))
             if logical == "opencode-tui-plugin":
                 operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
-                                            params={"requires_owner": True, "owner_name": _TUI_PLUGIN_NAME}))
+                                            params={"requires_owner": True, "owner_name": _TUI_PLUGIN_NAME,
+                                                    "remove_modified": True, "remove_unlisted": True}))
                 operations.append(Operation("delete_owned_file", destination / ".prompt-optimizer-owner.json",
                                             label="opencode-tui-owner"))
             elif logical != "opencode-plugin":
-                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical))
+                params = {"remove_modified": True}
+                if logical in {"shared-skills", "claude-skills"}:
+                    params.update({"include": ["prompt-optimizer"], "remove_unlisted": True})
+                elif logical == "opencode-commands":
+                    params["include"] = ["prompt.md", "prompt-only.md", "prompt-optimizer.md"]
+                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical, params=params))
         else:
-            operations.append(Operation("delete_file_if_matches", destination, source=source, label=logical))
+            operations.append(Operation("delete_owned_file", destination, source=source, label=logical))
     if scope == "project":
         operations.append(Operation("delete_json_hooks", root / ".cursor/hooks.json", label="cursor-hooks",
                                     params={"events": ["beforeSubmitPrompt"]}))
     operations.append(Operation("delete_json_hooks", root / ".gemini/settings.json", label="gemini-hooks",
                                 params={"events": ["BeforeAgent", "BeforeModel"]}))
     operations.append(Operation("delete_block", root / ".gitignore", label="runtime ignores"))
+    backup_paths = {operation.path for operation in operations if operation.kind != "delete_tree_if_matches"}
+    for source, destination, strategy in targets.values():
+        if strategy == "dir":
+            for source_file in source.rglob("*"):
+                if source_file.is_file():
+                    relative = source_file.relative_to(source)
+                    if destination.name == "skills" and relative.parts[0] != "prompt-optimizer":
+                        continue
+                    if destination.name == "commands" and relative.name not in {"prompt.md", "prompt-only.md", "prompt-optimizer.md"}:
+                        continue
+                    backup_paths.add(destination / relative)
+    for path in sorted(backup_paths):
+        operations.append(Operation("delete_owned_file", path.with_name(path.name + ".prompt-optimizer.bak"), label="installer backup"))
     for runtime in (
         root / ".cursor/.prompt-optimizer-runtime.json",
         root / ".cursor/.prompt-optimizer-session-state.json",

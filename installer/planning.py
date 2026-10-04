@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
+import subprocess
 from pathlib import Path
 
 from .catalog import AdapterCatalog
@@ -11,6 +13,10 @@ from .content import configured_snippet_block, merge_json
 from .domain import InstallPlan, InstallRequest, Operation
 from config_contract import BEHAVIORS, SCOPES, UNSUPPORTED_MODELS, normalize_quality_gate
 from config_contract import managed_config
+
+
+def shell_command(args: list[str], *, platform: str | None = None) -> str:
+    return subprocess.list2cmdline(args) if (platform or os.name) == 'nt' else shlex.join(args)
 
 
 def plan_config_write(path: Path, updates: dict, *, existing: str | None = None) -> Operation:
@@ -141,7 +147,7 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
             Operation("copy_file", root / ".cursor/hooks/prompt-optimizer-state.py", source=Path("adapters/cursor/hooks/prompt-optimizer-state.py"), label="Cursor model-state hook"),
             Operation("copy_file", root / ".cursor/rules/prompt-optimizer.mdc", source=Path("adapters/cursor/rules/prompt-optimizer.mdc"), label="Cursor always rule"),
         ))
-        command = " ".join(shlex.quote(part) for part in (request.python_bin, "-B", ".cursor/hooks/prompt-optimizer-state.py"))
+        command = shell_command([request.python_bin, "-B", ".cursor/hooks/prompt-optimizer-state.py"])
         hook = {"name": "prompt-optimizer", "owner": "universal-prompt-optimizer", "command": command}
         operations.append(_hook_operation(root / ".cursor/hooks.json", "beforeSubmitPrompt", hook))
         runtime_ignores.extend([
@@ -151,8 +157,9 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
         ])
     if request.automatic and "gemini" in request.adapters:
         operations.append(Operation("copy_file", root / ".gemini/hooks/prompt-preflight.py", source=Path("adapters/gemini-cli/hooks/prompt-preflight.py"), label="Gemini CLI hook"))
-        code = "import os,runpy;runpy.run_path(os.path.join(os.environ.get('GEMINI_PROJECT_DIR') or os.getcwd(),'.gemini','hooks','prompt-preflight.py'),run_name='__main__')"
-        command = " ".join(shlex.quote(part) for part in (request.python_bin, "-B", "-c", code))
+        script_root = "os.path.expanduser('~')" if request.scope == 'global' else "os.environ.get('GEMINI_PROJECT_DIR') or os.getcwd()"
+        code = f"import os,runpy;runpy.run_path(os.path.join({script_root},'.gemini','hooks','prompt-preflight.py'),run_name='__main__')"
+        command = shell_command([request.python_bin, "-B", "-c", code])
         hook = {"hooks": [{"name": "prompt-optimizer", "owner": "universal-prompt-optimizer", "type": "command", "command": command, "timeout": 5000}]}
         settings = root / ".gemini/settings.json"
         operations.extend((_hook_operation(settings, "BeforeAgent", hook), _hook_operation(settings, "BeforeModel", hook)))

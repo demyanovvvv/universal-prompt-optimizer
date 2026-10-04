@@ -366,6 +366,73 @@ class InstallerTests(unittest.TestCase):
             installer.uninstall(home, "global")
             self.assertFalse((home / ".agents/skills/prompt-optimizer/SKILL.md").exists())
 
+    def test_reinstall_updates_existing_owned_files(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            installer.install_global(
+                home,
+                {"gemini"},
+                True,
+                "auto",
+                "all",
+                "skip",
+                "adaptive",
+                False,
+                False,
+                sys.executable,
+            )
+            hook = home / ".gemini/hooks/prompt-preflight.py"
+            hook.write_text("stale installed version", encoding="utf-8")
+            installer.install_global(
+                home,
+                {"gemini"},
+                True,
+                "auto",
+                "all",
+                "skip",
+                "adaptive",
+                False,
+                False,
+                sys.executable,
+            )
+            self.assertEqual(hook.read_bytes(), (ROOT / "adapters/gemini-cli/hooks/prompt-preflight.py").read_bytes())
+
+    def test_uninstall_removes_modified_owned_files_and_installer_backups(self):
+        with tempfile.TemporaryDirectory() as raw:
+            home = Path(raw)
+            installer.install_global(
+                home,
+                {"gemini", "cursor"},
+                True,
+                "auto",
+                "all",
+                "skip",
+                "adaptive",
+                True,
+                False,
+                sys.executable,
+            )
+            hook = home / ".gemini/hooks/prompt-preflight.py"
+            hook.write_text("modified by user", encoding="utf-8")
+            installer.install_global(
+                home,
+                {"gemini", "cursor"},
+                True,
+                "auto",
+                "all",
+                "skip",
+                "adaptive",
+                True,
+                False,
+                sys.executable,
+            )
+            backup = hook.with_name(hook.name + ".prompt-optimizer.bak")
+            self.assertTrue(backup.exists())
+            installer.uninstall(home, "global")
+            self.assertFalse(hook.exists())
+            self.assertFalse(backup.exists())
+            self.assertFalse((home / ".cursor/hooks/prompt-optimizer-state.py").exists())
+
     def test_global_markdown_adapters_diagnose_and_uninstall_round_trip(self):
         with tempfile.TemporaryDirectory() as raw:
             home = Path(raw)

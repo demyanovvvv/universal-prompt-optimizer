@@ -453,6 +453,45 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
             self.assertEqual([entry["name"] for entry in entries], ["user-hook", "prompt-optimizer"])
             self.assertIn("python-custom", entries[1]["command"])
 
+    def test_gemini_routes_every_canonical_alias(self):
+        import ast
+        source = ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py'
+        tree = ast.parse(source.read_text(encoding='utf-8'))
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'exact_profile_for']
+        namespace = {}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
+        registry = json.loads((ROOT / '.agents/skills/prompt-optimizer/references/model-registry.json').read_text(encoding='utf-8'))
+        for profile in registry['profiles']:
+            for alias in profile['aliases']:
+                self.assertEqual(namespace['exact_profile_for'](alias), profile['id'], alias)
+
+    def test_gemini_supported_profiles_render_without_false_fallback(self):
+        import subprocess
+        import sys
+        import os
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
+            for model in ('gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3'):
+                env = dict(os.environ, GEMINI_MODEL=model)
+                run = subprocess.run([sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')], input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}), text=True, capture_output=True, env=env, check=True)
+                context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']
+                self.assertIn('Resolved model profile:', context)
+                self.assertNotIn('No exact installed model profile', context)
+
+    def test_global_gemini_hook_uses_home_script_not_project_script(self):
+        plan = plan_install(InstallRequest(Path('/example/home'), 'global', frozenset({'gemini'}), automatic=True), catalog.load_catalog(ROOT))
+        hook = next(json.loads(op.content)['hook'] for op in plan.operations if op.kind == 'merge_hook')
+        command = hook['hooks'][0]['command']
+        self.assertIn('expanduser', command)
+        self.assertNotIn('GEMINI_PROJECT_DIR', command)
+
+    def test_hook_command_quotes_windows_executable_and_code(self):
+        from installer.planning import shell_command
+        command = shell_command(['C:/Program Files/Python/python.exe', '-c', 'print("ok")'], platform='nt')
+        self.assertTrue(command.startswith('"C:/Program Files/Python/python.exe"'))
+        self.assertNotIn("'C:/Program Files", command)
+
     def test_executor_rolls_back_all_files_when_later_operation_fails(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

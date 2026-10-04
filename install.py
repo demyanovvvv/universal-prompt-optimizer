@@ -233,7 +233,7 @@ def configured_block(rel: str, behavior: str, scope: str, quality_gate: str | bo
     block=text(rel).rstrip()
     marker=END
     q = quality_gate if isinstance(quality_gate, str) else ('adaptive' if quality_gate else 'pass')
-    line=f"\nConfigured by installer: `behavior={behavior}`, `scope={scope}`, `qualityGate={q}`, `unsupportedModel={unsupported}`. If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
+    line=f"\nConfigured by installer: `behavior={behavior}`, `scope={scope}`, `qualityGate={q}`, `unsupportedModel={unsupported}`. These are fallback defaults; current project/global settings override them. If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
     return block.replace(marker, line+marker)
 
 def merge_runtime_ignores(path: Path, entries: list[str], *, backup=True, dry_run=False) -> str:
@@ -533,7 +533,7 @@ def _describe_uninstall_operation(operation) -> str:
     return L(f'removed: {operation.path}', f'удален: {operation.path}')
 
 def uninstall(root: Path, scope: str, *, dry_run=False) -> list[str]:
-    """Remove package-owned files/blocks without touching user modifications."""
+    """Remove the installation while preserving unrelated user content."""
     plan = _build_uninstall_plan(root, PACKAGE_ROOT, scope)
     try:
         _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=False)

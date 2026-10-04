@@ -80,6 +80,7 @@ function piHook() {
   })
   const hooks: Record<string, (event: unknown, ctx: unknown) => any> = {}
   exports.default!({ on: (name: string, handler: typeof hooks[string]) => { hooks[name] = handler }, registerTool() {}, registerCommand() {} })
+  assert.equal(typeof hooks.session_shutdown, 'function', 'Pi must register the real cleanup event')
   return hooks.before_agent_start
 }
 

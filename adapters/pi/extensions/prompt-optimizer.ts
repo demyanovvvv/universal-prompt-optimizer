@@ -12,6 +12,15 @@ const sessionBehaviors = new Map<string, Behavior>()
 const sessionTurns = new Map<string, number>()
 const previewedTurns = new Map<string, number>()
 
+function boundSessions(sid: string): void {
+  if (!sessionTurns.has(sid) && sessionTurns.size >= 200) {
+    const oldest = sessionTurns.keys().next().value as string
+    sessionTurns.delete(oldest)
+    sessionBehaviors.delete(oldest)
+    previewedTurns.delete(oldest)
+  }
+}
+
 const BASE_COMMON = `Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; do not invent requirements. Keep prompts as lean as the task/model permits. Native Reasoning First: no hidden-CoT requests or generic 'think step by step'. User instructions override this preflight.`
 const BASE_GATE = `Prompt Optimizer v5.11: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
 const BASE_ALWAYS = `Prompt Optimizer v5.11: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
@@ -110,9 +119,10 @@ function hintFor(model:any): string | undefined {
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event:any, ctx:any) => {
     const sid = String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
+    boundSessions(sid)
     if (!sessionTurns.has(sid)) sessionTurns.set(sid, 0)
   })
-  pi.on("session_end", async (_event:any, ctx:any) => {
+  pi.on("session_shutdown", async (_event:any, ctx:any) => {
     const sid = String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
     sessionBehaviors.delete(sid)
     sessionTurns.delete(sid)
@@ -164,6 +174,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("before_agent_start", async (event:any, ctx:any) => {
     const settings = cfg(ctx)
     const sid = String(ctx.sessionManager?.getSessionId?.() ?? "__default__")
+    boundSessions(sid)
     if (settings.behavior === 'off') return
     const hint = hintFor(ctx.model)
      if (!hint && settings.unsupportedModel === 'skip') return

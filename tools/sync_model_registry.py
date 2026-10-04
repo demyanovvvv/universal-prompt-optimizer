@@ -102,7 +102,14 @@ def main() -> int:
     args = parser.parse_args()
     json_text, ts_text = generated()
     profiles = load_profiles()
-    current = [(JSON_OUTPUT, json_text), (TS_OUTPUT, ts_text), (PI_OUTPUT, render_pi_ts(profiles))]
+    gemini_path = ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py'
+    gemini = gemini_path.read_text(encoding='utf-8')
+    start = gemini.index('    profiles = {', gemini.index('def exact_profile_for'))
+    end = gemini.index('\n    if leaf in profiles:', start)
+    aliases = {alias: item['id'] for item in profiles for alias in item['aliases']}
+    table = '    profiles = ' + json.dumps(aliases, indent=4).replace('\n', '\n    ')
+    gemini = gemini[:start] + table + gemini[end:]
+    current = [(JSON_OUTPUT, json_text), (TS_OUTPUT, ts_text), (PI_OUTPUT, render_pi_ts(profiles)), (gemini_path, gemini)]
     stale = [path for path, expected in current if not path.is_file() or path.read_text(encoding="utf-8") != expected]
     if args.check:
         if stale:
@@ -114,7 +121,8 @@ def main() -> int:
     JSON_OUTPUT.write_text(json_text, encoding="utf-8")
     TS_OUTPUT.write_text(ts_text, encoding="utf-8")
     PI_OUTPUT.write_text(render_pi_ts(profiles), encoding="utf-8")
-    print(f"Generated {JSON_OUTPUT}, {TS_OUTPUT}, and {PI_OUTPUT}")
+    gemini_path.write_text(gemini, encoding='utf-8')
+    print(f"Generated {JSON_OUTPUT}, {TS_OUTPUT}, {PI_OUTPUT}, and Gemini routing")
     return 0
 
 

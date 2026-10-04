@@ -98,9 +98,10 @@ The v5.5 verified lifecycle build remains included:
 
 - `./install.sh --doctor` / `--status` performs a read-only installation,
   configuration, lock, and runtime-state diagnostic.
-- `./install.sh --uninstall` removes unchanged package-owned files and managed
-  blocks/hooks while preserving user text, custom JSON fields, hooks, commands,
-  and modified files. `--dry-run` previews the removal.
+- Re-running `./install.sh` updates installer-owned files to the current version.
+- `./install.sh --uninstall` removes modified installer-owned files, backups and
+  managed blocks/hooks while preserving unrelated user content. `--dry-run`
+  previews the removal.
 - Managed configuration now carries `schemaVersion: 1`; the formal contract is
   `prompt-optimizer.schema.json`. Unknown fields remain supported and preserved.
 - GitHub Actions verifies Linux and Windows, unit/conformance/eval suites, and
@@ -207,13 +208,12 @@ Shared config (project):
 
 `scope: "first"` restores first-user-turn-only behavior from v4.
 
-The shared `.prompt-optimizer.json` keeps the legacy boolean `qualityGate` form
-because Cursor, Gemini CLI, Pi, and shared instruction adapters consume that
-contract. Boolean `true` enables adaptive PASS/LIGHT/FULL gating and `false`
-maps to the legacy always-normalize behavior. OpenCode's own
-`.opencode/prompt-optimizer.json` may use the richer `adaptive`, `pass`, `light`,
-or `full` values; the installer writes the compatible boolean to shared config
-and the richer value to OpenCode config.
+Shared `.prompt-optimizer.json` and OpenCode config preserve the selected
+`qualityGate=adaptive|pass|light|full`. Legacy boolean `true` remains accepted
+as adaptive and `false` as force-normalize (`pass`). Instruction adapters read
+current project settings before global settings, with installer defaults as
+fallback. Gemini automatic preflight requires a per-turn hook eligibility signal.
+Global Gemini hooks execute the home-installed script independently of project cwd.
 
 For OpenCode, `adaptive` selects PASS for precise prompts, LIGHT for incomplete
 or planning/research work, and FULL for complex, security-sensitive, migration,
@@ -270,7 +270,7 @@ No second “prompt rewriting model” call is required.
 | Russian installation | `./install.sh --ru` | `py -3 install.ru.py --agents all --auto` | Same installer API and adapter contents |
 | Non-interactive installation | `./install.sh --agents all --auto --yes` | `py -3 install.py --agents all --auto` | Suitable for CI and scripts |
 | Preview / dry-run | `./install.sh --agents all --dry-run --yes` | `py -3 install.py --agents all --dry-run` | Shows planned changes without writing |
-| Uninstall | `./install.sh --uninstall --yes` | `py -3 install.py --uninstall` | Removes only unchanged managed files/blocks |
+| Uninstall | `./install.sh --uninstall --yes` | `py -3 install.py --uninstall` | Removes managed files, backups and blocks |
 | Verification | `./verify.sh` | `py -3 tools/selfcheck.py` | Full project self-check; see checks below |
 
 Python 3.10 or newer is required. On Linux and macOS, the shell launcher is
@@ -385,13 +385,13 @@ On Windows, `install.ru.py` is a localized direct entry point to the same API.
 ./install.sh --scope project --project . --uninstall --yes
 ```
 
-Uninstall is conservative. A copied package file is removed only while its
-content still matches the package version. User-modified files are reported and
-preserved. Managed Markdown blocks and hook entries can be removed independently
-without deleting surrounding user content. Ambiguous pre-existing config
-containers such as a version-only `settings.json` are retained. The OpenCode TUI
-copy carries a local ownership marker so uninstall removes installer-owned files
-without claiming a pre-existing plugin at the same conventional path.
+Uninstall removes installer-owned files even when their contents were edited,
+including installer backups. Managed Markdown blocks and hook entries are
+removed without deleting surrounding user content or unrelated JSON fields.
+Ambiguous pre-existing config containers such as a version-only `settings.json`
+are retained. The OpenCode TUI copy carries a local ownership marker so uninstall
+does not claim a pre-existing plugin at the same conventional path. Re-running
+install updates managed files to the current package version.
 
 ### Development checks
 

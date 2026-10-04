@@ -190,16 +190,51 @@ def exact_profile_for(model: str | None) -> str | None:
     if leaf.endswith("-latest"):
         leaf = leaf[:-7]
     profiles = {
-        "gpt-6-astra": "astra", "astra": "astra",
-        "gpt-6-sol": "sol", "sol": "sol", "gpt-6.1-sol": "gpt-6.1-sol",
-        "gpt-5.6-terra": "terra", "terra": "terra",
-        "gpt-6-luna": "luna", "luna": "luna",
-        "gpt-5.6": "gpt-5.6-sol", "gpt-5.6-sol": "gpt-5.6-sol", "gpt-5.6-luna": "gpt-5.6-luna",
-        "claude-fable-5.1": "claude-fable-5.1", "claude-fable-5-1": "claude-fable-5.1", "claude-fable-5": "claude-fable-5",
-        "claude-opus-5.5": "claude-opus-5.5", "claude-opus-5-5": "claude-opus-5.5", "claude-opus-5": "claude-opus-5",
-        "claude-opus-4.8": "claude-opus-4.8", "claude-opus-4-8": "claude-opus-4.8",
-        "claude-sonnet-5": "claude-sonnet-5", "claude-sonnet-5.5": "claude-sonnet-5.5", "claude-sonnet-5-5": "claude-sonnet-5.5",
+        "gpt-6-astra": "astra",
+        "astra": "astra",
+        "gpt-6-sol": "sol",
+        "sol": "sol",
+        "gpt-6.1-sol": "gpt-6.1-sol",
+        "gpt-5.6-terra": "terra",
+        "terra": "terra",
+        "gpt-6-luna": "luna",
+        "luna": "luna",
+        "gpt-5.6": "gpt-5.6-sol",
+        "gpt-5.6-sol": "gpt-5.6-sol",
+        "gpt-5.6-luna": "gpt-5.6-luna",
+        "glm-5.2": "glm-5.2",
+        "glm-5-2": "glm-5.2",
+        "glm-5.3": "glm-5.3",
+        "glm-5-3": "glm-5.3",
+        "glm-5.3-flash": "glm-5.3-flash",
+        "glm-5-3-flash": "glm-5.3-flash",
+        "deepseek-v4.1-flash": "deepseek-v4.1-flash",
+        "deepseek-v4-1-flash": "deepseek-v4.1-flash",
+        "deepseek-flash": "deepseek-v4.1-flash",
+        "deepseek-v4-flash": "deepseek-v4-flash",
+        "deepseek-v4-flash-0731": "deepseek-v4-flash",
+        "deepseek-v4-pro": "deepseek-v4-pro",
+        "claude-fable-5.1": "claude-fable-5.1",
+        "claude-fable-5-1": "claude-fable-5.1",
+        "claude-fable-5": "claude-fable-5",
+        "claude-opus-5.5": "claude-opus-5.5",
+        "claude-opus-5-5": "claude-opus-5.5",
+        "claude-opus-5": "claude-opus-5",
+        "claude-opus-4.8": "claude-opus-4.8",
+        "claude-opus-4-8": "claude-opus-4.8",
+        "claude-sonnet-5": "claude-sonnet-5",
+        "claude-sonnet-5.5": "claude-sonnet-5.5",
+        "claude-sonnet-5-5": "claude-sonnet-5.5",
+        "kimi-k3": "kimi-k3",
+        "muse-spark-1.3": "muse-spark-1.3",
+        "muse-spark-1-3": "muse-spark-1.3",
+        "hy4-preview": "hy4-preview",
+        "hy-4-preview": "hy4-preview",
+        "qwen3.8-max": "qwen3.8-max",
+        "qwen3.8-max-0902": "qwen3.8-max",
+        "qwen3.8-max-2026-09-02": "qwen3.8-max",
         "gemini-3.8-flash": "gemini-3.8-flash",
+        "grok-4.6": "grok-4.6"
     }
     if leaf in profiles:
         return profiles[leaf]
@@ -306,6 +341,8 @@ elif profile == "claude-sonnet-5.5":
     base += "Resolved model profile: Claude Sonnet 5.5. Use a bounded objective, scope, initiative boundary, deliverable and verification; continue authorized work without premature check-ins, batch independent tools, and report completed versus verified versus unconfirmed work. "
 elif profile in {"claude-sonnet-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-fable-5.1", "claude-fable-5"}:
     base += f"Resolved Claude profile: {profile}. Use clear scope, concrete completion criteria, relevant tool evidence and behavior verification; use examples/XML and long-context source ordering only when they materially clarify the task. Keep effort and thinking in runtime. "
+elif profile:
+    base += f"Resolved model profile: {profile}. Apply only its matching profile from the installed prompt-optimizer skill; preserve scope, constraints and required verification. "
 elif model:
     base += f"Observed/configured model: {model}. No exact installed model profile matches it; use the neutral model-agnostic optimizer profile and do not invent model-specific behavior. "
 else:

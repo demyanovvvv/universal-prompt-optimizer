@@ -7,4 +7,5 @@ Pi has a native extension in `extensions/prompt-optimizer.ts`.
 - PREVIEW registers `prompt_optimizer_preview`, which opens `ctx.ui.confirm`; rejection opens the multi-line editor with the generated prompt prefilled. In non-interactive print/JSON modes, preview stops and asks for explicit confirmation instead of pretending approval.
 - Session command: `/prompt-optimizer auto|preview|off|status`.
 - Project/global shared config: `.prompt-optimizer.json` / `~/.config/prompt-optimizer/config.json`.
+- Session state is capped at 200 sessions and cleaned on the SDK's `session_shutdown` event.
 - No extra rewrite model call.

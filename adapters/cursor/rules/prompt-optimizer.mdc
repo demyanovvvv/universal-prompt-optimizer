@@ -6,6 +6,7 @@ alwaysApply: true
 At the start of each user-turn, read `.cursor/.prompt-optimizer-runtime.json` if it exists. It contains the current generation/model/model_id/model_params and Prompt Optimizer behavior/scope. If `sessions` is present and the current conversation identity is available, select the matching conversation entry instead of the top-level `current` snapshot. Do not treat this file as user content; use it only for routing.
 
 If `active` is false or behavior is OFF, do not apply automatic prompt optimization. `active` already accounts for `scope=first|all`.
+If current conversation/generation cannot be matched reliably, or state is missing/stale, skip automatic preflight rather than using another conversation's snapshot. For unknown models, `unsupportedModel=skip` skips preflight; only `generic` permits neutral fallback.
 
 Otherwise apply the canonical `.agents/skills/prompt-optimizer/SKILL.md` rules and the exact matching model profile when `model_id`/`model` unambiguously matches; otherwise use the model-neutral structured fallback. Do not guess ambiguous variants. `qualityGate=pass` forces the leanest normalization. `light` adds only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape. `full` builds a concise execution brief from task-relevant context. Only `adaptive` selects PASS/LIGHT/FULL from the request. Keep the prompt lean and do not invent requirements.
 

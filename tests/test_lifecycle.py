@@ -32,6 +32,31 @@ class ManagedFileMapTests(unittest.TestCase):
 
 
 class UninstallPlanTests(unittest.TestCase):
+    def test_complete_uninstall_removes_obsolete_owned_files_and_keeps_neighbors(self):
+        from installer.catalog import load_catalog
+        from installer.domain import InstallRequest
+        from installer.planning import plan_install
+        for scope in ("project", "global"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                request = InstallRequest(root, scope, frozenset({"opencode", "claude", "gemini", "pi"}), automatic=True)
+                execute_plan(plan_install(request, load_catalog(ROOT)), source_root=ROOT, backup=True)
+                mapping = lifecycle.managed_file_map(root, ROOT, scope)
+                owned = [root / ".agents/skills/prompt-optimizer", root / ".claude/skills/prompt-optimizer",
+                         mapping["opencode-plugin"][1]]
+                for directory in owned:
+                    (directory / "obsolete.txt").write_text("older package file", encoding="utf-8")
+                neighbor = root / ".agents/skills/user/SKILL.md"
+                neighbor.parent.mkdir(parents=True)
+                neighbor.write_text("user skill", encoding="utf-8")
+                execute_plan(plan_install(request, load_catalog(ROOT)), source_root=ROOT, backup=True)
+                execute_plan(lifecycle.build_uninstall_plan(root, ROOT, scope), source_root=ROOT, backup=False)
+                for directory in owned:
+                    self.assertFalse(directory.exists(), directory)
+                self.assertEqual(neighbor.read_text(encoding="utf-8"), "user skill")
+                self.assertFalse(list(root.rglob("*.prompt-optimizer.bak")))
+                execute_plan(lifecycle.build_uninstall_plan(root, ROOT, scope), source_root=ROOT, backup=False)
+
     def test_delete_json_plugin_specs_handles_plugin_entries_with_options(self):
         with tempfile.TemporaryDirectory() as raw:
             config = Path(raw) / "opencode.json"
@@ -54,8 +79,21 @@ class UninstallPlanTests(unittest.TestCase):
         kinds = {(operation.kind, operation.path.as_posix()) for operation in plan.operations}
         self.assertIn(("delete_tree_if_matches", "/tmp/project/.agents/skills"), kinds)
         self.assertIn(("delete_block", "/tmp/project/GEMINI.md"), kinds)
-        self.assertIn(("delete_file_if_matches", "/tmp/project/.gemini/hooks/prompt-preflight.py"), kinds)
+        self.assertIn(("delete_owned_file", "/tmp/project/.gemini/hooks/prompt-preflight.py"), kinds)
         self.assertIn(("delete_json_fields", "/tmp/project/.prompt-optimizer.json"), kinds)
+
+    def test_uninstall_removes_modified_installer_owned_files(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            hook = root / ".gemini/hooks/prompt-preflight.py"
+            hook.parent.mkdir(parents=True)
+            hook.write_text("user-modified", encoding="utf-8")
+            execute_plan(
+                lifecycle.build_uninstall_plan(root, PACKAGE_ROOT, "project"),
+                source_root=PACKAGE_ROOT,
+                backup=False,
+            )
+            self.assertFalse(hook.exists())
 
     def test_uninstall_uses_plain_tree_cleanup_for_server_plugin_and_owned_cleanup_for_tui(self):
         plan = lifecycle.build_uninstall_plan(Path("/tmp/project"), PACKAGE_ROOT, "project")
@@ -63,8 +101,22 @@ class UninstallPlanTests(unittest.TestCase):
         tui = [operation for operation in plan.operations if operation.label == "opencode-tui-plugin"]
         self.assertEqual(len(server), 1)
         self.assertEqual(server[0].kind, "delete_tree_if_matches")
-        self.assertEqual(server[0].params, None)
+        self.assertEqual(server[0].params, {"remove_modified": True, "remove_unlisted": True})
         self.assertTrue(any(operation.kind == "delete_tree_if_matches" and operation.params for operation in tui))
+
+    def test_project_windsurf_uninstall_removes_modified_rule(self):
+        from installer.catalog import load_catalog
+        from installer.domain import InstallRequest
+        from installer.planning import plan_install
+        for modified in (False, True):
+            with self.subTest(modified=modified), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                execute_plan(plan_install(InstallRequest(root, 'project', frozenset({'windsurf'}), automatic=True), load_catalog(ROOT)), source_root=ROOT, backup=False)
+                rule = root / '.windsurf/rules/prompt-optimizer.md'
+                if modified:
+                    rule.write_text(rule.read_text(encoding='utf-8') + '\nUser-owned edit\n', encoding='utf-8')
+                execute_plan(lifecycle.build_uninstall_plan(root, ROOT, 'project'), source_root=ROOT, backup=False)
+                self.assertFalse(rule.exists())
 
     def test_build_uninstall_plan_includes_runtime_cleanup(self):
         plan = lifecycle.build_uninstall_plan(Path("/tmp/project"), PACKAGE_ROOT, "project")

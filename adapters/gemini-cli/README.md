@@ -19,6 +19,12 @@ Gemini CLI command-line `--model` has higher precedence but is not exposed to `B
 
 Only unambiguous installed model IDs select profiles. This includes the shared OpenAI profiles (`gpt-6.1-sol`, `gpt-6-sol`, `gpt-6-astra`, `gpt-6-luna`) and Claude profiles, including `claude-sonnet-5.5`; aliases such as `auto`, `pro`, or `flash` are not guessed. Unknown models follow the configured `unsupportedModel=skip|generic` behavior.
 
+The alias table is generated from the canonical registry with `npm run generate:model-registry`.
+Global hooks execute the home-installed script; project cwd is used for settings/state only.
+Automatic instructions require non-empty per-turn hook context, including for PREVIEW.
+The stored model is the last observed request model, not proof of the next request's model;
+a model switch can lag by one turn because BeforeAgent runs before BeforeModel.
+
 ## PREVIEW
 
 When `behavior=preview`, the injected preflight asks the model to use Gemini CLI's built-in `ask_user` tool. If that tool is unavailable, it must show the exact optimized prompt and wait for explicit confirmation.

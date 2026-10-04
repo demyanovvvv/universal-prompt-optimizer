@@ -131,8 +131,11 @@ path before comparing the selected mode.
 - OpenCode TUI install/uninstall preserves user plugins and unrelated `tui.json`
   fields; uninstall dry-run leaves the config and managed tree unchanged while
   reporting the planned cleanup.
-- OpenCode quality gates preserve exact `adaptive/pass/light/full` values while
-  shared/legacy adapter config remains boolean-compatible.
+- Shared and OpenCode quality gates preserve exact `adaptive/pass/light/full` values;
+  legacy booleans remain accepted.
+- Hook command planning covers global Gemini script location and Windows quoting.
+- Gemini routing covers every canonical alias and supported profile output.
+- Project Windsurf uninstall removes unchanged rules and preserves user edits.
 - OpenCode session duplicate protection does not discard a new turn merely because
   its text matches the previous turn; the current prompt is reserved before the
   context hook and only committed as processed after the decision.

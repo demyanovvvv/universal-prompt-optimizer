@@ -30,7 +30,7 @@ def configured_snippet_block(snippet: str, behavior: str, scope: str, unsupporte
     line = (
         f"\nConfigured by installer: `behavior={behavior}`, `scope={scope}`, "
         f"`qualityGate={gate}`, `unsupportedModel={unsupported_model}`. "
-        "If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
+        "These are fallback defaults; current project/global settings override them. If a native adapter injects a newer per-turn setting, the native adapter wins.\n"
     )
     return snippet.replace(marker, line + marker)
 

@@ -79,7 +79,8 @@
       "mechanism": "BeforeAgent preflight plus observation-only BeforeModel model capture and GEMINI.md",
       "knownLimitations": [
         "BeforeAgent does not expose the resolved model ID; exact routing begins only after the first BeforeModel observation.",
-        "CLI --model is not visible to BeforeAgent, so exact first-turn routing is not claimed for that case."
+        "CLI --model is not visible to BeforeAgent, so exact first-turn routing is not claimed for that case.",
+        "The model snapshot is last-observed: switching models may lag by one user-turn."
       ]
     },
     {
