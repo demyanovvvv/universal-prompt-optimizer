@@ -1,6 +1,21 @@
-# v5.11 build verification
+# Testing and verification
 
-Verified on **2026-09-16** after the lifecycle, CI, schema, conformance, and eval audit.
+The repository uses a layered test strategy. Select the narrowest checks that cover the changed subsystem, then run the complete CI-equivalent sequence before a release or broad cross-cutting change.
+
+## Change matrix
+
+| Change type | Required focused checks |
+|---|---|
+| Python installer, filesystem, or lifecycle | `python -m unittest discover -s tests -v`; relevant installer/lifecycle tests; `npm run verify` |
+| TypeScript plugin or runtime | `npm run verify:ts`; `npm run test:runtime` |
+| Model registry or routing | `npm run generate:model-registry` when canonical data changes; `npm run check:model-registry`; `npm run test:registry`; relevant routing tests |
+| Adapter implementation or manifest | `npm run test:adapters`; `npm run test:registry`; relevant installer/configuration tests |
+| Prompt profile, evaluation case, or scoring | `npm run test:evals:strict`; `npm run test:evals:mock`; `npm run test:evals:baseline` |
+| Configuration contract | Python installer tests; `npm run verify:ts`; `npm run test:runtime`; project/global and malformed-config coverage |
+| Verification scripts or CI | `npm run verify`; `npm run verify:bash`; all directly affected checks |
+| Documentation-only change | `npm run verify` when repository checks inspect the changed files |
+
+Focused checks do not replace additional checks required by the specific change or by CI.
 
 ## Interactive installer
 
@@ -49,6 +64,19 @@ The canonical `CI` GitHub Actions workflow runs the same checks on Ubuntu and
 Windows. It sets `PYTHONDONTWRITEBYTECODE=1` before Python checks so archive
 hygiene remains deterministic. Windows runs the portable self-check; Linux runs
 both the portable and bash self-checks.
+
+## Evaluation baseline policy
+
+Use deterministic cases and mock providers for repeatable local checks. A baseline
+may be updated only when the intended behavior or scoring contract changed and
+the new result has been reviewed. Never update a baseline only to hide an
+unexplained regression; record the behavioral reason alongside the change.
+
+## Reporting results
+
+Record the exact command, environment when relevant, and pass/fail result. If a
+check cannot run because a dependency or host tool is unavailable, report that
+limitation explicitly and do not describe the overall verification as complete.
 
 - Bash syntax: `install.sh`, `verify.sh`.
 - Python syntax: installer, Cursor hook, Gemini CLI hook.
