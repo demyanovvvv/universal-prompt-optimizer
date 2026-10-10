@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import re
 
 from .content import merge_json
 from .domain import InstallPlan, Operation
@@ -378,7 +379,15 @@ Use the Prompt Optimizer server plugin state for this session. Report the
 resolved mode, scope, quality gate, model/profile and privacy-safe counters.
 Do not edit persistent configuration and do not reveal hidden reasoning.
 """
-    if text != legacy_status and ("description: Optimize this task for " not in text or "Use the `prompt-" not in text):
+    command_name = re.escape(operation.path.stem)
+    legacy_model_templates = (
+        r"---\ndescription: Optimize this task for [^\n]+, then execute it\.\n---\n"
+        rf"Use the `{command_name}` skill for this request\.\n\n\$ARGUMENTS\n",
+        r"---\ndescription: Optimize and execute with the [^\n]+ profile\n---\n"
+        rf"Use the `{command_name}` skill for the following task\. Preserve the user's language and constraints, "
+        r"then execute it unless the user requests prompt-only mode\.\n\n\$ARGUMENTS\n",
+    )
+    if text != legacy_status and not any(re.fullmatch(template, text) for template in legacy_model_templates):
         return
     transaction.record(operation.path)
     operation.path.unlink()

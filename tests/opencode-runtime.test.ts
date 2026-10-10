@@ -40,6 +40,50 @@ test("/po-status is implemented as a native TUI information dialog", () => {
   assert.match(source, /Status: \$\{current\.label\}/)
 })
 
+test("prompt-optimizer.menu exposes a structured palette menu with subtitles", () => {
+  const source = readFileSync(join(process.cwd(), "adapters/opencode/tui/prompt-optimizer.tsx"), "utf8").replace(/\r\n/g, "\n")
+  const menuCommand = source.indexOf('name: "prompt-optimizer.menu"')
+  assert.notEqual(menuCommand, -1)
+  const commandBlock = source.slice(menuCommand, source.indexOf("\n      },", menuCommand))
+  assert.match(commandBlock, /category: "Prompt Optimizer"/)
+  assert.match(commandBlock, /namespace: "palette"/)
+  assert.match(commandBlock, /run\(\) \{\s*openMenu\(api\)\s*\}/)
+  // The menu command must not claim a slash name: /prompt-optimizer is served by
+  // the server plugin, and a second registration would shadow it.
+  assert.doesNotMatch(commandBlock, /slashName|slashAliases/)
+
+  const menuStart = source.indexOf("function openMenu(api: any): void {")
+  assert.notEqual(menuStart, -1)
+  const menuBody = source.slice(menuStart, source.indexOf("\n}\n", menuStart))
+  assert.match(menuBody, /api\.ui\.DialogSelect/)
+  for (const [value, title] of [
+    ["status", /Status · \$\{current\.label\}/],
+    ["behavior", /Behavior · \$\{short\(settings\.behavior\)\}/],
+    ["scope", /Scope · \$\{short\(settings\.scope\)\}/],
+    ["qualityGate", /Quality gate · \$\{short\(settings\.qualityGate\)\}/],
+    ["unsupportedModel", /Unsupported model · \$\{short\(settings\.unsupportedModel\)\}/],
+    ["target", /Save to · \$\{TARGET_LABELS\[target\]\}/],
+  ] as const) {
+    assert.match(menuBody, new RegExp(`value: "${value}"`))
+    assert.match(menuBody, title)
+  }
+  const rows = menuBody.match(/description:/g) ?? []
+  assert.equal(rows.length, 7)
+  assert.match(menuBody, /statusDetails\(api, sessionID\)/)
+  for (const open of ["openBehavior", "openScope", "openGate", "openUnsupported"]) {
+    assert.match(menuBody, new RegExp(`${open}\\(api, target\\)`))
+  }
+})
+
+test("Prompt Optimizer keeps the host command palette and does not bind ctrl+p", () => {
+  const source = readFileSync(join(process.cwd(), "adapters/opencode/tui/prompt-optimizer.tsx"), "utf8").replace(/\r\n/g, "\n")
+  const bindings = source.slice(source.indexOf("bindings: ["))
+  assert.match(bindings, /key: "ctrl\+shift\+p", cmd: "prompt-optimizer\.open"/)
+  // ctrl+p is OpenCode's built-in command_list; binding it here would shadow the
+  // host palette for the whole application.
+  assert.doesNotMatch(bindings, /key: "ctrl\+p"/)
+})
+
 test("managed config updates preserve unknown fields and write atomically", () => {
   const root = mkdtempSync(join(tmpdir(), "prompt-optimizer-tui-"))
   const path = join(root, "prompt-optimizer.json")

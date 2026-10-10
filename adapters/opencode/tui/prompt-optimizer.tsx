@@ -158,27 +158,39 @@ function settingsSummary(api: any): string {
   return `${short(settings.behavior)} · ${short(settings.scope)} · ${short(settings.qualityGate)} · ${resolved.source === "default" ? "Default" : TARGET_LABELS[Object.keys(override).some(key => key !== "schemaVersion") ? "session" : resolved.source]}`
 }
 
-function SettingsDialog(props: { api: any; target: Target }): any {
-  const api = props.api
-  const openBehavior = () => api.ui.dialog.replace(() => <api.ui.DialogSelect title="Behavior" current={(sessionOverride(api, currentSessionID(api)).behavior ?? resolvedSettings(api).settings.behavior)} options={[
+function openBehavior(api: any, target: Target): void {
+  api.ui.dialog.replace(() => <api.ui.DialogSelect title="Behavior" current={(sessionOverride(api, currentSessionID(api)).behavior ?? resolvedSettings(api).settings.behavior)} options={[
     { title: "Auto", value: "auto", description: "Optimize when the quality gate says it helps." },
     { title: "Preview", value: "preview", description: "Show the suggested flow before execution." },
     { title: "Off", value: "off", description: "Keep Prompt Optimizer disabled." },
-  ]} onSelect={(option: any) => saveSetting(api, props.target, "behavior", option.value)} />)
-  const openScope = () => api.ui.dialog.replace(() => <api.ui.DialogSelect title="Scope" options={[
+  ]} onSelect={(option: any) => saveSetting(api, target, "behavior", option.value)} />)
+}
+
+function openScope(api: any, target: Target): void {
+  api.ui.dialog.replace(() => <api.ui.DialogSelect title="Scope" options={[
     { title: "First request", value: "first", description: "Apply only to the first user request." },
     { title: "All requests", value: "all", description: "Apply throughout the session." },
-  ]} onSelect={(option: any) => saveSetting(api, props.target, "scope", option.value)} />)
-  const openGate = () => api.ui.dialog.replace(() => <api.ui.DialogSelect title="Quality gate" options={[
+  ]} onSelect={(option: any) => saveSetting(api, target, "scope", option.value)} />)
+}
+
+function openGate(api: any, target: Target): void {
+  api.ui.dialog.replace(() => <api.ui.DialogSelect title="Quality gate" options={[
     { title: "Adaptive", value: "adaptive", description: "Choose PASS, LIGHT or FULL from task complexity." },
     { title: "Pass", value: "pass", description: "Use the legacy always-normalize path." },
     { title: "Light", value: "light", description: "Use a concise normalization." },
     { title: "Full", value: "full", description: "Use the complete execution brief." },
-  ]} onSelect={(option: any) => saveSetting(api, props.target, "qualityGate", option.value)} />)
-  const openUnsupported = () => api.ui.dialog.replace(() => <api.ui.DialogSelect title="Unsupported model" options={[
+  ]} onSelect={(option: any) => saveSetting(api, target, "qualityGate", option.value)} />)
+}
+
+function openUnsupported(api: any, target: Target): void {
+  api.ui.dialog.replace(() => <api.ui.DialogSelect title="Unsupported model" options={[
     { title: "Skip", value: "skip", description: "Do not optimize models outside the registry." },
     { title: "Generic fallback", value: "generic", description: "Use model-neutral optimization guidance." },
-  ]} onSelect={(option: any) => saveSetting(api, props.target, "unsupportedModel", option.value)} />)
+  ]} onSelect={(option: any) => saveSetting(api, target, "unsupportedModel", option.value)} />)
+}
+
+function SettingsDialog(props: { api: any; target: Target }): any {
+  const api = props.api
   const settings = { ...resolvedSettings(api).settings, ...sessionOverride(api, currentSessionID(api)) }
   return <api.ui.DialogSelect title={`Prompt Optimizer · ${settingsSummary(api)}`} options={[
     { title: `Behavior · ${short(settings.behavior)}`, value: "behavior", description: "Auto, preview or off." },
@@ -188,13 +200,44 @@ function SettingsDialog(props: { api: any; target: Target }): any {
     { title: `Save to · ${TARGET_LABELS[props.target]}`, value: "target", description: "Choose where the next changes are saved." },
     { title: "Done", value: "done", description: "Close Prompt Optimizer settings." },
   ]} onSelect={(option: any) => {
-    if (option.value === "behavior") openBehavior()
-    else if (option.value === "scope") openScope()
-    else if (option.value === "qualityGate") openGate()
-    else if (option.value === "unsupportedModel") openUnsupported()
+    if (option.value === "behavior") openBehavior(api, props.target)
+    else if (option.value === "scope") openScope(api, props.target)
+    else if (option.value === "qualityGate") openGate(api, props.target)
+    else if (option.value === "unsupportedModel") openUnsupported(api, props.target)
     else if (option.value === "target") openTarget(api)
     else api.ui.dialog.clear()
   }} />
+}
+
+function activeTarget(api: any): Target {
+  const override = sessionOverride(api, currentSessionID(api))
+  if (Object.keys(override).some(key => key !== "schemaVersion")) return "session"
+  const source = resolvedSettings(api).source
+  return source === "default" ? "global" : source
+}
+
+function openMenu(api: any): void {
+  const settings = { ...resolvedSettings(api).settings, ...sessionOverride(api, currentSessionID(api)) }
+  const target = activeTarget(api)
+  const current = statusFromConfig(api, currentSessionID(api))
+  const sessionID = currentSessionID(api)
+  api.ui.dialog.replace(() => <api.ui.DialogSelect title={`Prompt Optimizer · ${settingsSummary(api)}`} options={[
+    { title: `Status · ${current.label}`, value: "status", description: "Resolved settings, detected profile and the latest decision." },
+    { title: `Behavior · ${short(settings.behavior)}`, value: "behavior", description: "Auto, preview or off." },
+    { title: `Scope · ${short(settings.scope)}`, value: "scope", description: "First request or all requests." },
+    { title: `Quality gate · ${short(settings.qualityGate)}`, value: "qualityGate", description: "How much normalization to apply." },
+    { title: `Unsupported model · ${short(settings.unsupportedModel)}`, value: "unsupportedModel", description: "Fallback behavior for unknown models." },
+    { title: `Save to · ${TARGET_LABELS[target]}`, value: "target", description: "Choose where the next changes are saved." },
+    { title: "Close", value: "close", description: "Close Prompt Optimizer menu." },
+  ]} onSelect={(option: any) => {
+    if (option.value === "status") api.ui.dialog.replace(() => <api.ui.DialogAlert title="Prompt Optimizer status" message={statusDetails(api, sessionID)} />)
+    else if (option.value === "behavior") openBehavior(api, target)
+    else if (option.value === "scope") openScope(api, target)
+    else if (option.value === "qualityGate") openGate(api, target)
+    else if (option.value === "unsupportedModel") openUnsupported(api, target)
+    else if (option.value === "target") openTarget(api)
+    else api.ui.dialog.clear()
+  }} />)
 }
 
 function openTarget(api: any): void {
@@ -255,7 +298,7 @@ const tui: TuiPlugin = async (api) => {
         name: "prompt-optimizer.open",
         title: "Prompt Optimizer · Settings",
         description: "Configure Prompt Optimizer behavior and save target",
-        category: "Plugin",
+        category: "Prompt Optimizer",
         namespace: "palette",
         slashName: "prompt-optimizer",
         slashAliases: ["po"],
@@ -265,10 +308,21 @@ const tui: TuiPlugin = async (api) => {
         },
       },
       {
+        name: "prompt-optimizer.menu",
+        title: "Prompt Optimizer · Menu",
+        description: "Status, behavior, scope, quality gate, unsupported model and save target",
+        category: "Prompt Optimizer",
+        namespace: "palette",
+        suggested: true,
+        run() {
+          openMenu(api)
+        },
+      },
+      {
         name: "prompt-optimizer.status",
         title: "Prompt Optimizer status",
         description: "Show current optimizer status",
-        category: "Plugin",
+        category: "Prompt Optimizer",
         namespace: "palette",
          slashName: "po-status",
          run() {

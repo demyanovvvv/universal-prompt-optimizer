@@ -19,7 +19,8 @@ Full release notes: [CHANGELOG.md](CHANGELOG.md).
 
 - Added a compact color-coded OpenCode TUI indicator: `● PO AUTO`,
   `◐ PO PREVIEW`, `○ PO OFF`, `◇ PO GENERIC`, and `! PO CONFIG`.
-- Added native `Ctrl+P` → `Prompt Optimizer · Settings` controls.
+- Added native `Ctrl+P` → command palette → `Prompt Optimizer` group controls,
+  with a structured menu that shows every setting's current value as a subtitle.
 - Settings can be saved for the current session, the project, or globally.
 - Added atomic, symlink-aware config writes with preservation of custom JSON
   fields and fail-safe handling of malformed configuration.
@@ -114,7 +115,7 @@ The v5.5 verified lifecycle build remains included:
   prompt-injection, destructive-action, and secret-preservation cases.
 - OpenCode now has a separate native TUI plugin. It is invisible by default apart
   from a compact `PO + AUTO` indicator, with `/prompt-optimizer`,
-  and `Ctrl+Shift+P` available for on-demand controls.
+  `Ctrl+P` command-palette entries, and `Ctrl+Shift+P` available for on-demand controls.
 - OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
   and `full`. Legacy boolean values remain readable; adapters without a native
   gate API preserve the richer value in runtime state and degrade only at the
@@ -237,8 +238,10 @@ under `.opencode/plugins/prompt-optimizer-tui/`, and registers the latter in
 - `/prompt-optimizer on|off|preview|first|all|pass|light|full|adaptive|reset`
   changes only the current OpenCode session; edit JSON explicitly for persistent
   configuration.
-- `Ctrl+P` → `Prompt Optimizer · Settings` opens the native settings dialog.
-  `Ctrl+Shift+P` remains a shortcut. Behavior, scope, quality gate, and
+- `Ctrl+P` opens the OpenCode command palette, where the `Prompt Optimizer`
+  group provides a structured menu, settings, and status. Each menu row shows the
+  current value of that setting as a subtitle.
+  `Ctrl+Shift+P` opens the settings dialog directly. Behavior, scope, quality gate, and
   unsupported-model handling can be saved to the current session, the project,
   or the global OpenCode configuration.
 

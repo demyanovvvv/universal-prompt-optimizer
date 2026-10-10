@@ -37,9 +37,11 @@ The TUI plugin is registered in `tui.json` as:
 {"plugin":["./plugins/prompt-optimizer-tui/prompt-optimizer.tsx"]}
 ```
 
-It exposes `/prompt-optimizer`, `Ctrl+P` → `Prompt Optimizer · Settings`, and
-`Ctrl+Shift+P` as a shortcut. The compact status chip uses `● PO AUTO`,
-`◐ PO PREVIEW`, `○ PO OFF`, `◇ PO GENERIC`, or `! PO CONFIG`; `*` marks a
+It exposes `/prompt-optimizer`, `Ctrl+P` → command palette → the
+`Prompt Optimizer` group (menu, settings, status), and `Ctrl+Shift+P` as a
+shortcut that opens settings directly. The palette menu is structured and shows
+the current value of every setting as a subtitle. The compact status chip uses
+`● PO AUTO`, `◐ PO PREVIEW`, `○ PO OFF`, `◇ PO GENERIC`, or `! PO CONFIG`; `*` marks a
 session override. The settings dialog can save Behavior, Scope, Quality gate,
 and Unsupported model to Session, Project, or Global targets. Project settings
 are stored in `.opencode/prompt-optimizer.json`, global settings in

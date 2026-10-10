@@ -7,12 +7,36 @@ from installer import catalog, filesystem, transaction
 from installer.domain import InstallRequest
 from installer.planning import plan_config_write, plan_install
 from installer.executor import execute_plan
-from installer.domain import InstallPlan
+from installer.domain import InstallPlan, Operation
 from installer.locking import InstallLock
 from installer.planning import validate_request
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_VERSION = (ROOT / "VERSION").read_text(encoding="utf-8").strip()
+
+LEGACY_MODEL_COMMANDS = {
+    "prompt-claude-opus-5-5.md": """---
+description: Optimize and execute with the Claude Opus 5.5 profile
+---
+Use the `prompt-claude-opus-5-5` skill for the following task. Preserve the user's language and constraints, then execute it unless the user requests prompt-only mode.
+
+$ARGUMENTS
+""",
+    "prompt-claude-fable-5-1.md": """---
+description: Optimize and execute with the Claude Fable 5.1 profile
+---
+Use the `prompt-claude-fable-5-1` skill for the following task. Preserve the user's language and constraints, then execute it unless the user requests prompt-only mode.
+
+$ARGUMENTS
+""",
+    "prompt-sol.md": """---
+description: Optimize this task for GPT-6 Sol, then execute it.
+---
+Use the `prompt-sol` skill for this request.
+
+$ARGUMENTS
+""",
+}
 
 
 class InstallerModuleTests(unittest.TestCase):
@@ -207,6 +231,71 @@ class InstallerModuleTests(unittest.TestCase):
             self.assertTrue((root / ".agents/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".opencode/commands/prompt.md").is_file())
             self.assertFalse((root / ".opencode/commands/prompt-luna.md").exists())
+
+    def test_install_migrates_legacy_model_commands_to_universal_commands(self):
+        for scope in ("project", "global"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                commands = root / (".opencode/commands" if scope == "project" else ".config/opencode/commands")
+                commands.mkdir(parents=True)
+                for name, content in LEGACY_MODEL_COMMANDS.items():
+                    (commands / name).write_text(content, encoding="utf-8")
+                custom = commands / "custom.md"
+                custom.write_text("user-command", encoding="utf-8")
+                plan = plan_install(
+                    InstallRequest(root, scope, frozenset({"opencode"}), automatic=False),
+                    catalog.load_catalog(ROOT),
+                )
+                execute_plan(plan, source_root=ROOT, dry_run=True)
+                for name, content in LEGACY_MODEL_COMMANDS.items():
+                    self.assertEqual((commands / name).read_text(encoding="utf-8"), content)
+                for _ in range(2):
+                    execute_plan(plan, source_root=ROOT)
+                    self.assertEqual(
+                        {path.name for path in commands.glob("*.md")},
+                        {"prompt.md", "prompt-only.md", "prompt-optimizer.md", "custom.md"},
+                    )
+                    self.assertEqual(custom.read_text(encoding="utf-8"), "user-command")
+
+    def test_install_preserves_modified_or_mismatched_legacy_model_commands(self):
+        for name, legacy in LEGACY_MODEL_COMMANDS.items():
+            variants = {
+                "appended instructions": legacy + "Custom instructions.\n",
+                "changed task": legacy.replace("$ARGUMENTS", "Custom task: $ARGUMENTS"),
+                "changed skill": legacy.replace(name.removesuffix(".md"), "prompt-custom"),
+                "extra frontmatter": legacy.replace("\n---\n", "\nagent: custom\n---\n"),
+                "custom content": "user-owned model command\n",
+            }
+            for label, content in variants.items():
+                with self.subTest(command=name, change=label), tempfile.TemporaryDirectory() as raw:
+                    root = Path(raw)
+                    command = root / ".opencode/commands" / name
+                    command.parent.mkdir(parents=True)
+                    command.write_text(content, encoding="utf-8")
+                    plan = plan_install(
+                        InstallRequest(root, "project", frozenset({"opencode"}), automatic=False),
+                        catalog.load_catalog(ROOT),
+                    )
+                    execute_plan(plan, source_root=ROOT)
+                    self.assertEqual(command.read_text(encoding="utf-8"), content)
+
+    def test_legacy_model_command_cleanup_rolls_back_on_install_failure(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            commands = root / ".opencode/commands"
+            commands.mkdir(parents=True)
+            for name, content in LEGACY_MODEL_COMMANDS.items():
+                (commands / name).write_text(content, encoding="utf-8")
+            plan = plan_install(
+                InstallRequest(root, "project", frozenset({"opencode"}), automatic=False),
+                catalog.load_catalog(ROOT),
+            )
+            failing = InstallPlan((*plan.operations, Operation("merge", root / "broken.json", content=b"not json")))
+            with self.assertRaises(ValueError):
+                execute_plan(failing, source_root=ROOT)
+            for name, content in LEGACY_MODEL_COMMANDS.items():
+                self.assertEqual((commands / name).read_text(encoding="utf-8"), content)
+            self.assertFalse((commands / "prompt.md").exists())
 
     def test_install_removes_only_unchanged_legacy_po_status_command(self):
         legacy = """---
