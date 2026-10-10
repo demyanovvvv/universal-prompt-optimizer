@@ -1,7 +1,7 @@
 ---
 trigger: always_on
 ---
-# Prompt Optimizer v5.11
+# Prompt Optimizer v5.12
 
 Use the installed `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight when automatic optimization is enabled. Read the project's `.prompt-optimizer.json`, otherwise global `~/.config/prompt-optimizer/config.json`; invalid settings or OFF disable automatic preflight. Respect scope first/all. For unknown models, `unsupportedModel=skip` skips preflight; only `generic` permits neutral fallback. Resolve skills from the installed project or global skills tree.
 

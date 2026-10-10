@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.11
+# Source provenance — Universal Prompt Optimizer v5.12
 
 Checked: **2026-09-23** for the GPT-6 family and Claude Opus 5.5 / Claude Code guidance; other profiles retain their per-file checked dates.
 

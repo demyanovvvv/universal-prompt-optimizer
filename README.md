@@ -1,144 +1,55 @@
-# Universal Prompt Optimizer v5.11
+# Universal Prompt Optimizer v5.12
 
 **Language:** English · [Русский README](README.ru.md)
 
-**Quick links:** [Installation](#installation) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md) · [v5.11.0 release](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.11.0)
+**Quick links:** [Installation](#installation) · [Commands](#universal-commands) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md)
 
-## v5.11 release highlights
+Model-aware prompt optimization for eight coding agents. Write a natural request;
+the active agent applies only useful guidance for its resolved model, preserves
+your intent and constraints, and executes in the same model turn.
 
-- Added exact routing and model guidance for GPT-6.1 Sol (`gpt-6.1-sol`).
-- Added exact routing and a dedicated prompt profile for Claude Sonnet 5.5 (`claude-sonnet-5.5`, alias `claude-sonnet-5-5`).
-- Updated Claude family guidance from Anthropic's current prompting best practices: bounded autonomy, useful tool progress, long-context ordering, targeted examples/XML, behavior verification, and no hidden-CoT scaffolding.
-- Propagated the new profiles across all eight adapters: OpenCode, Pi, Gemini CLI, Cursor, Claude Code, Codex, GitHub Copilot CLI, and Windsurf.
-- Gemini CLI now resolves supported OpenAI and Claude model IDs after model observation while preserving neutral fallback for unknown or ambiguous IDs.
-- Added routing and installer coverage for the new profiles and updated package hygiene checks for 26 model profiles.
+The goal is higher first-pass success, fewer scope errors and repair iterations,
+and lower total tokens per completed task. No separate optimizer LLM call is required.
 
-Full release notes: [CHANGELOG.md](CHANGELOG.md).
+## Core capabilities
 
-## v5.10 release highlights
+- **Adaptive preflight:** PASS keeps precise requests lean, LIGHT adds a missing
+  boundary, and FULL builds a concise brief for complex tasks.
+- **Exact model routing:** 26 internal profiles cover supported OpenAI, Claude,
+  DeepSeek, GLM, Gemini, and other models. Unknown or ambiguous IDs follow the
+  configured `generic` or `skip` policy without guessing a model variant.
+- **AUTO / PREVIEW / OFF:** choose silent adaptation, review before execution,
+  or disabled automatic optimization. PREVIEW guarantees depend on the host;
+  OpenCode v1 provides advisory confirmation.
+- **OpenCode controls:** a compact status indicator, a native command-palette
+  menu with current setting values, and session/project/global save targets.
+- **Local-only operation:** no telemetry or hidden network calls; prompt text is
+  not persisted as metrics. Host permissions and user constraints remain authoritative.
+- **Repeatable installation:** project/global installs, atomic writes, rollback,
+  read-only diagnostics, and cleanup of stock legacy model commands while
+  preserving custom instructions and unrelated commands.
 
-- Added a compact color-coded OpenCode TUI indicator: `● PO AUTO`,
-  `◐ PO PREVIEW`, `○ PO OFF`, `◇ PO GENERIC`, and `! PO CONFIG`.
-- Added native `Ctrl+P` → command palette → `Prompt Optimizer` group controls,
-  with a structured menu that shows every setting's current value as a subtitle.
-- Settings can be saved for the current session, the project, or globally.
-- Added atomic, symlink-aware config writes with preservation of custom JSON
-  fields and fail-safe handling of malformed configuration.
-- Added a per-session bridge shared by the OpenCode TUI and server plugin.
+## Supported agents
 
-Full release notes: [CHANGELOG.md](CHANGELOG.md).
+OpenCode, Pi, Gemini CLI, Cursor, Claude Code, OpenAI Codex, GitHub Copilot CLI,
+and Windsurf. Native model visibility and PREVIEW capabilities vary by adapter;
+see the [compatibility matrix](COMPATIBILITY.md).
 
-## v5.9 release highlights
+## Universal commands
 
-- Reduced user-facing commands to three general-purpose OpenCode commands:
-  `/prompt`, `/prompt-only`, and `/prompt-optimizer`.
-- Removed model-specific slash commands and manual model skills from user
-  installations while preserving internal model profiles for automatic routing.
-- Added one consolidated Pi settings command:
-  `/prompt-optimizer auto|preview|off|status`.
-- Unknown or unavailable models now use a model-neutral structured fallback by
-  default instead of being skipped or assigned an unrelated vendor profile.
-- Added safe migration cleanup for unchanged legacy model commands and skills;
-  user-modified and third-party files are preserved.
+| Command | Purpose |
+|---|---|
+| `/prompt <task>` | Detect the active model, optimize the request, and execute the task. |
+| `/prompt-only <task>` | Return only the optimized reusable prompt. |
+| `/prompt-optimizer` | Inspect or change optimizer settings. |
 
-## v5.8 release highlights
+OpenCode installs only these three general-purpose command files. Native TUI
+controls also expose `/po` and `/po-status`. Separate Opus, Fable, and other
+model-specific commands are unnecessary: profiles are selected internally.
+Reinstall in the same scope to clean up stock legacy command files, then restart
+OpenCode to refresh the command list. User-modified and third-party commands are preserved.
 
-- OpenCode nested server plugins are now explicitly registered in
-  `opencode.json`, so the native integration is loaded reliably by OpenCode v1.
-- Non-automatic installs no longer silently install or register native OpenCode
-  server/TUI integration.
-- OpenCode uninstall preserves user plugin entries, including entries with
-  options, and removes only Prompt Optimizer-owned registration and files.
-- Added the `/prompt-optimizer` settings command and stable plugin IDs:
-  `prompt-optimizer` and `prompt-optimizer.tui`.
-- GPT-6 Sol repository analysis now uses bounded inspection and current
-  configuration evidence instead of open-ended exploration or stale docs.
-- OpenCode PREVIEW safety is documented accurately as advisory in v1 because
-  the current plugin API has no cancellable tool hook or host mutation barrier.
-
-Full release notes: [CHANGELOG.md](CHANGELOG.md).
-
-Model-aware adaptive Agent Skill that lets you write normal short human prompts while the active agent silently converts them **only when useful** into the prompt shape recommended for the selected model.
-
-Primary goals: higher first-pass success, fewer misunderstandings/scope errors, fewer repair iterations and lower total tokens per completed task — not merely fewer tokens in the first prompt.
-
-## v5.7 — DeepSeek V4.1 Flash profile
-
-The native hooks require Python 3.10 or newer.
-
-- Added the DeepSeek V4.1 Flash profile (`deepseek-v4.1-flash`, `deepseek-flash`)
-  with official thinking/tool-call/JSON/vision guidance and generation-safe
-  OpenCode/Pi routing ahead of the legacy V4 Flash rule.
-- Preserved the DeepSeek V4 Flash and V4 Pro profiles and aliases. The retired
-  `deepseek-v4-flash` IDs map to the V4.1 Flash profile because the official API
-  now routes them there; bare `deepseek-v4` stays ambiguous.
-
-The v5.6 release remains included:
-
-The installer is built around a
-single declarative planner/executor shared by every adapter, project and global.
-
-- The installer is split into the `installer` package: `planning`, `executor`,
-  `lifecycle`, `content`, `transaction`, `locking`, and `catalog`. All AUTO
-  adapters and non-AUTO `opencode`/`claude` installs run the same plan/executor
-  path.
-- `uninstall` is fully declarative via `build_uninstall_plan` and executes
-  transactionally, so a failure rolls back partial removals instead of leaving a
-  half-removed installation.
-- `install`, `uninstall`, and `doctor` share one managed-path map
-  (`managed_file_map`); `doctor` adds authoritative config and managed-block
-  diagnostics.
-- Shared markdown blocks for `claude`/`codex`/`copilot`/`gemini` are generated
-  from `auto/*.snippet.md`, and global paths are aligned across adapters.
-- Package verification is consolidated into `tools/selfcheck.py` with thin bash
-  and Node entry points.
-- Corrupted managed JSON now reports a localized error instead of a raw
-  traceback.
-
-The v5.5 verified lifecycle build remains included:
-
-- `./install.sh --doctor` / `--status` performs a read-only installation,
-  configuration, lock, and runtime-state diagnostic.
-- Re-running `./install.sh` updates installer-owned files to the current version.
-- `./install.sh --uninstall` removes modified installer-owned files, backups and
-  managed blocks/hooks while preserving unrelated user content. `--dry-run`
-  previews the removal.
-- Managed configuration now carries `schemaVersion: 1`; the formal contract is
-  `prompt-optimizer.schema.json`. Unknown fields remain supported and preserved.
-- GitHub Actions verifies Linux and Windows, unit/conformance/eval suites, and
-  the OpenCode/Pi TypeScript adapters using the pinned npm toolchain. CI also
-  enforces strict safety coverage for consequential, FULL-gate, and skip-action
-  evaluation contracts.
-- Cursor and Gemini runtime state is bounded and entries expire after 30 days.
-- `evals/run.py` validates 47 deterministic fixtures, including GPT-6 Sol/Luna routing, Astra persistence,
-  progressive-disclosure, ambiguous-model,
-  prompt-injection, destructive-action, and secret-preservation cases.
-- OpenCode now has a separate native TUI plugin. It is invisible by default apart
-  from a compact `PO + AUTO` indicator, with `/prompt-optimizer`,
-  `Ctrl+P` command-palette entries, and `Ctrl+Shift+P` available for on-demand controls.
-- OpenCode supports task-aware `qualityGate` values: `adaptive`, `pass`, `light`,
-  and `full`. Legacy boolean values remain readable; adapters without a native
-  gate API preserve the richer value in runtime state and degrade only at the
-  host instruction boundary.
-- OpenCode runtime state is process-local, bounded, expires after 30 days and is
-  capped at 200 sessions; privacy-safe aggregate metrics never store prompt content.
-  TUI session overrides use a separate per-session bridge file and remain active until
-  changed or cleared with `/prompt-optimizer reset`.
-
-The v5.4 installer/runtime hardening remains included:
-
-- `./install.sh` remains the only normal human-facing installer. English is default; `./install.sh --ru` / `./install.sh ru` runs the complete Russian wizard.
-- Auto-detection runs first, with **detected / ALL / manual multi-select / re-scan** and a no-detection fallback. Windows/Git Bash detection now also checks common Cursor/Windsurf locations.
-- Every current setting is available in-console: project/global location, automatic/native integration, AUTO/PREVIEW/OFF, all/first scope, PASS/LIGHT/FULL quality gate, unknown-model SKIP/GENERIC, backups, dry-run, and final review navigation.
-- Installer updates preserve unrelated existing JSON fields instead of replacing whole config objects.
-- Pi `scope=first` state is session-scoped instead of process-global.
-- Gemini CLI no longer assumes Gemini 3.8 Flash. `BeforeModel` now observes the exact resolved `llm_request.model` without modifying the request; first-turn routing uses only explicit `GEMINI_MODEL` / `model.name` when visible and otherwise follows SKIP/GENERIC without guessing.
-- Stale v5.2/v5.3 runtime IDs were removed; version identity is centralized in `VERSION`.
-- `verify.sh` and `verify.mjs` are thin launchers over one shared checker, `tools/selfcheck.py`, covering Python/JSON/JSONL/TypeScript, registry/profile alignment, archive hygiene, installer smoke tests, state handling, and config preservation.
-- Model profiles remain internal developer-guidance data. User installations expose one canonical `prompt-optimizer` skill and automatic exact-model routing, with a neutral structured fallback for unknown or unavailable models.
-- Installation updates managed files atomically, preserves unrelated files in existing skill/command directories, rejects malformed managed JSON, and refuses to install inside the package source tree.
-
-### Quick start
+## Quick start
 
 ```bash
 chmod +x install.sh verify.sh
@@ -180,7 +91,7 @@ Shared config (project):
   "schemaVersion": 1,
   "behavior": "auto",
   "scope": "all",
-  "qualityGate": true,
+  "qualityGate": "adaptive",
   "unsupportedModel": "generic"
 }
 ```
@@ -191,7 +102,7 @@ Shared config (project):
   "schemaVersion": 1,
   "behavior": "preview",
   "scope": "all",
-  "qualityGate": true,
+  "qualityGate": "adaptive",
   "unsupportedModel": "generic"
 }
 ```
@@ -202,7 +113,7 @@ Shared config (project):
   "schemaVersion": 1,
   "behavior": "off",
   "scope": "all",
-  "qualityGate": true,
+  "qualityGate": "adaptive",
   "unsupportedModel": "generic"
 }
 ```
@@ -350,7 +261,7 @@ The console wizard exposes all current installer settings:
 3. **Automatic/native integration** — ON or OFF (skills/commands only).
 4. **Behavior** — AUTO / PREVIEW / OFF.
 5. **Prompt scope** — every user turn / first user turn only.
-6. **Adaptive quality gate** — ON (`PASS → LIGHT → FULL`) / OFF (normalize every eligible prompt).
+6. **Quality gate** — Adaptive (`PASS → LIGHT → FULL`), Pass (always normalize), Light, or Full.
 7. **Unknown model** — SKIP model-specific adaptation / use GENERIC neutral profile.
 8. **Backups** — ON / OFF.
 9. **Dry-run** — write normally / show changes without writing.
@@ -397,6 +308,10 @@ does not claim a pre-existing plugin at the same conventional path. Re-running
 install updates managed files to the current package version.
 
 ### Development checks
+
+CI checks routing, adapter compatibility, installer lifecycle, and strict safety coverage
+for synthetic prompt-injection, destructive-action, and secret-preservation fixtures.
+See [TESTING.md](TESTING.md) for the full verification matrix.
 
 ```bash
 npm install

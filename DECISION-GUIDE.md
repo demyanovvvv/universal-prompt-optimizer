@@ -1,4 +1,4 @@
-# Choosing a configuration — v5.11
+# Choosing a configuration — v5.12
 
 This is the decision guide for the three user-facing questions: **which agent**,
 **which behavior**, and **which quality gate**. For the raw capability table see

@@ -1,5 +1,5 @@
 <!-- prompt-optimizer:auto:start -->
-## Prompt Optimizer v5.11
+## Prompt Optimizer v5.12
 Read current project `.prompt-optimizer.json`, otherwise global `~/.config/prompt-optimizer/config.json`, before automatic preflight; these settings override installer defaults. Invalid settings or OFF disable automatic preflight. Unknown models use neutral shaping only for `unsupportedModel=generic`; `skip` disables it. Respect scope first/all. `qualityGate=pass` forces lean normalization, light/full select those levels, and adaptive alone selects PASS/LIGHT/FULL. Resolve the skill from the installed project or global skills tree.
 Use the canonical `.agents/skills/prompt-optimizer/SKILL.md` (or `.claude/skills/prompt-optimizer/SKILL.md`) as an adaptive preflight. Apply only the exact current model profile when the runtime exposes it; otherwise use the model-neutral structured fallback. PASS a clear request unchanged, use LIGHT for a small missing boundary, and load the FULL or PREVIEW workflow only when selected. Preserve user/project requirements and keep runtime effort/thinking separate from prompt text. AUTO executes silently; OFF skips auto optimization. User instructions override this block.
 <!-- prompt-optimizer:auto:end -->

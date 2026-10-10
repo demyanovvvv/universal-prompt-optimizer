@@ -1,4 +1,4 @@
-# Compatibility — v5.11
+# Compatibility — v5.12
 
 | Agent | Shared skills | Exact active model routing | AUTO | PREVIEW | OFF | Mechanism |
 |---|---:|---:|---:|---:|---:|---|

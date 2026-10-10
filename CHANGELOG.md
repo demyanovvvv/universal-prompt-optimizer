@@ -1,5 +1,18 @@
 # Changelog
 
+## 5.12 — 2026-10-10
+
+- Reworked OpenCode controls into a native command-palette menu with current setting values, settings, and status; `/po-status` opens a native TUI dialog.
+- Fixed migration cleanup for stock Opus/Fable command templates. OpenCode installs only universal `/prompt`, `/prompt-only`, and `/prompt-optimizer` command files, while custom instructions and third-party commands are preserved.
+- Added project/global migration, dry-run, repeat-installation, preservation, and transactional rollback coverage for legacy command cleanup.
+- Hardened OpenCode turn tracking, duplicate detection, and configuration override precedence to prevent stale context and session leakage across turns.
+- Added structured prompt plans and modular analysis, risk, policy, and turn tracking while preserving user intent, exact-model routing, approval boundaries, and local-only operation.
+- Made reinstall/uninstall lifecycle behavior consistent and corrected Gemini routing and preflight eligibility handling.
+- Rewrote the English and Russian README introductions around current capabilities, universal commands, and installation; moved release history to this changelog and refreshed the project description.
+- Synchronized package, skill, registry, adapter, runtime, and documentation version markers for v5.12.0.
+
+Release: [v5.12.0](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.12.0).
+
 ## 5.11 — 2026-09-29
 
 - Added exact routing and a dedicated prompt profile for GPT-6.1 Sol (`gpt-6.1-sol`).
