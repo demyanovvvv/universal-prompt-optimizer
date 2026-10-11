@@ -41,7 +41,7 @@ class InstallCliTests(unittest.TestCase):
             root = Path(raw)
             output = self.run_interactive(["--uninstall", "--dry-run", "--lang", "ru"], ["1", str(root)], root)
             self.assertIn("область установки: проект", output)
-            self.assertIn(str(root), output)
+            self.assertIn(str(root.resolve()), output)
             self.assertFalse(any(root.iterdir()))
             self.run_interactive(["--uninstall"], ["q"], root)
             self.assertFalse(any(root.iterdir()))

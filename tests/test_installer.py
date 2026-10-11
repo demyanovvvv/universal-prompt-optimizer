@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -29,7 +30,8 @@ class InstallerTests(unittest.TestCase):
                 run = subprocess.run(
                     [sys.executable, "-B", str(ROOT / script), "--project", str(root),
                      "--agents", "opencode", "--dry-run"],
-                    capture_output=True, text=True, check=True,
+                    capture_output=True, text=True, encoding="utf-8", check=True,
+                    env={**os.environ, "PYTHONIOENCODING": "cp1252"},
                 )
                 outputs.append(run.stdout)
             self.assertIn("scope: project", outputs[0])

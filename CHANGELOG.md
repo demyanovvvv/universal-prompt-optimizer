@@ -10,6 +10,7 @@
 - Refreshed README introductions and project metadata around adaptive model-aware optimization, intent preservation, and no extra LLM calls; corrected Python scope-selection instructions.
 - Removed the obsolete standalone migration guide and replaced historical onboarding with current usage instructions.
 - Synchronized current package, skill, registry, adapter, runtime, and documentation versions at v5.13.0.
+- Fixed Russian CLI output in redirected Windows streams and normalized Windows path assertions in installer tests.
 
 Release: [v5.13.0](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.13.0).
 

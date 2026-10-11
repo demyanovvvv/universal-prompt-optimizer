@@ -821,6 +821,10 @@ def choose_install_scope(project: str) -> tuple[str, str] | None:
 
 
 def main():
+    # Redirected Windows streams can use a code page that cannot represent Russian.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, 'reconfigure'):
+            stream.reconfigure(encoding='utf-8')
     ap=argparse.ArgumentParser(description=f'Install Universal Prompt Optimizer v{VERSION}')
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
     ap.add_argument('--scope',choices=['project','global'],help='Installation location; prompted in a terminal, otherwise project')
