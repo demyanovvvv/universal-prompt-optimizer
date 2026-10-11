@@ -1,5 +1,8 @@
 # Claude Code adapter — v5
 
+For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
+or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.
+
 Claude Code receives the canonical `prompt-optimizer` skill copied to `.claude/skills/` plus a persistent CLAUDE.md preflight. It selects an exact current model profile only when the runtime exposes an unambiguous ID; otherwise it uses the model-neutral structured fallback.
 
 AUTO/PREVIEW/OFF are represented by the shared config/instruction layer. PREVIEW uses Claude Code's native user-question mechanism when available before mutating/external work; otherwise it prints the prompt and waits for confirmation.

@@ -1,4 +1,7 @@
-# Compatibility — v5.12
+# Compatibility — v5.13
+
+For practical setup and task examples, see [Usage](USAGE.md) or
+[Руководство пользователя](USAGE.ru.md). Adapter-specific instructions are linked below.
 
 | Agent | Shared skills | Exact active model routing | AUTO | PREVIEW | OFF | Mechanism |
 |---|---:|---:|---:|---:|---:|---|

@@ -1,12 +1,15 @@
-# Universal Prompt Optimizer v5.12
+# Universal Prompt Optimizer v5.13
 
 **Language:** English · [Русский README](README.ru.md)
 
-**Quick links:** [Installation](#installation) · [Commands](#universal-commands) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md)
+**Quick links:** [Usage guide](USAGE.md) · [Installation](#installation) · [Commands](#universal-commands) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md)
 
-Model-aware prompt optimization for eight coding agents. Write a natural request;
-the active agent applies only useful guidance for its resolved model, preserves
-your intent and constraints, and executes in the same model turn.
+Adaptive, model-aware prompt optimization for coding agents. Preserves user
+intent and constraints, with no extra LLM calls.
+
+Write a natural request. The active agent applies only useful guidance for its
+resolved model and executes in the same model turn. Clear requests stay lean;
+complex tasks receive a concise, task-relevant execution brief.
 
 The goal is higher first-pass success, fewer scope errors and repair iterations,
 and lower total tokens per completed task. No separate optimizer LLM call is required.
@@ -46,8 +49,6 @@ see the [compatibility matrix](COMPATIBILITY.md).
 OpenCode installs only these three general-purpose command files. Native TUI
 controls also expose `/po` and `/po-status`. Separate Opus, Fable, and other
 model-specific commands are unnecessary: profiles are selected internally.
-Reinstall in the same scope to clean up stock legacy command files, then restart
-OpenCode to refresh the command list. User-modified and third-party commands are preserved.
 
 ## Quick start
 
@@ -58,12 +59,32 @@ chmod +x install.sh verify.sh
 ./verify.sh --ru      # optional package self-check
 ```
 
+On Windows PowerShell, run `py -3 install.py --agents opencode --auto` from the
+release folder. Choose project or global scope, then restart the agent. In the
+Bash wizard, choose your agents, enable automatic/native integration, and keep
+AUTO + Adaptive for everyday use.
+
+### First task
+
+With automatic integration enabled, send an ordinary request:
+
+```text
+Fix the failing login test. Preserve the public API and run the relevant tests.
+```
+
+In OpenCode, use `/prompt-only <task>` to obtain a reusable prompt without
+executing the task, or `/prompt <task>` for manual optimization and execution.
+Use `/po-status` to inspect native integration and `/po` to open settings.
+Commands vary by host; see the [usage guide](USAGE.md) for examples, configuration,
+updates, removal, and troubleshooting.
+
 ## Models
 
 ### OpenAI
 GPT-6 Astra, GPT-6.1 Sol (`gpt-6.1-sol`), GPT-6 Sol (`gpt-6-sol`, short alias `sol`), and GPT-6 Luna (`gpt-6-luna`, short alias `luna`). GPT-5.6 Terra remains `terra`; legacy GPT-5.6 Sol/Luna remain available as `gpt-5.6-sol` / `gpt-5.6-luna`, with `gpt-5.6` preserved as a GPT-5.6 Sol alias.
 
-**Migration:** model-specific slash commands and manual override skills are no longer installed. Model aliases remain internal routing data for automatic exact-model selection. Unknown or unavailable models use the neutral structured fallback and do not get assigned a vendor-specific profile.
+Model aliases are internal routing data. Unknown or ambiguous models follow
+`unsupportedModel=skip|generic`; they are never assigned a guessed vendor profile.
 
 ### Z.ai / GLM
 GLM-5.2; GLM-5.3; GLM-5.3-Flash.
@@ -321,7 +342,9 @@ Normal users do not need these. They are retained for repeatable automation and 
 
 Run `./install.sh --help` for the automation interface.
 
-`install.py` is the non-interactive backend; `install.sh` provides the wizard.
+`install.py` provides the backend and interactive scope selection;
+`install.sh` provides the full settings wizard. Use explicit scope and `--yes`
+for unattended runs.
 On Windows, `install.ru.py` is a localized direct entry point to the same API.
 
 ### Diagnose and uninstall
@@ -347,7 +370,7 @@ for synthetic prompt-injection, destructive-action, and secret-preservation fixt
 See [TESTING.md](TESTING.md) for the full verification matrix.
 
 ```bash
-npm install
+npm ci
 npm run verify        # portable self-check (Node + Python, no bash/WSL needed)
 npm run verify:bash   # canonical bash self-check (Linux/macOS/Git Bash)
 npm test

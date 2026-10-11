@@ -7,6 +7,8 @@
 3. Identify the canonical source, generated consumers, relevant tests, and documentation.
 4. Make the smallest coherent change; avoid unrelated refactors.
 5. Update implementation, tests, and user-facing documentation together when behavior changes.
+   Keep `README.md` / `README.ru.md` and `USAGE.md` / `USAGE.ru.md` aligned;
+   document host-specific behavior in the matching adapter README.
 6. Inspect `git diff` and run the checks selected from the `TESTING.md` matrix.
 7. Report the exact commands and results in the pull request or handoff.
 

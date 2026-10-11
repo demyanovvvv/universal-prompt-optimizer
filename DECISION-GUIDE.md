@@ -1,9 +1,10 @@
-# Choosing a configuration — v5.12
+# Choosing a configuration — v5.13
 
 This is the decision guide for the three user-facing questions: **which agent**,
 **which behavior**, and **which quality gate**. For the raw capability table see
 `COMPATIBILITY.md`; for the machine-readable contract see
-`adapters/capability-matrix.json`.
+`adapters/capability-matrix.json`. For step-by-step examples and troubleshooting,
+see [Usage](USAGE.md) or [Руководство пользователя](USAGE.ru.md).
 
 ## 1. Which agent should I install for?
 
@@ -86,7 +87,7 @@ maps to `pass`.
 **Nothing is being optimized.**
 1. Run `./install.sh --scope project --project . --doctor` and confirm `behavior`
    is not `off` and the expected adapter files are `current`.
-2. Check the model is one of the 23 profiles; an unknown model with
+2. Check the model has a supported profile in the canonical registry; an unknown model with
    `unsupportedModel: skip` intentionally injects nothing. Set `generic` to opt
    into neutral context.
 3. For Gemini CLI first-turn routing, set `GEMINI_MODEL` or rely on the

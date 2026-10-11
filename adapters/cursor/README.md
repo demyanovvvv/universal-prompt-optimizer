@@ -1,5 +1,8 @@
 # Cursor adapter — v5
 
+For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
+or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.
+
 Cursor `beforeSubmitPrompt` receives the current `model`, optional structured `model_id`, and `model_params`, but its documented output can block submission rather than inject arbitrary per-prompt context. v5 therefore uses an exact-model state bridge instead of pretending to rewrite the submission hook.
 
 Install:

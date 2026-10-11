@@ -1,4 +1,7 @@
-# OpenCode adapter — v5.12
+# OpenCode adapter — v5.13
+
+Start with [Usage](../../USAGE.md) or [Руководство пользователя](../../USAGE.ru.md)
+for installation, first tasks, settings, updates, and troubleshooting.
 
 Strongest integration. The server plugin uses OpenCode v1 `chat.message` and
 `experimental.chat.system.transform` hooks, so the profile is selected from the

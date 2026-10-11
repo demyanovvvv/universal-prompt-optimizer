@@ -1,8 +1,8 @@
 {
   "name": "universal-prompt-optimizer",
   "private": true,
-  "version": "5.12.0",
-  "description": "Local-only, model-aware prompt optimization for eight coding agents with universal commands and adaptive preflight",
+  "version": "5.13.0",
+  "description": "Adaptive, model-aware prompt optimization for coding agents. Preserves user intent and constraints, with no extra LLM calls.",
   "engines": {
     "node": ">=20"
   },

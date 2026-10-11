@@ -1,5 +1,8 @@
 # Pi adapter — v5
 
+For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
+or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.
+
 Pi has a native extension in `extensions/prompt-optimizer.ts`.
 
 - Exact active model routing uses `ctx.model` (`provider/id`) on each `before_agent_start`.

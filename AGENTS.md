@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This repository provides model-aware prompt preflight and adapters for coding agents. Changes must preserve user intent, host-agent approval boundaries, adapter compatibility, and the local-only privacy contract.
+This repository provides adaptive, model-aware prompt optimization and adapters for coding agents, preserving user intent and constraints without a separate optimizer LLM call. Changes must preserve host-agent approval boundaries, adapter compatibility, and the local-only privacy contract.
 
 ## Rule precedence
 

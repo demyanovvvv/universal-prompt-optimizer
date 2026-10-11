@@ -1,4 +1,7 @@
-# Gemini CLI adapter — v5.12
+# Gemini CLI adapter — v5.13
+
+For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
+or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.
 
 The adapter registers the same observation/preflight script for two native Gemini CLI events:
 

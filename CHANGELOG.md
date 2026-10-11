@@ -1,11 +1,17 @@
 # Changelog
 
-## Unreleased
+## 5.13 — 2026-10-11
 
 - Added local/project and global/current-user scope selection to Python installation and both uninstall launchers, with explicit scope and `--yes` for automation.
 - Added `uninstall.py` and `uninstall.sh` entry points for complete, repeatable removal in the selected scope.
 - Track installed version, adapters, settings and package file ownership in local metadata; reinstall updates from the current release folder and removes recorded obsolete files transactionally.
 - Preserve saved settings on Python/non-wizard Bash updates and remove installer-created JSON scaffolding, nested Gemini hooks, runtime ignore blocks, runtime locks, metadata and empty directories on uninstall.
+- Added English and Russian usage guides with first-task examples, manual commands, configuration, updates, removal, and troubleshooting.
+- Refreshed README introductions and project metadata around adaptive model-aware optimization, intent preservation, and no extra LLM calls; corrected Python scope-selection instructions.
+- Removed the obsolete standalone migration guide and replaced historical onboarding with current usage instructions.
+- Synchronized current package, skill, registry, adapter, runtime, and documentation versions at v5.13.0.
+
+Release: [v5.13.0](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.13.0).
 
 ## 5.12 — 2026-10-10
 

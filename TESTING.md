@@ -124,10 +124,10 @@ path before comparing the selected mode.
 - Gemini CLI `scope=first`: first BeforeAgent active, subsequent user turn suppressed.
 - Gemini CLI model observation: BeforeModel stores the exact `llm_request.model` without returning an `llm_request` override; a later BeforeAgent in the same session applies Gemini 3.8 Flash rules only on an unambiguous exact match.
 - Gemini CLI unknown-model SKIP produces no optimizer context; GENERIC opts into neutral context.
- - OpenCode router precedence includes all 23 profiles, GPT-6 `sol`/`luna`, versioned GPT-5.6 Sol/Luna, Opus 5.5 before Opus 5, Fable 5.1 before Fable 5, GLM Flash before GLM 5.3, and no guess for bare `deepseek-v4`.
- - Registry conformance covers all 23 profiles, manual skills, OpenCode commands,
+ - OpenCode router precedence covers all canonical profiles, GPT-6 `sol`/`luna`, versioned GPT-5.6 Sol/Luna, Opus 5.5 before Opus 5, Fable 5.1 before Fable 5, GLM Flash before GLM 5.3, and no guess for bare `deepseek-v4`.
+ - Registry conformance covers canonical profiles, shared skills, universal OpenCode commands,
   OpenCode profile/hint maps, Pi model tokens, and canonical skill references.
-- Twelve deterministic Python unit tests cover project/global lifecycle,
+- Deterministic Python unit tests cover project/global lifecycle,
   managed blocks/hooks, modified
   file preservation, custom JSON
   preservation, schema versions, registry consistency, and eval fixtures.

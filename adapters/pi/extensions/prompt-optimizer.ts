@@ -22,8 +22,8 @@ function boundSessions(sid: string): void {
 }
 
 const BASE_COMMON = `Preserve intent, exact literals, hard constraints, project rules, required verification and approval boundaries; do not invent requirements. Keep prompts as lean as the task/model permits. Native Reasoning First: no hidden-CoT requests or generic 'think step by step'. User instructions override this preflight.`
-const BASE_GATE = `Prompt Optimizer v5.12: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
-const BASE_ALWAYS = `Prompt Optimizer v5.12: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
+const BASE_GATE = `Prompt Optimizer v5.13: use PASS/LIGHT/FULL quality gating. ${BASE_COMMON}`
+const BASE_ALWAYS = `Prompt Optimizer v5.13: quality gate is disabled; normalize every in-scope prompt into the leanest model-appropriate execution brief. ${BASE_COMMON}`
 const PREVIEW = `PREVIEW MODE: before mutating/external work, form the exact optimized execution prompt and call prompt_optimizer_preview exactly once for this user-turn. Read-only context resolution may happen first. After tool approval, execute the returned approved/edited prompt; do not preview again in the same user-turn.`
 
 const hints: Array<[RegExp,string]> = [

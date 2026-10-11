@@ -1,5 +1,5 @@
 <!-- prompt-optimizer:auto:start -->
-## Prompt Optimizer v5.12 preflight
+## Prompt Optimizer v5.13 preflight
 
 Before automatic preflight, read the project `.prompt-optimizer.json` if present, otherwise the global `~/.config/prompt-optimizer/config.json`; current settings override the installer defaults below. Invalid settings disable automatic preflight. OFF skips it. For an unknown model, `unsupportedModel=skip` skips preflight and `generic` enables neutral shaping. Respect `scope=first` only for the first eligible user-turn; do not infer an exact model or session identity. Resolve the canonical skill from the installed project or global skills tree.
 For each eligible user task, use `.agents/skills/prompt-optimizer/SKILL.md` as the canonical adaptive preflight unless a native Prompt Optimizer adapter already handles this turn. The native adapter wins. `qualityGate=pass` forces the leanest normalization; `light` adds only a missing high-value field; `full` builds a concise task-relevant execution brief; only `adaptive` selects PASS/LIGHT/FULL according to task need.

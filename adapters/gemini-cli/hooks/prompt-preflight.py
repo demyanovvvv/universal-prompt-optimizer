@@ -301,13 +301,13 @@ common = (
 )
 quality_gate = cfg.get("qualityGate", "adaptive")
 if quality_gate == "pass":
-    base = "Prompt Optimizer v5.12. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
+    base = "Prompt Optimizer v5.13. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
 elif quality_gate == "light":
-    base = "Prompt Optimizer v5.12. Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape before acting. " + common
+    base = "Prompt Optimizer v5.13. Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape before acting. " + common
 elif quality_gate == "full":
-    base = "Prompt Optimizer v5.12. Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before acting. " + common
+    base = "Prompt Optimizer v5.13. Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before acting. " + common
 else:
-    base = "Prompt Optimizer v5.12. Apply PASS/LIGHT/FULL quality gating before acting. " + common
+    base = "Prompt Optimizer v5.13. Apply PASS/LIGHT/FULL quality gating before acting. " + common
 
 # Prefer the exact model observed by BeforeModel in this session. Before the first
 # model call, use only explicit configuration visible to the hook. Never assume a

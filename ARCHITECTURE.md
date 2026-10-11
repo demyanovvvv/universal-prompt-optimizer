@@ -2,7 +2,7 @@
 
 ## System overview
 
-Universal Prompt Optimizer is a local, model-aware preflight layer for coding-agent hosts. It combines a canonical prompt-optimization skill, model profiles, host adapters, an installer, and deterministic/evaluation verification.
+Universal Prompt Optimizer is an adaptive, model-aware preflight layer for coding-agent hosts. It preserves user intent and constraints, applies useful model guidance within the host's existing turn, and requires no separate optimizer LLM call. It combines a canonical prompt-optimization skill, model profiles, host adapters, an installer, and deterministic/evaluation verification. Preflight is local; the host's normal model calls remain subject to its own configuration.
 
 The main boundaries are:
 
