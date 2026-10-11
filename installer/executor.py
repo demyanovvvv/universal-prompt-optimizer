@@ -257,6 +257,9 @@ def _delete_block(operation: Operation, transaction: InstallTransaction) -> None
     _reject_symlink(operation.path)
     current = operation.path.read_text(encoding="utf-8")
     start, end = _BLOCK_START, _BLOCK_END
+    if operation.params:
+        start = operation.params.get("start", start)
+        end = operation.params.get("end", end)
     if (start in current) != (end in current):
         raise ValueError(f"incomplete managed block: {operation.path}")
     if start not in current:
@@ -268,7 +271,7 @@ def _delete_block(operation: Operation, transaction: InstallTransaction) -> None
     if before and not after:
         new += "\n"
     transaction.record(operation.path)
-    if new:
+    if new.strip():
         atomic_write_bytes(operation.path, new.encode("utf-8"))
     else:
         operation.path.unlink()
@@ -419,6 +422,14 @@ def _clean_managed_hooks(entries: list) -> tuple[list, bool]:
         if isinstance(entry, dict) and entry.get("owner") == _MANAGED_HOOK_OWNER and entry.get("name") == _MANAGED_HOOK_NAME:
             changed = True
             continue
+        nested = entry.get("hooks") if isinstance(entry, dict) else None
+        if isinstance(nested, list):
+            cleaned, nested_changed = _clean_managed_hooks(nested)
+            if nested_changed:
+                changed = True
+                if not cleaned:
+                    continue
+                entry = {**entry, "hooks": cleaned}
         remaining.append(entry)
     return remaining, changed
 
@@ -500,6 +511,20 @@ def _merge_json_plugin_specs(operation: Operation, transaction: InstallTransacti
 
 
 def _apply(operation: Operation, source_root: Path, transaction: InstallTransaction, backup: bool) -> None:
+    if operation.kind == "delete_json_scaffold":
+        if operation.path.exists():
+            current = _load_json(operation.path, "installer-created configuration")
+            if current in ({}, {"version": 1}, {"$schema": "https://opencode.ai/tui.json"}, {"version": 1, "$schema": "https://opencode.ai/tui.json"}):
+                _delete_owned_file(operation, transaction)
+        return
+    if operation.kind == "prune_empty":
+        _reject_symlink(operation.path)
+        if operation.path.is_dir():
+            try:
+                operation.path.rmdir()
+            except OSError:
+                pass
+        return
     if operation.kind == "write":
         if operation.content is None:
             raise ValueError(f"write operation has no content: {operation.path}")
@@ -637,7 +662,7 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                 "merge_block", "copy_owned_file", "merge_tui", "merge_json_plugin_specs", "merge_ignore", "delete",
                 "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
                 "delete_legacy_model_skill", "delete_legacy_model_command",
-                "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
+                "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs", "prune_empty", "delete_json_scaffold",
             }:
                 raise ValueError(f"unsupported operation kind: {operation.kind}")
         return affected

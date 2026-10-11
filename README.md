@@ -180,18 +180,51 @@ No second “prompt rewriting model” call is required.
 
 | Task | Linux / macOS | Windows PowerShell | Notes |
 |---|---|---|---|
-| English installation | `./install.sh` | `py -3 install.py --agents all --auto` | Shell wizard detects agents; Python backend runs automatically |
+| English installation | `./install.sh` | `py -3 install.py --agents all --auto` | Choose local/project or global/current-user installation |
 | Russian installation | `./install.sh --ru` | `py -3 install.ru.py --agents all --auto` | Same installer API and adapter contents |
-| Non-interactive installation | `./install.sh --agents all --auto --yes` | `py -3 install.py --agents all --auto` | Suitable for CI and scripts |
-| Preview / dry-run | `./install.sh --agents all --dry-run --yes` | `py -3 install.py --agents all --dry-run` | Shows planned changes without writing |
-| Uninstall | `./install.sh --uninstall --yes` | `py -3 install.py --uninstall` | Removes managed files, backups and blocks |
+| Non-interactive installation | `./install.sh --scope project --agents all --auto --yes` | `py -3 install.py --scope project --agents all --auto --yes` | Suitable for CI and scripts |
+| Preview / dry-run | `./install.sh --agents all --dry-run --yes` | `py -3 install.py --agents all --dry-run --yes` | Shows planned changes without writing |
+| Uninstall | `bash ./uninstall.sh` | `py -3 uninstall.py` | Choose local/global; removes package files, backups, state and managed blocks |
 | Verification | `./verify.sh` | `py -3 tools/selfcheck.py` | Full project self-check; see checks below |
 
 Python 3.10 or newer is required. On Linux and macOS, the shell launcher is
-the recommended interactive entry point; on Windows, the Python commands run
-without prompts and install all listed adapters. To use the wizard on Windows,
-run `./install.sh` from Git Bash. Add `--lang ru` to `install.py` when a script
+the recommended interactive entry point; on Windows, Python installation and
+uninstallation ask for local/global scope and the project path. Explicit
+`--scope project|global` or `--yes` skips that question; without a terminal the
+default is project scope. To use the full settings wizard on Windows, run
+`./install.sh` from Git Bash. Add `--lang ru` to `install.py` when a script
 needs to select the Russian UI without using the dedicated wrapper.
+
+### Updating and removing an installation
+
+Re-run the installer from the new release folder in the **same scope** to update
+to that folder's `VERSION`. It displays the previous and target versions and
+replaces package files, including obsolete files recorded by earlier installs.
+Python and non-wizard Bash runs retain installed adapters, native integration,
+and current shared-config settings unless explicitly overridden. The full Bash
+wizard applies the choices made in its review screen. No release is downloaded.
+
+Installation metadata contains version, adapters, settings and package file
+paths, never prompts: `.prompt-optimizer-install.json` in projects, or
+`~/.config/prompt-optimizer/install.json` globally. Older installs without this
+metadata are supported; their version is reported as not recorded until reinstall.
+
+```bash
+# Update the global installation from this release folder
+bash ./install.sh --scope global --yes
+# Remove the global installation without questions
+bash ./uninstall.sh --scope global --yes
+# Preview removal from a particular project
+python install.py --uninstall --scope project --project /path/to/project --dry-run
+```
+
+On Windows use `py -3 install.py --scope global` to update and
+`py -3 uninstall.py --scope global` to remove. Add `--lang ru` for Russian output.
+Uninstall removes modified package-owned files, registrations, managed blocks,
+installer backups, runtime state/locks, metadata and empty installation directories.
+Unrelated files, hooks, JSON fields and text outside managed blocks are preserved.
+Files created by the installer that contain only JSON scaffolding are removed;
+pre-existing shared configuration files are retained. Repeated removal is safe.
 
 ### Normal installation — no flags
 

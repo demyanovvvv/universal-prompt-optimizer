@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added local/project and global/current-user scope selection to Python installation and both uninstall launchers, with explicit scope and `--yes` for automation.
+- Added `uninstall.py` and `uninstall.sh` entry points for complete, repeatable removal in the selected scope.
+- Track installed version, adapters, settings and package file ownership in local metadata; reinstall updates from the current release folder and removes recorded obsolete files transactionally.
+- Preserve saved settings on Python/non-wizard Bash updates and remove installer-created JSON scaffolding, nested Gemini hooks, runtime ignore blocks, runtime locks, metadata and empty directories on uninstall.
+
 ## 5.12 — 2026-10-10
 
 - Reworked OpenCode controls into a native command-palette menu with current setting values, settings, and status; `/po-status` opens a native TUI dialog.

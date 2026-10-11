@@ -21,6 +21,7 @@ from installer.locking import InstallLock as _InstallLock
 from installer.domain import InstallRequest as _InstallRequest
 from installer.planning import plan_install as _plan_install
 from installer.executor import execute_plan as _execute_plan
+from installer.state import read_state
 from installer.lifecycle import (
     build_uninstall_plan as _build_uninstall_plan,
     diagnose as _diagnose,
@@ -717,8 +718,8 @@ def _execute_plan_checked(plan, *, dry_run: bool, backup: bool) -> None:
 
 def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     validate_project_root(root)
-    if auto and selected <= _PLANNED_AUTO_ADAPTERS:
-        request = _InstallRequest(root, "project", frozenset(selected), automatic=True, behavior=behavior,
+    if selected <= _PLANNED_AUTO_ADAPTERS:
+        request = _InstallRequest(root, "project", frozenset(selected), automatic=auto, behavior=behavior,
                                   prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
@@ -759,11 +760,11 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
         out.append(merge_block(root/'AGENTS.md',configured_block('auto/AGENTS.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))
     return out
 
-_GLOBAL_PLANNED_AUTO_ADAPTERS = _PLANNED_AUTO_ADAPTERS - {'cursor'}
+_GLOBAL_PLANNED_AUTO_ADAPTERS = _PLANNED_AUTO_ADAPTERS
 
 def install_global(home: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
-    if auto and selected <= _GLOBAL_PLANNED_AUTO_ADAPTERS:
-        request = _InstallRequest(home, "global", frozenset(selected), automatic=True, behavior=behavior,
+    if selected <= _GLOBAL_PLANNED_AUTO_ADAPTERS:
+        request = _InstallRequest(home, "global", frozenset(selected), automatic=auto, behavior=behavior,
                                   prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
@@ -803,42 +804,91 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
     if 'cursor' in selected: out.append(L('Cursor global hook/rule installation is intentionally not automated because global hooks/rules are user-environment specific; use adapters/cursor/README.md or project install', 'Глобальная установка hook/rule для Cursor намеренно не автоматизируется, потому что глобальные hooks/rules зависят от окружения пользователя; используйте adapters/cursor/README.md или установку в проект'))
     return out
 
+def choose_install_scope(project: str) -> tuple[str, str] | None:
+    print(L('Installation location (q to cancel):', 'Место установки / удаления (q — отмена):'))
+    print(L('  1) Local — project\n  2) Global — current user', '  1) Локально — в проект\n  2) Глобально — для текущего пользователя'))
+    while True:
+        choice = input('> ').strip().lower() or '1'
+        if choice in {'q', 'quit', 'отмена'}:
+            print(L('Cancelled', 'Отменено'))
+            return None
+        if choice in {'2', 'global', 'глобально'}:
+            return 'global', project
+        if choice in {'1', 'project', 'local', 'локально'}:
+            path = input(L(f'Project path [{project}]: ', f'Путь к проекту [{project}]: ')).strip() or project
+            return 'project', path
+        print(L('Choose 1, 2 or q.', 'Выберите 1, 2 или q.'))
+
+
 def main():
     ap=argparse.ArgumentParser(description=f'Install Universal Prompt Optimizer v{VERSION}')
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
-    ap.add_argument('--scope',choices=['project','global'],default='project')
+    ap.add_argument('--scope',choices=['project','global'],help='Installation location; prompted in a terminal, otherwise project')
     ap.add_argument('--project',default='.')
-    ap.add_argument('--agents',default='all',help='opencode,codex,cursor,pi,claude,gemini,copilot,windsurf,all')
-    ap.add_argument('--auto',action='store_true',help='Install automatic/preview/off adapter integration in addition to skills')
-    ap.add_argument('--behavior',choices=['auto','preview','off'],default='auto')
-    ap.add_argument('--prompt-scope',choices=['first','all'],default='all')
-    ap.add_argument('--quality-gate',choices=['on','off','pass','light','full','adaptive'],default='adaptive',help='Quality gate: adaptive, pass, light, full, or legacy on/off')
-    ap.add_argument('--unsupported-model',choices=['skip','generic'],default='generic')
+    ap.add_argument('--agents',help='opencode,codex,cursor,pi,claude,gemini,copilot,windsurf,all; defaults to installed agents or all')
+    integration = ap.add_mutually_exclusive_group()
+    integration.add_argument('--auto',action='store_true',default=None,help='Install automatic/preview/off adapter integration in addition to skills')
+    integration.add_argument('--no-auto',dest='auto',action='store_false',help='Install skills/commands only')
+    ap.add_argument('--default-auto',action='store_true',help=argparse.SUPPRESS)
+    ap.add_argument('--behavior',choices=['auto','preview','off'])
+    ap.add_argument('--prompt-scope',choices=['first','all'])
+    ap.add_argument('--quality-gate',choices=['on','off','pass','light','full','adaptive'],help='Quality gate: adaptive, pass, light, full, or legacy on/off')
+    ap.add_argument('--unsupported-model',choices=['skip','generic'])
     ap.add_argument('--python-bin',default=sys.executable,help='Python command used by generated hooks')
     ap.add_argument('--opencode-mode',choices=['first','all','off'],help='Deprecated v4 compatibility: first/all map to behavior=auto and corresponding scope; off maps to behavior=off')
     ap.add_argument('--no-backup',action='store_true')
     ap.add_argument('--dry-run',action='store_true')
     ap.add_argument('--doctor',action='store_true',help='Read-only installation and configuration diagnostic')
-    ap.add_argument('--uninstall',action='store_true',help='Remove only unchanged package-owned files and managed blocks')
+    ap.add_argument('--uninstall',action='store_true',help='Remove the complete package installation, including modified owned files and managed blocks')
+    ap.add_argument('-y','--yes',action='store_true',help='Use CLI/default scope without interactive questions')
     args=ap.parse_args()
     global UI_LANG
     UI_LANG=args.lang
-    behavior=args.behavior; scope=args.prompt_scope
-    if args.opencode_mode:
-        if args.opencode_mode=='off': behavior='off'
-        else: behavior='auto'; scope=args.opencode_mode
-    selected=parse_agents(args.agents); backup=not args.no_backup
-    quality_gate = {'on': 'adaptive', 'off': 'pass'}.get(args.quality_gate, args.quality_gate)
+    if args.doctor and args.uninstall:
+        fail(L('Choose either --doctor or --uninstall, not both', 'Выберите либо --doctor, либо --uninstall, но не оба параметра'))
+    if args.scope is None:
+        if not args.yes and not args.doctor and sys.stdin.isatty() and sys.stdout.isatty():
+            location = choose_install_scope(args.project)
+            if location is None:
+                return
+            args.scope, args.project = location
+        else:
+            args.scope = 'project'
     if args.scope == 'project':
         root = Path(args.project).expanduser().resolve()
         if not args.doctor:
             validate_project_root(root)
     else:
         root = Path.home()
-    if args.doctor and args.uninstall:
-        fail(L('Choose either --doctor or --uninstall, not both', 'Выберите либо --doctor, либо --uninstall, но не оба параметра'))
     if args.doctor:
         raise SystemExit(doctor(root, args.scope))
+    try:
+        previous = read_state(root, args.scope)
+    except (ValueError, OSError) as exc:
+        fail(str(exc))
+    saved = previous.get('settings', {}) if previous else {}
+    # Read the live config so settings changed by the host TUI survive updates.
+    config = root / ('.prompt-optimizer.json' if args.scope == 'project' else '.config/prompt-optimizer/config.json')
+    if config.exists():
+        live = load_json_object(config, 'managed configuration')
+        validate_managed_config(live, config, 'managed configuration')
+        saved = {**saved, **{key: live[field] for key, field in
+                 (('behavior', 'behavior'), ('prompt_scope', 'scope'), ('quality_gate', 'qualityGate'), ('unsupported_model', 'unsupportedModel')) if field in live}}
+    behavior=args.behavior or saved.get('behavior', 'auto')
+    scope=args.prompt_scope or saved.get('prompt_scope', 'all')
+    quality_gate=args.quality_gate or saved.get('quality_gate', 'adaptive')
+    quality_gate = {'on': 'adaptive', 'off': 'pass'}.get(quality_gate, quality_gate)
+    args.quality_gate = quality_gate
+    args.unsupported_model=args.unsupported_model or saved.get('unsupported_model', 'generic')
+    args.auto=args.auto if args.auto is not None else (previous['automatic'] if previous else args.default_auto)
+    if args.opencode_mode:
+        if args.opencode_mode=='off': behavior='off'
+        else: behavior='auto'; scope=args.opencode_mode
+    selected=parse_agents(args.agents or (','.join(previous['adapters']) if previous and not args.uninstall else 'all'))
+    backup=not args.no_backup
+    if not args.uninstall:
+        old = previous['version'] if previous else L('not recorded', 'не зафиксирована')
+        print(L(f'Installation version: {old} -> {VERSION}', f'Версия установки: {old} -> {VERSION}'))
     if args.uninstall:
         validate_project_root(root)
         if selected != AGENTS:

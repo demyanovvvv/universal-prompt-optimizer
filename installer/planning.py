@@ -51,6 +51,8 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
     operations: list[Operation] = []
     root = request.root
     package_root = catalog.root
+    model_skills = []
+    opencode_base = root / (".opencode" if request.scope == "project" else ".config/opencode")
     if package_root is not None:
         registry_path = package_root / ".agents/skills/prompt-optimizer/references/model-registry.json"
         registry = json.loads(registry_path.read_text(encoding="utf-8"))
@@ -133,12 +135,12 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
                     content=block.encode("utf-8"),
                     label="Windsurf managed block",
                 ))
-    if "opencode" in request.adapters:
+    if "opencode" in request.adapters and request.automatic:
         config_path = opencode_base / "prompt-optimizer.json"
         updates = {"schemaVersion": 1, "behavior": request.behavior, "scope": request.prompt_scope,
                    "qualityGate": request.quality_gate, "unsupportedModel": request.unsupported_model}
         operations.append(plan_config_write(config_path, updates))
-    if "pi" in request.adapters:
+    if "pi" in request.adapters and request.automatic:
         base = root / (".pi/extensions" if request.scope == "project" else ".pi/agent/extensions")
         operations.append(Operation("copy_tree", base, source=Path("adapters/pi/extensions"), label="Pi extension"))
     runtime_ignores: list[str] = []
@@ -170,7 +172,11 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
         ])
     if runtime_ignores:
         operations.append(Operation("merge_ignore", root / ".gitignore", content=json.dumps(runtime_ignores).encode("utf-8"), label="Runtime ignores"))
-    return InstallPlan(tuple(operations))
+    plan = InstallPlan(tuple(operations))
+    if package_root is not None:
+        from .state import with_install_state
+        plan = with_install_state(plan, request, package_root)
+    return plan
 
 
 def _hook_operation(path: Path, event: str, hook: dict) -> Operation:

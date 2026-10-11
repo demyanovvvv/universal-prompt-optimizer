@@ -8,12 +8,15 @@ VERSION="$(tr -d '\r\n' < "$SCRIPT_DIR/VERSION")"
 AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf")
 
 scope="project"
+scope_explicit=0
 project="."
 agents_arg=""
 agent_selection_mode=""  # detected | all | manual | cli
 detect_requested=0
 interactive=0
 auto_integration=1
+integration_explicit=0
+settings_cli=()
 behavior="auto"
 prompt_scope="all"
 quality_gate="on"
@@ -441,15 +444,20 @@ configure_scope_interactive() {
   local choice
   if [[ "$UI_LANG" == "ru" ]]; then
     section "2/4  Место установки"
-    printf '%b\n' "  1) В проект  ${DIM}[рекомендуется]${RESET}"
+    printf '%b\n' "  1) Локально — в проект  ${DIM}[рекомендуется]${RESET}"
     echo "  2) Глобально"
   else
     section "2/4  Installation location"
-    printf '%b\n' "  1) Project  ${DIM}[recommended]${RESET}"
+    printf '%b\n' "  1) Local — project  ${DIM}[recommended]${RESET}"
     echo "  2) Global"
   fi
   read -r -p "> " choice || true; choice="${choice:-1}"
-  case "$(lower "$choice")" in 2|global|глобально) scope=global ;; *) scope=project ;; esac
+  case "$(lower "$choice")" in
+    2|global|глобально) scope=global ;;
+    q|quit|отмена) echo "$(tr_ui cancelled)"; exit 0 ;;
+    1|project|local|локально) scope=project ;;
+    *) if [[ "$UI_LANG" == ru ]]; then echo "Выберите 1, 2 или q."; else echo "Choose 1, 2 or q."; fi; configure_scope_interactive; return ;;
+  esac
   if [[ "$scope" == "project" ]]; then
     if [[ "$UI_LANG" == "ru" ]]; then read_value "Путь к проекту" "$project"; else read_value "Project path" "$project"; fi
     project="$REPLY"
@@ -683,20 +691,20 @@ while [[ $# -gt 0 ]]; do
     --list-agents) header; print_agent_status; exit 0 ;;
     --agents) agents_arg="${2:?missing value for --agents}"; agent_selection_mode="cli"; shift 2 ;;
     --agents=*) agents_arg="${1#*=}"; agent_selection_mode="cli"; shift ;;
-    --scope) scope="${2:?missing value for --scope}"; shift 2 ;;
-    --scope=*) scope="${1#*=}"; shift ;;
+    --scope) scope="${2:?missing value for --scope}"; scope_explicit=1; shift 2 ;;
+    --scope=*) scope="${1#*=}"; scope_explicit=1; shift ;;
     --project) project="${2:?missing value for --project}"; shift 2 ;;
     --project=*) project="${1#*=}"; shift ;;
-    --auto) auto_integration=1; shift ;;
-    --no-auto) auto_integration=0; shift ;;
-    --behavior) behavior="${2:?missing value for --behavior}"; shift 2 ;;
-    --behavior=*) behavior="${1#*=}"; shift ;;
-    --prompt-scope) prompt_scope="${2:?missing value for --prompt-scope}"; shift 2 ;;
-    --prompt-scope=*) prompt_scope="${1#*=}"; shift ;;
-    --quality-gate) quality_gate="${2:?missing value for --quality-gate}"; shift 2 ;;
-    --quality-gate=*) quality_gate="${1#*=}"; shift ;;
-    --unsupported-model) unsupported_model="${2:?missing value for --unsupported-model}"; shift 2 ;;
-    --unsupported-model=*) unsupported_model="${1#*=}"; shift ;;
+    --auto) auto_integration=1; integration_explicit=1; shift ;;
+    --no-auto) auto_integration=0; integration_explicit=1; shift ;;
+    --behavior) behavior="${2:?missing value for --behavior}"; settings_cli+=(--behavior "$behavior"); shift 2 ;;
+    --behavior=*) behavior="${1#*=}"; settings_cli+=(--behavior "$behavior"); shift ;;
+    --prompt-scope) prompt_scope="${2:?missing value for --prompt-scope}"; settings_cli+=(--prompt-scope "$prompt_scope"); shift 2 ;;
+    --prompt-scope=*) prompt_scope="${1#*=}"; settings_cli+=(--prompt-scope "$prompt_scope"); shift ;;
+    --quality-gate) quality_gate="${2:?missing value for --quality-gate}"; settings_cli+=(--quality-gate "$quality_gate"); shift 2 ;;
+    --quality-gate=*) quality_gate="${1#*=}"; settings_cli+=(--quality-gate "$quality_gate"); shift ;;
+    --unsupported-model) unsupported_model="${2:?missing value for --unsupported-model}"; settings_cli+=(--unsupported-model "$unsupported_model"); shift 2 ;;
+    --unsupported-model=*) unsupported_model="${1#*=}"; settings_cli+=(--unsupported-model "$unsupported_model"); shift ;;
     --python-bin) PYTHON_BIN="${2:?missing value for --python-bin}"; shift 2 ;;
     --python-bin=*) PYTHON_BIN="${1#*=}"; shift ;;
     --backup) backup=on; shift ;;
@@ -710,7 +718,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ $interactive -eq 1 ]]; then interactive_wizard; fi
+if [[ $interactive -eq 1 && $uninstall_mode -eq 0 && $doctor_mode -eq 0 ]]; then interactive_wizard; fi
 
 case "$scope" in project|global) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимая область установки: $scope" >&2; else echo "Invalid scope: $scope" >&2; fi; exit 2;; esac
 case "$behavior" in auto|preview|off) ;; *) if [[ "$UI_LANG" == ru ]]; then echo "Недопустимый режим: $behavior" >&2; else echo "Invalid behavior: $behavior" >&2; fi; exit 2;; esac
@@ -745,28 +753,46 @@ if [[ $doctor_mode -eq 1 ]]; then
   exec "$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --doctor
 fi
 
-if [[ $uninstall_mode -eq 1 && $assume_yes -eq 0 && is_tty ]]; then
+if [[ $assume_yes -eq 0 && $scope_explicit -eq 0 && ( $interactive -eq 0 || $uninstall_mode -eq 1 ) ]] && is_tty; then
+  configure_scope_interactive
+fi
+
+if [[ $uninstall_mode -eq 1 && $assume_yes -eq 0 ]] && is_tty; then
   header
   if [[ "$UI_LANG" == ru ]]; then
-    echo "Будет удалена вся управляемая установка Prompt Optimizer. Пользовательские и измененные файлы будут сохранены."
+    echo "Будет полностью удалена выбранная установка Prompt Optimizer, включая изменённые файлы пакета. Пользовательские файлы и настройки будут сохранены."
     echo "Область: $scope"
     [[ "$scope" == project ]] && echo "Путь: $project"
     read -r -p "Введите uninstall для продолжения: " answer || true
   else
-    echo "The complete managed Prompt Optimizer installation will be removed. User-owned and modified files will be preserved."
+    echo "The selected Prompt Optimizer installation will be completely removed, including modified package files. User-owned files and settings will be preserved."
     echo "Scope: $scope"
     [[ "$scope" == project ]] && echo "Path: $project"
     read -r -p "Type uninstall to continue: " answer || true
   fi
   [[ "$(lower "$answer")" == uninstall ]] || { echo "$(tr_ui cancelled)"; exit 0; }
-elif [[ $interactive -eq 0 && $assume_yes -eq 0 && is_tty ]]; then
+elif [[ $interactive -eq 0 && $assume_yes -eq 0 ]] && is_tty; then
   header; show_summary
   if [[ "$UI_LANG" == ru ]]; then read -r -p "Нажмите Enter для продолжения или q для отмены: " answer || true; else read -r -p "Press Enter to continue, or q to cancel: " answer || true; fi
   if [[ "$(lower "$answer")" == q ]]; then echo "$(tr_ui cancelled)"; exit 0; fi
 fi
 
-cmd=("$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --agents "$agents_arg" --behavior "$behavior" --prompt-scope "$prompt_scope" --quality-gate "$quality_gate" --unsupported-model "$unsupported_model" --python-bin "$PYTHON_BIN")
-[[ $auto_integration -eq 1 ]] && cmd+=(--auto)
+cmd=("$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --python-bin "$PYTHON_BIN" --yes)
+[[ "$agent_selection_mode" != all || $interactive -eq 1 ]] && cmd+=(--agents "$agents_arg")
+# Defaults do not overwrite settings on a repeat installation. Wizard choices
+# and explicit flags are intentional overrides; Python resolves saved values.
+if [[ $interactive -eq 1 && $uninstall_mode -eq 0 ]]; then
+  cmd+=(--behavior "$behavior" --prompt-scope "$prompt_scope" --quality-gate "$quality_gate" --unsupported-model "$unsupported_model")
+  [[ $auto_integration -eq 1 ]] && cmd+=(--auto) || cmd+=(--no-auto)
+else
+  cmd+=("${settings_cli[@]}")
+  if [[ $integration_explicit -eq 1 ]]; then
+    [[ $auto_integration -eq 1 ]] && cmd+=(--auto) || cmd+=(--no-auto)
+  else
+    # The shell launcher retains its native-integration default for first installs.
+    cmd+=(--default-auto)
+  fi
+fi
 [[ "$backup" == off ]] && cmd+=(--no-backup)
 [[ $dry_run -eq 1 ]] && cmd+=(--dry-run)
 [[ $uninstall_mode -eq 1 ]] && cmd+=(--uninstall)

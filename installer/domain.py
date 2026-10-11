@@ -30,7 +30,7 @@ class Operation:
         "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
         "delete_legacy_model_skill", "delete_legacy_model_command",
         "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
-        "merge_json_plugin_specs",
+        "merge_json_plugin_specs", "prune_empty", "delete_json_scaffold",
     ]
     path: Path
     content: bytes | None = None

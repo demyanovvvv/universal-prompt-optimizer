@@ -26,6 +26,20 @@ Focused checks do not replace additional checks required by the specific change 
 - Manual selection supports multiple numbers, `a` (all), `n` (none), `d` (reset to detected), and re-scan.
 - Project/global location, automatic/native integration, AUTO/PREVIEW/OFF, all/first scope, quality gate, SKIP/GENERIC, backups, and dry-run are all configurable in-console.
 - Final Review can return to agent selection, settings, or location before installation.
+- Python install/uninstall and `bash ./uninstall.sh` ask for project/global scope when run in a terminal without `--scope` or `--yes`; project choice asks for its path. `q` cancels without writes.
+- `--uninstall --interactive` uses the removal location/confirmation flow, not installation settings.
+- Non-wizard Bash and Python updates preserve saved settings unless overridden; the full Bash wizard applies its reviewed choices.
+
+## Versioned install/uninstall lifecycle
+
+`tests/test_install_cli.py` and `tests/test_install_state.py` cover scope selection,
+automation, version reporting, current-config preservation, inventories in both
+scopes, obsolete-file deletion, repeated complete removal, dry-run, rollback,
+and rejection of inventory paths outside package-owned destinations.
+
+Run `python -m unittest discover -s tests -v`, `npm run verify`,
+`bash -n install.sh uninstall.sh` and `npm run verify:bash` for launcher/lifecycle changes.
+On Windows with WSL's `bash` unavailable, invoke Git Bash explicitly.
 
 ## Package/runtime checks
 

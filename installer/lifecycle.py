@@ -139,7 +139,7 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                 operations.append(Operation("delete_owned_file", destination / ".prompt-optimizer-owner.json",
                                             label="opencode-tui-owner"))
             elif logical != "opencode-plugin":
-                params = {"remove_modified": True}
+                params: dict = {"remove_modified": True}
                 if logical in {"shared-skills", "claude-skills"}:
                     params.update({"include": ["prompt-optimizer"], "remove_unlisted": True})
                 elif logical == "opencode-commands":
@@ -152,7 +152,8 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                                     params={"events": ["beforeSubmitPrompt"]}))
     operations.append(Operation("delete_json_hooks", root / ".gemini/settings.json", label="gemini-hooks",
                                 params={"events": ["BeforeAgent", "BeforeModel"]}))
-    operations.append(Operation("delete_block", root / ".gitignore", label="runtime ignores"))
+    operations.append(Operation("delete_block", root / ".gitignore", label="runtime ignores",
+                                params={"start": "# prompt-optimizer:runtime:start", "end": "# prompt-optimizer:runtime:end"}))
     backup_paths = {operation.path for operation in operations if operation.kind != "delete_tree_if_matches"}
     for source, destination, strategy in targets.values():
         if strategy == "dir":
@@ -173,6 +174,29 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
         root / ".gemini/.prompt-optimizer-session-state.json",
     ):
         operations.append(Operation("delete_owned_file", runtime, label="runtime state"))
+    from .state import owned_path, read_state, state_path
+    state = read_state(root, scope)
+    if state:
+        for relative in state.get("created_configs", []):
+            operations.append(Operation("delete_json_scaffold", root / relative, label="installer-created configuration"))
+        for relative in state["files"]:
+            path = owned_path(root, scope, relative)
+            operations.extend((Operation("delete_owned_file", path, label="recorded package file"),
+                               Operation("delete_owned_file", path.with_name(path.name + ".prompt-optimizer.bak"), label="recorded backup")))
+    for runtime in (root / ".cursor/.prompt-optimizer-runtime.json", root / ".cursor/.prompt-optimizer-session-state.json",
+                    root / ".gemini/.prompt-optimizer-model-state.json", root / ".gemini/.prompt-optimizer-session-state.json"):
+        operations.append(Operation("delete_owned_file", runtime.with_name(runtime.name + ".lock"), label="runtime lock"))
+    metadata = state_path(root, scope)
+    operations.extend((Operation("delete_owned_file", metadata, label="installation metadata"),
+                       Operation("delete_owned_file", metadata.with_name(metadata.name + ".prompt-optimizer.bak"), label="metadata backup")))
+    directories = set()
+    for operation in operations:
+        parent = operation.path.parent
+        while parent != root and root in parent.parents:
+            directories.add(parent)
+            parent = parent.parent
+    operations.extend(Operation("prune_empty", path, label="empty installation directory")
+                      for path in sorted(directories, key=lambda p: len(p.parts), reverse=True))
     return InstallPlan(tuple(operations))
 
 
