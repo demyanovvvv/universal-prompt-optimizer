@@ -75,6 +75,8 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
             for command in [*model_skills, "po-status"]:
                 operations.append(Operation("delete_legacy_model_command", commands_dest / f"{command}.md",
                                             label="obsolete OpenCode command"))
+                operations.append(Operation("delete_legacy_model_command", commands_dest / f"{command}.md.prompt-optimizer.bak",
+                                            label="obsolete OpenCode command backup", params={"name": command}))
         operations.append(Operation("copy_files", commands_dest, source=Path("adapters/opencode/commands"), label="OpenCode commands",
                                     params={"include": ["prompt.md", "prompt-only.md", "prompt-optimizer.md"]}))
         opencode_base = root / (".opencode" if request.scope == "project" else ".config/opencode")

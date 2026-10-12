@@ -1,7 +1,7 @@
 {
   "name": "universal-prompt-optimizer",
   "private": true,
-  "version": "5.13.0",
+  "version": "5.14.0",
   "description": "Adaptive, model-aware prompt optimization for coding agents. Preserves user intent and constraints, with no extra LLM calls.",
   "engines": {
     "node": ">=20"

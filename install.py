@@ -716,6 +716,21 @@ def _execute_plan_checked(plan, *, dry_run: bool, backup: bool) -> None:
     except ValueError as exc:
         fail(L(str(exc), str(exc)))
 
+def _install_plan_messages(plan, *, dry_run: bool) -> list[str]:
+    messages = []
+    action = L("would install", "будет установлено") if dry_run else L("installed", "установлено")
+    for operation in plan.operations:
+        if operation.kind.startswith("delete") or operation.kind == "prune_empty":
+            continue
+        paths = [operation.path]
+        if operation.kind == "copy_files":
+            paths = [operation.path / name for name in operation.params["include"]]
+        elif operation.kind == "copy_tree" and operation.params and operation.params.get("include"):
+            paths = [operation.path / name for name in operation.params["include"]]
+        messages.extend(f"{action} {operation.label}: {path}" for path in paths)
+    return messages
+
+
 def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:
     validate_project_root(root)
     if selected <= _PLANNED_AUTO_ADAPTERS:
@@ -724,14 +739,14 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
-        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
+        return _install_plan_messages(plan, dry_run=dry_run)
     if not auto and selected <= {"opencode", "claude"}:
         request = _InstallRequest(root, "project", frozenset(selected), automatic=False, behavior=behavior,
                                   prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
-        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
+        return _install_plan_messages(plan, dry_run=dry_run)
     out=[copy_skills(root/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(root/'.claude/skills',backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
@@ -769,7 +784,7 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
-        out = [f"installed composable plan: {operation.path}" for operation in plan.operations]
+        out = _install_plan_messages(plan, dry_run=dry_run)
         if 'cursor' in selected:
             out.append(L('Cursor global hook/rule installation is intentionally not automated because global hooks/rules are user-environment specific; use adapters/cursor/README.md or project install', 'Глобальная установка hook/rule для Cursor намеренно не автоматизируется, потому что глобальные hooks/rules зависят от окружения пользователя; используйте adapters/cursor/README.md или установку в проект'))
         return out
@@ -779,7 +794,7 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
-        return [f"installed composable plan: {operation.path}" for operation in plan.operations]
+        return _install_plan_messages(plan, dry_run=dry_run)
     out=[copy_skills(home/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(home/'.claude/skills',backup=backup,dry_run=dry_run))
     if 'opencode' in selected:

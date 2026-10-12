@@ -1,5 +1,14 @@
 # Changelog
 
+## 5.14 — 2026-10-12
+
+- Improved Python installer output to list current resources with their purpose and individual command paths; cleanup operations are no longer reported as installed resources, and dry runs use `would install`.
+- Reinstallation removes obsolete OpenCode command `.md.prompt-optimizer.bak` copies only when their content matches known package templates, preserving custom replacements and backups of current commands.
+- Documented the shared OpenCode skill, three universal Markdown commands, native `/po-status`, and legacy cleanup behavior; added installer regression coverage.
+- Synchronized current package, skill, registry, adapter, runtime, and documentation versions at v5.14.0.
+
+Release: [v5.14.0](https://github.com/demyanovvvv/universal-prompt-optimizer/releases/tag/v5.14.0).
+
 ## 5.13 — 2026-10-11
 
 - Added local/project and global/current-user scope selection to Python installation and both uninstall launchers, with explicit scope and `--yes` for automation.

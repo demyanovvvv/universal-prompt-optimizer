@@ -116,6 +116,39 @@ class InstallerTests(unittest.TestCase):
             self.assertFalse((root / ".opencode/plugins/prompt-optimizer").exists())
             self.assertFalse((root / ".opencode/opencode.json").exists())
 
+    def test_install_reports_current_resources_without_legacy_cleanup_as_installed(self):
+        for global_scope in (False, True):
+            with self.subTest(global_scope=global_scope), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                if global_scope:
+                    output = installer.install_global(root, {"opencode"}, True, "auto", "first", "skip", "adaptive", False, True, sys.executable)
+                    base = root / ".config/opencode"
+                else:
+                    output = installer.install_project(root, {"opencode"}, True, "auto", "first", "skip", "adaptive", False, True, sys.executable)
+                    base = root / ".opencode"
+                self.assertFalse(any("prompt-sol" in line or "po-status.md" in line for line in output))
+                for name in ("prompt.md", "prompt-only.md", "prompt-optimizer.md"):
+                    self.assertTrue(any(str(base / "commands" / name) in line for line in output), output)
+                self.assertTrue(all(line.startswith("would install ") for line in output), output)
+                self.assertFalse(any(root.iterdir()))
+
+    def test_install_cleans_only_recognized_legacy_command_backups(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            commands = root / ".opencode/commands"
+            commands.mkdir(parents=True)
+            legacy = "---\ndescription: Optimize this task for GPT-6 Sol, then execute it.\n---\nUse the `prompt-sol` skill for this request.\n\n$ARGUMENTS\n"
+            stale = commands / "prompt-sol.md.prompt-optimizer.bak"
+            stale.write_text(legacy, encoding="utf-8")
+            custom = commands / "prompt-luna.md.prompt-optimizer.bak"
+            custom.write_text("user-owned backup", encoding="utf-8")
+            current = commands / "prompt.md.prompt-optimizer.bak"
+            current.write_text("user-owned current command backup", encoding="utf-8")
+            installer.install_project(root, {"opencode"}, False, "auto", "first", "skip", "adaptive", True, False, sys.executable)
+            self.assertFalse(stale.exists())
+            self.assertEqual(custom.read_text(encoding="utf-8"), "user-owned backup")
+            self.assertEqual(current.read_text(encoding="utf-8"), "user-owned current command backup")
+
     def test_nonautomatic_composable_install_keeps_first_backup_of_managed_command(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)

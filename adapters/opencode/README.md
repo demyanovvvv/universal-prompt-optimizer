@@ -1,4 +1,4 @@
-# OpenCode adapter — v5.13
+# OpenCode adapter — v5.14
 
 Start with [Usage](../../USAGE.md) or [Руководство пользователя](../../USAGE.ru.md)
 for installation, first tasks, settings, updates, and troubleshooting.
@@ -59,3 +59,13 @@ model-guided rather than a host-enforced execution barrier. The GPT-6 Sol
 profile also applies bounded inspection for long repository analysis and must
 emit the requested report or an explicit blocking reason once its acceptance
 evidence is sufficient.
+
+The installer deploys one shared `prompt-optimizer` skill and three Markdown
+commands: `/prompt`, `/prompt-only`, and `/prompt-optimizer`. Per-model skills
+and commands are obsolete; their profiles remain in the shared model registry.
+Reinstallation removes legacy wrappers, including obsolete command
+`.md.prompt-optimizer.bak` copies, only when their content matches the known
+package templates. Custom replacements and backups of current commands are
+preserved. `/po-status` is registered by the TUI plugin and needs no Markdown file.
+Install output lists current resources with their purpose; cleanup operations
+are not reported as installed resources, and `--dry-run` uses `would install`.

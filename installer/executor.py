@@ -382,7 +382,7 @@ Use the Prompt Optimizer server plugin state for this session. Report the
 resolved mode, scope, quality gate, model/profile and privacy-safe counters.
 Do not edit persistent configuration and do not reveal hidden reasoning.
 """
-    command_name = re.escape(operation.path.stem)
+    command_name = re.escape(operation.params["name"] if operation.params else operation.path.stem)
     legacy_model_templates = (
         r"---\ndescription: Optimize this task for [^\n]+, then execute it\.\n---\n"
         rf"Use the `{command_name}` skill for this request\.\n\n\$ARGUMENTS\n",

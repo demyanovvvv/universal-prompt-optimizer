@@ -1,4 +1,4 @@
-# Compatibility — v5.13
+# Compatibility — v5.14
 
 For practical setup and task examples, see [Usage](USAGE.md) or
 [Руководство пользователя](USAGE.ru.md). Adapter-specific instructions are linked below.
