@@ -12,6 +12,8 @@ The adapter registers the same observation/preflight script for two native Gemin
 
 The adapter never assumes that “Gemini CLI” means Gemini 3.8 Flash.
 
+`gemini-4-argon` selects its own installed profile and Argon-specific preflight. The profile combines labeled shared Google prompting practices with Argon context constraints; thinking and API parameters remain host-controlled. Similar IDs and other Argon variants do not select this profile.
+
 Before the first model call it can safely use only an explicit model visible to the hook, in this order:
 
 1. `GEMINI_MODEL`;

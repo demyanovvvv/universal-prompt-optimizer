@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "matrix-baseline",
-  "fingerprint": "c073b94e6096a6f51f79c17db85549e057013874f3b0b7a3282087057aa7401b",
+  "fingerprint": "8e8c2c4184bf35e140d8de5717e90cdf112e4f090cef7785dfc75b7543852c10",
   "modes": [
     "OFF",
     "AUTO",
@@ -9,47 +9,47 @@
   ],
   "input": {
     "format": "jsonl",
-    "sha256": "0e7fef98158aa74de27da88f43145ac8935530acaf982009e82e1ddf334e93c2"
+    "sha256": "19b5c49bac325a9895460f487c49057e4b7463d28cd6dd812e820b02e241a2aa"
   },
-  "providerCalls": 174,
+  "providerCalls": 183,
   "failures": 0,
   "runs": {
     "OFF": {
-      "cases": 58,
-      "measured": 58,
+      "cases": 61,
+      "measured": 61,
       "approvalRequired": 0,
       "failed": 0
     },
     "AUTO": {
-      "cases": 58,
-      "measured": 58,
+      "cases": 61,
+      "measured": 61,
       "approvalRequired": 0,
       "failed": 0
     },
     "PREVIEW": {
-      "cases": 58,
-      "measured": 58,
+      "cases": 61,
+      "measured": 61,
       "approvalRequired": 0,
       "failed": 0
     }
   },
   "quality": {
     "OFF": {
-      "cases": 58,
-      "scored": 58,
-      "passed": 58,
+      "cases": 61,
+      "scored": 61,
+      "passed": 61,
       "passRate": 1.0
     },
     "AUTO": {
-      "cases": 58,
-      "scored": 58,
-      "passed": 58,
+      "cases": 61,
+      "scored": 61,
+      "passed": 61,
       "passRate": 1.0
     },
     "PREVIEW": {
-      "cases": 58,
-      "scored": 58,
-      "passed": 58,
+      "cases": 61,
+      "scored": 61,
+      "passed": 61,
       "passRate": 1.0
     }
   },
@@ -61,8 +61,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 58,
-        "outputTokens": 58,
+        "inputTokens": 61,
+        "outputTokens": 61,
         "cost": 0.0
       }
     },
@@ -73,8 +73,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 58,
-        "outputTokens": 58,
+        "inputTokens": 61,
+        "outputTokens": 61,
         "cost": 0.0
       }
     },
@@ -85,8 +85,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 58,
-        "outputTokens": 58,
+        "inputTokens": 61,
+        "outputTokens": 61,
         "cost": 0.0
       }
     }
@@ -1313,6 +1313,112 @@
       }
     },
     {
+      "id": "gemini4-argon-multifile",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9bfc99a48a8df819cf8eb371bd22a7bf3708dabdf60fdc2774dacb3caaf69f9d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9bfc99a48a8df819cf8eb371bd22a7bf3708dabdf60fdc2774dacb3caaf69f9d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "9bfc99a48a8df819cf8eb371bd22a7bf3708dabdf60fdc2774dacb3caaf69f9d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini4-argon-precise",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3853b182ea511fd7a6d19ff0b0ac862cecdca9b2741e7cd974441ef307a24223",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3853b182ea511fd7a6d19ff0b0ac862cecdca9b2741e7cd974441ef307a24223",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 3,
+            "matched": 3,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3853b182ea511fd7a6d19ff0b0ac862cecdca9b2741e7cd974441ef307a24223",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "glm52-architecture",
       "modes": {
         "OFF": {
@@ -1993,6 +2099,59 @@
           },
           "qualityPassed": true,
           "responseSha256": "f7baf71d02a05939ef040ef521b3e35b6096d50fa9e3e282b31fe90fa7853ae5",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "negative-gemini4-variant",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dabf1fccd00b699a01a79f147575b99f3f82370d6a581b3ee76081a64b5d4a54",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dabf1fccd00b699a01a79f147575b99f3f82370d6a581b3ee76081a64b5d4a54",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 2,
+            "matched": 2,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "dabf1fccd00b699a01a79f147575b99f3f82370d6a581b3ee76081a64b5d4a54",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,

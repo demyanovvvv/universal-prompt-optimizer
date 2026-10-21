@@ -37,6 +37,8 @@ multi-agent installation and dry-run commands.
 
 ## 2. Send a normal task
 
+For Gemini 4 Argon, select `gemini-4-argon` in your host/provider. All eight adapters share its dedicated profile; automatic routing uses the exact ID where observable, otherwise name `gemini-4-argon` explicitly when invoking the skill. This selects prompt guidance, not a provider/model switch. Thinking and sampling settings remain host-controlled; see the [Argon harness notes](.agents/skills/prompt-optimizer/references/harness-gemini-4-argon.md).
+
 With automatic integration enabled, write your request normally:
 
 ```text

@@ -376,6 +376,9 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(resolve("claude-sonnet-5-5"), "claude-sonnet-5.5")
         self.assertEqual(resolve("vendor/CLAUDE_SONNET_5.5-latest"), "claude-sonnet-5.5")
         self.assertEqual(resolve("claude-opus-5.5"), "claude-opus-5.5")
+        self.assertEqual(resolve("google/gemini-4-argon"), "gemini-4-argon")
+        self.assertIsNone(resolve("gemini-4-argon-cyber-permissive"))
+        self.assertIsNone(resolve("gemini-4.0-argon"))
         self.assertIsNone(resolve("gpt-6.1-sol-extra"))
 
     def test_global_install_uninstall_lifecycle(self):
@@ -398,6 +401,10 @@ class InstallerTests(unittest.TestCase):
             )
             self.assertTrue((home / ".config/opencode/plugins/prompt-optimizer/index.ts").is_file())
             self.assertTrue((home / ".gemini/settings.json").is_file())
+            for skills_dir in (home / ".agents/skills", home / ".claude/skills"):
+                references = skills_dir / "prompt-optimizer/references"
+                self.assertTrue((references / "gemini-4-argon.md").is_file())
+                self.assertTrue((references / "harness-gemini-4-argon.md").is_file())
             installer.uninstall(home, "global")
             self.assertFalse((home / ".agents/skills/prompt-optimizer/SKILL.md").exists())
 

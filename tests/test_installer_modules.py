@@ -561,7 +561,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
-            for model in ('gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3'):
+            for model in ('gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3', 'gemini-4-argon'):
                 env = dict(os.environ, GEMINI_MODEL=model)
                 run = subprocess.run([sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')], input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}), text=True, capture_output=True, env=env, check=True)
                 context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']

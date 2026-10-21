@@ -9,6 +9,8 @@ test("Pi routing uses the exact shared aliases and supported latest suffix", () 
   assert.equal(resolvePiProfile("claude-fable-5.10"), undefined)
   assert.equal(resolvePiProfile("glm-5.30"), undefined)
   assert.equal(resolvePiProfile("constructor"), undefined)
+  assert.equal(resolvePiProfile("google/gemini-4-argon"), "gemini-4-argon")
+  assert.equal(resolvePiProfile("gemini-4-argon-cyber-permissive"), undefined)
 })
 
 test("Pi model normalization accepts malformed inputs as unsupported IDs", () => {

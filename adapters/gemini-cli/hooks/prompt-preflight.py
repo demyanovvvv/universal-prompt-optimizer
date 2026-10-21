@@ -233,6 +233,7 @@ def exact_profile_for(model: str | None) -> str | None:
         "qwen3.8-max": "qwen3.8-max",
         "qwen3.8-max-0902": "qwen3.8-max",
         "qwen3.8-max-2026-09-02": "qwen3.8-max",
+        "gemini-4-argon": "gemini-4-argon",
         "gemini-3.8-flash": "gemini-3.8-flash",
         "grok-4.6": "grok-4.6"
     }
@@ -333,6 +334,8 @@ if profile == "gemini-3.8-flash":
         "Resolved model profile: Gemini 3.8 Flash. Prefer concise direct instructions and aggressively PASS/LIGHT. "
         "For long context put source data first and the specific task at the end; avoid verbose legacy prompt frameworks. "
     )
+elif profile == "gemini-4-argon":
+    base += "Resolved model profile: Gemini 4 Argon. Use clear goals, relevant context, constraints and expected output; add multi-file scope, dependencies and verification only when useful. Preserve precise short requests, leave output room in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Gemini Flash guidance. "
 elif profile == "gpt-6.1-sol":
     base += "Resolved model profile: GPT-6.1 Sol. Preserve decisive context, scope, approval boundaries and observable completion; continue authorized work through relevant validation, use bounded current evidence, and keep reasoning effort in runtime rather than prompt text. "
 elif profile == "sol":

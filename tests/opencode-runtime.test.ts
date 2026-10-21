@@ -244,6 +244,18 @@ test("corrupt metric enum values are discarded during state normalization", () =
   assert.equal(state?.metrics?.lastProfile, undefined)
 })
 
+test("Argon profile survives session override and resolution normalization", () => {
+  const state = normalizeState({
+    userPromptCount: 1, active: true,
+    override: { profile: "gemini-4-argon" },
+    lastResolution: { profile: "gemini-4-argon", source: "exact-id", confidence: "high", modelID: "gemini-4-argon" },
+    metrics: { lastProfile: "gemini-4-argon" },
+  })
+  assert.equal(state?.override?.profile, "gemini-4-argon")
+  assert.equal(state?.lastResolution?.profile, "gemini-4-argon")
+  assert.equal(state?.metrics?.lastProfile, "gemini-4-argon")
+})
+
 test("turn store keeps interleaved turns correlated and consumes each turn once", () => {
   const store = new TurnStore()
   store.admit("session-1", { messageID: "a", prompt: "Fix A" })

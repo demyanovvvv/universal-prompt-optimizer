@@ -36,6 +36,7 @@ export const PROFILE_HINTS: Record<Profile, string> = {
   "hy4-preview": "Hy4-preview: direct goal/context/boundaries/done/stop; suppress think-deeply, exhaustive exploration and repeated generic verification; do not reopen settled decisions without new evidence.",
   "qwen3.8-max": "Qwen3.8-Max: objective/context/requirements/hard constraints/acceptance with autonomous tool-feedback loops; no repeated manual decomposition/CoT; clear tool descriptions, parallelize independent calls; history/tool-choice belongs to harness.",
   "gemini-3.8-flash": "Gemini 3.8 Flash: especially concise/direct; aggressively PASS/LIGHT; for long context put data first and specific task at end; avoid verbose legacy prompt frameworks and manual CoT.",
+  "gemini-4-argon": "Gemini 4 Argon: clear goal, relevant context, constraints and expected output; add scope/dependencies/verification only when useful for complex multi-file work; preserve precise short requests. Shared Google prompting guidance plus Argon API constraints: leave output room in the unified context window; keep thinking/sampling controls outside prompt text; no manual CoT.",
   "grok-4.6": "Grok 4.6: direct objective/context/constraints/evidence-tool policy/acceptance; native reasoning handles depth; avoid repeated restatement in long loops.",
 }
 

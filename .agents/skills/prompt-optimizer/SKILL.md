@@ -50,6 +50,7 @@ Profiles:
 - Hy4-preview -> `references/hy4-preview.md`
 - Qwen3.8-Max -> `references/qwen3.8-max.md`
 - Gemini 3.8 Flash -> `references/gemini-3.8-flash.md`
+- Gemini 4 Argon / `gemini-4-argon` -> `references/gemini-4-argon.md`
 - Grok 4.6 -> `references/grok-4.6.md`
 - Unknown -> `references/generic-agent.md` only when neutral fallback is enabled.
 

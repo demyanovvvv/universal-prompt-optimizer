@@ -24,6 +24,7 @@ export type Profile =
   | "muse-spark-1.3"
   | "hy4-preview"
   | "qwen3.8-max"
+  | "gemini-4-argon"
   | "gemini-3.8-flash"
   | "grok-4.6"
 
@@ -71,6 +72,7 @@ const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "qwen3.8-max": "qwen3.8-max",
   "qwen3.8-max-0902": "qwen3.8-max",
   "qwen3.8-max-2026-09-02": "qwen3.8-max",
+  "gemini-4-argon": "gemini-4-argon",
   "gemini-3.8-flash": "gemini-3.8-flash",
   "grok-4.6": "grok-4.6",
 }

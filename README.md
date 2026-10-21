@@ -98,7 +98,9 @@ V4.1 Flash is the canonical `deepseek-flash` model. The retired `deepseek-v4-fla
   Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.5; Sonnet 5.
 
 ### Other
-Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Grok 4.6.
+Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Argon (`gemini-4-argon`); Grok 4.6.
+
+Gemini 4 Argon has a separate profile based on its official developer guide and shared Google prompting practices, with API settings documented separately. It is available through all eight adapters; exact automatic selection depends on the host exposing the model ID. The optimizer does not change the host's model or provider availability. Similar IDs and the separate cyber-permissive variant are not aliases.
 
 ## Modes
 

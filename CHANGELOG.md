@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Added the exact `gemini-4-argon` profile across all eight adapters, using Google's Argon developer guide and clearly labeled shared prompting practices; separated runtime/API notes and preserved fallback for other Gemini variants.
+
 ## 5.14 — 2026-10-12
 
 - Improved Python installer output to list current resources with their purpose and individual command paths; cleanup operations are no longer reported as installed resources, and dry runs use `would install`.

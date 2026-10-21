@@ -30,9 +30,11 @@ const routes = [
   ["deepseek-flash", "deepseek-v4.1-flash", "DeepSeek V4.1 Flash"],
   ["deepseek-v4-flash", "deepseek-v4-flash", "DeepSeek V4 Flash"],
   ["deepseek-v4-pro", "deepseek-v4-pro", "DeepSeek V4 Pro"],
+  ["gemini-4-argon", "gemini-4-argon", "Gemini 4 Argon"],
 ] as const
 
 const unsupported = [
+  "gemini-4", "gemini-4.0-argon", "gemini-4-argol", "gemini-4-argon-cyber-permissive", "gemini-4-argon-extra",
   "gpt-6", "gpt-6-terra", "gpt-60-sol", "gpt-5.60-sol",
   "gpt-6-sol-extra", "gpt-6-sol-2026", "gpt-5.6-luna-extra", "solvent", "unknown-model",
   "claude-opus-5.50", "claude-opus-5-50", "claude-opus-5-2026", "claude-opus-5.5-extra",

@@ -165,6 +165,12 @@
       ]
     },
     {
+      "id": "gemini-4-argon",
+      "aliases": [
+        "gemini-4-argon"
+      ]
+    },
+    {
       "id": "gemini-3.8-flash",
       "aliases": [
         "gemini-3.8-flash"

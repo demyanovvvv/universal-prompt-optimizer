@@ -54,11 +54,13 @@ LLM-вызов для переписывания запроса не требу�
 | Claude | Fable 5.1, Fable 5, Opus 5.5, Opus 5, Opus 4.8, Sonnet 5.5, Sonnet 5 |
 | GLM | GLM-5.2, GLM-5.3, GLM-5.3-Flash |
 | DeepSeek | V4.1 Flash, V4 Flash, V4 Pro |
-| Другие | Kimi K3, Muse Spark 1.3, Hy4-preview, Qwen3.8-Max, Gemini 3.8 Flash, Grok 4.6 |
+| Другие | Kimi K3, Muse Spark 1.3, Hy4-preview, Qwen3.8-Max, Gemini 3.8 Flash, Gemini 4 Argon (`gemini-4-argon`), Grok 4.6 |
 
 Профиль выбирается по точному ID активной модели, если агент его предоставляет.
 Поддерживаемые aliases перечислены во внутреннем [реестре моделей](.agents/skills/prompt-optimizer/references/model-registry.json).
 Неоднозначный `deepseek-v4` не выбирает вариант автоматически.
+
+Для Gemini 4 Argon добавлен отдельный профиль по официальному developer guide и общим рекомендациям Google; параметры API описаны отдельно. Профиль доступен во всех восьми адаптерах, автоматический выбор зависит от доступности точного ID в агенте. Оптимизатор не переключает модель и не меняет её доступность у провайдера. Похожие ID и отдельный вариант cyber-permissive не считаются алиасами.
 
 ## Универсальные команды
 

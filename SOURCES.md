@@ -66,6 +66,10 @@ A benchmark/default runtime parameter is not silently converted into a universal
 - Function calling: https://docs.qwencloud.com/developer-guides/tool-calling/function-calling
 
 ## Google / Gemini
+- Gemini 4 Argon checked **2026-10-21**; developer guide updated 2026-10-20. Model/API facts and inherited shared prompting practices are labeled separately.
+- Argon developer guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-argon
+- Argon model: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-argon
+- Shared prompting practices: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/prompts/prompt-design-strategies
 - Gemini 3 prompt guidance: https://ai.google.dev/gemini-api/docs/generate-content/gemini-3
 - Gemini 3.8 Flash: https://ai.google.dev/gemini-api/docs/latest-model
 

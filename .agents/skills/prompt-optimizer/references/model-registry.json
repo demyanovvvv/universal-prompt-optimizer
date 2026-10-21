@@ -215,6 +215,14 @@
       "provenance": "official-model+api"
     },
     {
+      "id": "gemini-4-argon",
+      "aliases": [
+        "gemini-4-argon"
+      ],
+      "file": "gemini-4-argon.md",
+      "provenance": "official-model+api+family"
+    },
+    {
       "id": "gemini-3.8-flash",
       "aliases": [
         "gemini-3.8-flash"
