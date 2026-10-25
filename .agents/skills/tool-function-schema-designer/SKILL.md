@@ -5,6 +5,8 @@ description: Designs robust function/tool calling schemas for LLMs with JSON sch
 
 # Tool/Function Schema Designer
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Design examples are not installed OMP tools: use the actual session schemas and never invent configuration or tool availability. Read-only research remains inspection only; preserve domain/security rules.
+
 Design robust tool schemas that LLMs can reliably invoke.
 
 ## Function Schema Format

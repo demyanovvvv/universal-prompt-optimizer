@@ -5,6 +5,8 @@ description: Creates comprehensive GitHub Actions CI/CD workflows for linting, t
 
 # GitHub Actions Pipeline Creator
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Workflow examples do not authorize local installs/builds, hooks, publishing, or deployment. Read-only research remains inspection only; preserve domain/security rules.
+
 Build production-ready GitHub Actions workflows with best practices.
 
 ## Basic CI Workflow

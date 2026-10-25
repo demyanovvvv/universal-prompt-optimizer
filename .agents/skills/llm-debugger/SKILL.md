@@ -5,6 +5,8 @@ description: Diagnoses LLM output failures including hallucinations, constraint 
 
 # LLM Debugger
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Examples do not authorize model calls, network access, or storing raw user prompts. Read-only research remains inspection only; preserve domain/security rules.
+
 Systematically diagnose and fix LLM output issues.
 
 ## Failure Taxonomy

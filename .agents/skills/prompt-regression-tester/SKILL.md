@@ -5,6 +5,8 @@ description: Compares old vs new prompts across test cases with diff summaries, 
 
 # Prompt Regression Tester
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Examples do not authorize model calls, test execution, baseline replacement, or storing raw user prompts. Read-only research remains inspection only; preserve domain/security rules.
+
 Systematically test prompt changes to prevent regressions.
 
 ## Test Case Format

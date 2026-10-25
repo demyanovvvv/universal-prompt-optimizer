@@ -5,6 +5,8 @@ description: Creates repeatable security review checklist for PRs with required 
 
 # Security PR Checklist Skill
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Read-only review does not authorize scans that execute code, dependency installation, hooks, or changes to security settings. Preserve all domain/security checks and approval boundaries.
+
 Standardized security review for pull requests.
 
 ## PR Security Checklist

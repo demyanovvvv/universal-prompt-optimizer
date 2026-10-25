@@ -13,7 +13,7 @@ Preserve the user's task while applying only model guidance that materially impr
 
 ## Priorities
 
-Apply, in order: system/safety requirements; explicit user instructions and approval boundaries; repository rules and contracts; task requirements; harness constraints; model-specific optimization; generic defaults. Optimization never weakens a higher-priority instruction.
+Apply, in order: system/safety requirements and host system/session instructions (including OMP); explicit user instructions and approval boundaries; repository rules and contracts; task requirements; model-specific optimization; generic defaults. Optimization never weakens a higher-priority instruction or changes the host's actual tool and approval constraints.
 
 ## Route
 
@@ -73,6 +73,8 @@ Preserve the outcome, relevant context, exact literals and selected options, exp
 Keep prompt shaping separate from reasoning effort, sampling, cache, and tool-history settings. Never request hidden chain-of-thought or add generic `think step by step`, `show reasoning`, or repeated `think harder` scaffolding.
 
 Preserve checks required by the user/project and checks objectively necessary for completion. Add model-specific checks only when they have positive value; use the smallest meaningful validation set.
+
+When running in OMP/Orca, follow the repository `AGENTS.md` execution policy for this skill and every generated brief. Use real session tools (`edit` for existing files, `write` for new files); do not translate model guidance into invented OMP settings or adapter support. Preserve read-only boundaries and embedded-tab-only browser restrictions in reusable prompts. Load the installed Orca/browser or computer guide before the corresponding capability is used.
 
 Do not turn internal planning into a user-visible plan or fixed microstep recipe. If the user asks for a plan before changes, provide it and stop. Otherwise preserve model autonomy and use structure only where it reduces execution risk.
 

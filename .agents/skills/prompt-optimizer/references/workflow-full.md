@@ -15,4 +15,6 @@ Use task-specific detail only when it changes execution:
 
 Use examples, delimiters, role framing, structured output, decomposition, or explicit style only when that technique solves a concrete problem. Do not expose private reasoning.
 
+Execution briefs inherit the active host's system/session instructions and repository `AGENTS.md`; they cannot override tools or approvals. In OMP, use `edit` for existing files and `write` for new ones. Preserve read-only research as inspection only: no servers, tests/builds, installs, or hooks. For browser work, require the installed Orca CLI guide and `references/browser.md`, embedded tabs with explicit `browserPageId`, fresh snapshot refs, and post-action verification; no external Playwright/Puppeteer/CDP or OS URL openers. Native/OS work requires the computer-use skill and matched guide, `orca computer`, and fresh verified state. Report exact tool failures without silently changing tools.
+
 For coding work, end with a concise factual result: changes made, validation actually run and its result, and any concrete blocker or unverified boundary. For research, distinguish confirmed evidence from inference and cite sources when requested. Do not add a report template where the requested output does not need one.

@@ -5,6 +5,8 @@ description: Generates comprehensive unit tests with AAA pattern (Arrange-Act-As
 
 # Unit Test Generator
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Test examples do not authorize test/build execution, dependency installation, or hooks during read-only research. Use `edit` for existing files and `write` for new files in OMP; preserve domain/security rules.
+
 Generate comprehensive unit tests with edge cases and AAA pattern.
 
 ## AAA Pattern Template

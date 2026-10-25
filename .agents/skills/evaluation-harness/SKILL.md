@@ -5,6 +5,8 @@ description: Builds repeatable evaluation systems with golden datasets, scoring 
 
 # Evaluation Harness
 
+Execution contract: follow the repository `AGENTS.md` OMP/Orca policy and higher-priority system/session instructions. Examples do not authorize model calls, network access, installs, or test execution during read-only research. Use actual session tools and preserve domain/security rules.
+
 Build systematic evaluation frameworks for LLM applications.
 
 ## Golden Dataset Format
