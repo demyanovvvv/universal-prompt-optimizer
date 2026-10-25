@@ -145,6 +145,9 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
     if "pi" in request.adapters and request.automatic:
         base = root / (".pi/extensions" if request.scope == "project" else ".pi/agent/extensions")
         operations.append(Operation("copy_tree", base, source=Path("adapters/pi/extensions"), label="Pi extension"))
+    if "omp" in request.adapters and request.automatic:
+        base = root / (".omp/extensions" if request.scope == "project" else ".omp/agent/extensions")
+        operations.append(Operation("copy_tree", base, source=Path("adapters/omp/extensions"), label="OMP extension"))
     runtime_ignores: list[str] = []
     if request.automatic and request.scope == "project" and "cursor" in request.adapters:
         operations.extend((

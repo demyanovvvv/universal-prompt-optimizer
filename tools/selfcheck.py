@@ -87,8 +87,8 @@ def package_hygiene() -> tuple[bool, str]:
     manifest = json.loads((ROOT / "adapters/manifest.json").read_text(encoding="utf-8"))
     if manifest.get("schemaVersion") != 1 or not isinstance(manifest.get("adapters"), list):
         return False, "invalid adapter manifest"
-    if len(manifest["adapters"]) != 8 or len(set(manifest["adapters"])) != 8:
-        return False, "adapter manifest must contain eight unique adapters"
+    if len(manifest["adapters"]) != 9 or len(set(manifest["adapters"])) != 9:
+        return False, "adapter manifest must contain nine unique adapters"
     registry = json.loads((ROOT / ".agents/skills/prompt-optimizer/references/model-registry.json").read_text(encoding="utf-8"))
     profiles = registry.get("profiles", [])
     if len(profiles) != 27:
@@ -122,7 +122,6 @@ def package_hygiene() -> tuple[bool, str]:
     version_markers = [
         ROOT / ".agents/skills/prompt-optimizer/SKILL.md",
         ROOT / "adapters/opencode/plugin/index.ts",
-        ROOT / "adapters/pi/extensions/prompt-optimizer.ts",
         ROOT / "adapters/gemini-cli/hooks/prompt-preflight.py",
         ROOT / "auto/AGENTS.snippet.md",
         ROOT / "auto/CLAUDE.snippet.md",
@@ -291,6 +290,8 @@ def real_install_smoke() -> tuple[bool, str]:
         expected = [
             ".agents/skills/prompt-optimizer/SKILL.md", ".opencode/plugins/prompt-optimizer/index.ts",
             ".cursor/hooks.json", ".pi/extensions/prompt-optimizer.ts", ".gemini/settings.json",
+            ".omp/extensions/prompt-optimizer/index.ts", ".omp/extensions/prompt-optimizer/runtime.ts",
+            ".omp/extensions/prompt-optimizer/model-registry.ts",
             "CLAUDE.md", ".github/copilot-instructions.md", ".windsurf/rules/prompt-optimizer.md", "AGENTS.md",
         ]
         missing = [rel for rel in expected if not (directory / rel).exists()]

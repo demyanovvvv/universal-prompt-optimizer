@@ -19,7 +19,7 @@ Scope = Literal["project", "global"]
 
 _BLOCK_LOGICAL = frozenset({"claude-block", "gemini-block", "copilot-block", "codex-block", "windsurf-block"})
 _CONFIG_LOGICAL = frozenset({"shared-config", "opencode-config"})
-_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension"})
+_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension", "omp-extension"})
 
 
 def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
@@ -53,6 +53,10 @@ def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tu
         "pi-extension": (
             package_root / "adapters/pi/extensions",
             root / (".pi/extensions" if project else ".pi/agent/extensions"),
+        ),
+        "omp-extension": (
+            package_root / "adapters/omp/extensions",
+            root / (".omp/extensions" if project else ".omp/agent/extensions"),
         ),
         "cursor-hook": (
             package_root / "adapters/cursor/hooks/prompt-optimizer-state.py",

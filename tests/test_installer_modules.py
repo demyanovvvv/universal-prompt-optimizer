@@ -42,7 +42,7 @@ $ARGUMENTS
 class InstallerModuleTests(unittest.TestCase):
     def test_catalog_is_explicit_and_validates_unknown_adapter(self):
         value = catalog.load_catalog(ROOT)
-        self.assertEqual(value.ids, frozenset({"opencode", "codex", "cursor", "pi", "claude", "gemini", "copilot", "windsurf"}))
+        self.assertEqual(value.ids, frozenset({"opencode", "codex", "cursor", "pi", "omp", "claude", "gemini", "copilot", "windsurf"}))
         with self.assertRaises(ValueError):
             value.require({"missing"})
 
@@ -153,6 +153,30 @@ class InstallerModuleTests(unittest.TestCase):
             extension = root / ".pi/extensions/prompt-optimizer.ts"
             self.assertTrue(extension.is_file())
             self.assertTrue((root / ".pi/extensions/model-registry.ts").is_file())
+
+    def test_omp_plan_is_self_contained_in_native_project_and_global_roots(self):
+        from installer.state import owned_path
+        from installer.lifecycle import build_uninstall_plan, managed_file_map
+        for scope, relative in (("project", ".omp/extensions"), ("global", ".omp/agent/extensions")):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                request = InstallRequest(root, scope, frozenset({"omp"}), automatic=True)
+                plan = plan_install(request, catalog.load_catalog(ROOT))
+                execute_plan(plan, source_root=ROOT, dry_run=True)
+                self.assertFalse((root / ".omp").exists())
+                execute_plan(plan, source_root=ROOT)
+                base = root / relative
+                for name in ("index.ts", "runtime.ts", "model-registry.ts"):
+                    path = base / "prompt-optimizer" / name
+                    self.assertTrue(path.is_file())
+                    self.assertEqual(owned_path(root, scope, path.relative_to(root).as_posix()), path)
+                self.assertEqual(managed_file_map(root, ROOT, scope)["omp-extension"][1], base)
+                neighbor = base / "user-extension.ts"
+                neighbor.write_text("user extension", encoding="utf-8")
+                execute_plan(plan, source_root=ROOT)
+                execute_plan(build_uninstall_plan(root, ROOT, scope), source_root=ROOT, backup=False)
+                self.assertFalse((base / "prompt-optimizer/index.ts").exists())
+                self.assertEqual(neighbor.read_text(encoding="utf-8"), "user extension")
 
     def test_plan_install_includes_cursor_and_gemini_deployable_files(self):
         request = InstallRequest(

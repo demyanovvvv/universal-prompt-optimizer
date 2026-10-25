@@ -13,6 +13,9 @@ SOURCE = ROOT / ".agents/skills/prompt-optimizer/references/model-registry.json"
 JSON_OUTPUT = ROOT / "adapters/opencode/plugin/profile-contract.json"
 TS_OUTPUT = ROOT / "adapters/opencode/plugin/model-registry.ts"
 PI_OUTPUT = ROOT / "adapters/pi/extensions/model-registry.ts"
+OMP_OUTPUT = ROOT / "adapters/omp/extensions/prompt-optimizer/model-registry.ts"
+PI_RUNTIME = ROOT / "adapters/pi/extensions/prompt-optimizer/runtime.ts"
+OMP_RUNTIME = ROOT / "adapters/omp/extensions/prompt-optimizer/runtime.ts"
 
 
 def load_profiles() -> list[dict[str, object]]:
@@ -109,7 +112,8 @@ def main() -> int:
     aliases = {alias: item['id'] for item in profiles for alias in item['aliases']}
     table = '    profiles = ' + json.dumps(aliases, indent=4).replace('\n', '\n    ')
     gemini = gemini[:start] + table + gemini[end:]
-    current = [(JSON_OUTPUT, json_text), (TS_OUTPUT, ts_text), (PI_OUTPUT, render_pi_ts(profiles)), (gemini_path, gemini)]
+    omp_runtime = "// Shared runtime mirrored from the Pi adapter; keep behavior changes synchronized.\n" + PI_RUNTIME.read_text(encoding="utf-8").replace('"../model-registry"', '"./model-registry"')
+    current = [(JSON_OUTPUT, json_text), (TS_OUTPUT, ts_text), (PI_OUTPUT, render_pi_ts(profiles)), (OMP_OUTPUT, render_pi_ts(profiles)), (OMP_RUNTIME, omp_runtime), (gemini_path, gemini)]
     stale = [path for path, expected in current if not path.is_file() or path.read_text(encoding="utf-8") != expected]
     if args.check:
         if stale:
@@ -118,11 +122,10 @@ def main() -> int:
             return 1
         print("Model registry artifacts are up to date")
         return 0
-    JSON_OUTPUT.write_text(json_text, encoding="utf-8")
-    TS_OUTPUT.write_text(ts_text, encoding="utf-8")
-    PI_OUTPUT.write_text(render_pi_ts(profiles), encoding="utf-8")
-    gemini_path.write_text(gemini, encoding='utf-8')
-    print(f"Generated {JSON_OUTPUT}, {TS_OUTPUT}, {PI_OUTPUT}, and Gemini routing")
+    for path, content in current:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+    print("Generated model registry artifacts and shared OMP runtime")
     return 0
 
 

@@ -15,6 +15,7 @@
     "adapters/opencode/plugin/index.ts",
     "adapters/opencode/plugin/*.ts",
     "adapters/opencode/tui/*.tsx",
-    "adapters/pi/extensions/*.ts"
+    "adapters/pi/extensions/**/*.ts",
+    "adapters/omp/extensions/**/*.ts"
   ]
 }

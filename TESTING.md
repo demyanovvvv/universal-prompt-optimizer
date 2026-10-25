@@ -46,8 +46,11 @@ On Windows with WSL's `bash` unavailable, invoke Git Bash explicitly.
 The managed adapter list lives in `adapters/manifest.json`; Python managed
 configuration rules live in `config_contract.py`, with an equivalent pure
 TypeScript contract in `adapters/opencode/plugin/config-contract.ts`.
-`npm run check:model-registry` checks that the installed OpenCode routing data
+`npm run check:model-registry` checks that OpenCode, Pi, and OMP routing data
 was generated from `.agents/skills/prompt-optimizer/references/model-registry.json`.
+It also checks the installed OMP runtime mirror against the canonical Pi runtime;
+edit `adapters/pi/extensions/prompt-optimizer/runtime.ts`, then regenerate with
+`npm run generate:model-registry` rather than editing the OMP copy.
 
 The CI-equivalent local sequence is:
 
@@ -95,12 +98,12 @@ limitation explicitly and do not describe the overall verification as complete.
 - Bash syntax: `install.sh`, `verify.sh`.
 - Python syntax: installer, Cursor hook, Gemini CLI hook.
 - JSON and JSONL syntax: every package file.
-- TypeScript compile check: OpenCode plugin and Pi extension via the pinned local `tsc`
+- TypeScript compile check: OpenCode plugin, Pi extension, and OMP extension via the pinned local `tsc`
   when dependencies are installed, or a compatible global `tsc`.
 - Registry alignment: model profiles and native routing artifacts match the registry; user installs contain only the canonical optimizer skill and general commands.
 - Archive hygiene: no `__pycache__` / `.pyc`.
 - Stale runtime IDs from v5.2/v5.3 rejected.
-- All-eight-agent installation dry-run.
+- All-supported-agent installation dry-run.
 
 ## Provider evaluation workflow
 

@@ -39,12 +39,15 @@ LLM-вызов для переписывания запроса не требу�
 |---|---|---:|---:|---:|---:|
 | OpenCode | native server plugin + TUI | Да | Native | Advisory | Да |
 | Pi | native extension | Да | Native | Native | Да |
+| OMP (Oh My Pi) | native extension | Да | Native | Native confirm/editor, advisory | Да |
 | Cursor | hooks + rule | Да, если модель передана runtime | Да | Question/fallback | Да |
 | Gemini CLI | hooks + `GEMINI.md` | Точная после BeforeModel; явная модель до первого вызова | Да | `ask_user`/fallback | Да |
 | Claude Code | skill + `CLAUDE.md` | Семейство Claude | Да | Question/fallback | Да |
 | GitHub Copilot CLI | instructions | Best effort | Да | Interactive/fallback | Да |
 | OpenAI Codex | `AGENTS.md` | Best effort | Да | Fallback | Да |
 | Windsurf | rules | Best effort | Да | Fallback | Да |
+
+Установка, команды и ограничения подтверждения описаны в [руководстве OMP](adapters/omp/README.md). OMP использует отдельное расширение, а не пакет Pi.
 
 ## Поддерживаемые модели
 
@@ -60,7 +63,7 @@ LLM-вызов для переписывания запроса не требу�
 Поддерживаемые aliases перечислены во внутреннем [реестре моделей](.agents/skills/prompt-optimizer/references/model-registry.json).
 Неоднозначный `deepseek-v4` не выбирает вариант автоматически.
 
-Для Gemini 4 Argon добавлен отдельный профиль по официальному developer guide и общим рекомендациям Google; параметры API описаны отдельно. Профиль доступен во всех восьми адаптерах, автоматический выбор зависит от доступности точного ID в агенте. Оптимизатор не переключает модель и не меняет её доступность у провайдера. Похожие ID и отдельный вариант cyber-permissive не считаются алиасами.
+Для Gemini 4 Argon добавлен отдельный профиль по официальному developer guide и общим рекомендациям Google; параметры API описаны отдельно. Профиль доступен во всех поддерживаемых адаптерах, автоматический выбор зависит от доступности точного ID в агенте. Оптимизатор не переключает модель и не меняет её доступность у провайдера. Похожие ID и отдельный вариант cyber-permissive не считаются алиасами.
 
 ## Универсальные команды
 

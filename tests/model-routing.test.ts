@@ -63,25 +63,25 @@ test("OpenCode routes GPT generations separately and injects the matching profil
 // Execute the shipped Pi extension with host registration/schema stubs and no
 // user config. Routing and before_agent_start remain real; Pi is not a dependency.
 function piHook() {
-  const source = readFileSync(resolve(process.cwd(), "adapters/pi/extensions/prompt-optimizer.ts"), "utf8")
+  const source = readFileSync(resolve(process.cwd(), "adapters/pi/extensions/prompt-optimizer/runtime.ts"), "utf8")
   const routingSource = readFileSync(resolve(process.cwd(), "adapters/pi/extensions/model-registry.ts"), "utf8")
   const routingCompiled = transpileModule(routingSource, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText
   const routingExports: Record<string, unknown> = {}
   runInNewContext(routingCompiled, { exports: routingExports, require })
   const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } }).outputText
-  const exports: { default?: (api: unknown) => void } = {}
+  const exports: { registerOptimizer?: (api: unknown, parameters: unknown) => void } = {}
   runInNewContext(compiled, {
     exports,
     require: (id: string) => {
       if (id === "typebox") return { Type: { Object: () => ({}), String: () => ({}) } }
       if (id === "node:fs") return { existsSync: () => false }
-      if (id === "./model-registry") return routingExports
+      if (id === "../model-registry") return routingExports
       return require(id)
     },
     process: { env: {} },
   })
   const hooks: Record<string, (event: unknown, ctx: unknown) => any> = {}
-  exports.default!({ on: (name: string, handler: typeof hooks[string]) => { hooks[name] = handler }, registerTool() {}, registerCommand() {} })
+  exports.registerOptimizer!({ on: (name: string, handler: typeof hooks[string]) => { hooks[name] = handler }, registerTool() {}, registerCommand() {} }, {})
   assert.equal(typeof hooks.session_shutdown, 'function', 'Pi must register the real cleanup event')
   return hooks.before_agent_start
 }

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Added a native OMP (Oh My Pi) adapter with exact runtime-model routing, host-native schemas, session controls, advisory PREVIEW approval, and managed project/global installation and removal.
 - Added the exact `gemini-4-argon` profile across all eight adapters, using Google's Argon developer guide and clearly labeled shared prompting practices; separated runtime/API notes and preserved fallback for other Gemini variants.
 - Adapted project instructions, all project-local skills, and reusable FULL/PREVIEW briefs for OMP system/session precedence and real file tools; documented version-matched Orca CLI discovery, embedded-page-only automation, native computer-use verification, and read-only research boundaries without adding an OMP adapter or changing user-global skills.
 

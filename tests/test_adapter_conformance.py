@@ -18,11 +18,12 @@ class AdapterConformanceTests(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         self.assertIn("opencode", ids)
         self.assertIn("pi", ids)
+        self.assertIn("omp", ids)
 
     def test_adapter_manifest_is_explicit_and_complete(self):
         manifest = json.loads((ROOT / "adapters" / "manifest.json").read_text(encoding="utf-8"))
         self.assertEqual(manifest["schemaVersion"], 1)
-        self.assertEqual(set(manifest["adapters"]), {"opencode", "codex", "cursor", "pi", "claude", "gemini", "copilot", "windsurf"})
+        self.assertEqual(set(manifest["adapters"]), {"opencode", "codex", "cursor", "pi", "omp", "claude", "gemini", "copilot", "windsurf"})
 
     def test_opencode_and_pi_claim_exact_routing(self):
         data = json.loads(MATRIX.read_text(encoding="utf-8"))
@@ -31,6 +32,8 @@ class AdapterConformanceTests(unittest.TestCase):
         self.assertEqual(by_id["opencode"]["firstTurnRouting"], "exact")
         self.assertTrue(by_id["pi"]["exactModelRouting"])
         self.assertEqual(by_id["pi"]["firstTurnRouting"], "exact")
+        self.assertTrue(by_id["omp"]["exactModelRouting"])
+        self.assertEqual(by_id["omp"]["firstTurnRouting"], "exact")
 
 
 if __name__ == "__main__":

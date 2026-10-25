@@ -43,6 +43,26 @@
        ]
     },
     {
+      "id": "omp",
+      "name": "OMP",
+      "sharedSkills": true,
+      "integration": "native",
+      "exactModelRouting": true,
+      "firstTurnRouting": "exact",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "runtime-state",
+      "sessionState": "process-local",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "Native OMP extension using before_agent_start with ctx.model and a preview tool",
+      "knownLimitations": [
+        "PREVIEW is advisory rather than a host-enforced execution barrier.",
+        "Non-interactive sessions require explicit confirmation instead of an interactive editor."
+      ]
+    },
+    {
       "id": "cursor",
       "name": "Cursor",
       "sharedSkills": true,

@@ -5,7 +5,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VERSION="$(tr -d '\r\n' < "$SCRIPT_DIR/VERSION")"
 
-AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf")
+AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "OMP" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf")
 
 scope="project"
 scope_explicit=0
@@ -247,6 +247,10 @@ agent_detect_reason() {
     pi)
       command_exists pi && { echo "$command_label: pi"; return 0; }
       [[ -d "$p/.pi" || -d "$h/.pi" ]] && { echo "$config_label"; return 0; }
+      ;;
+    omp)
+      command_exists omp && { echo "$command_label: omp"; return 0; }
+      [[ -d "$p/.omp" || -d "$h/.omp" ]] && { echo "$config_label"; return 0; }
       ;;
     claude)
       command_exists claude && { echo "$command_label: claude"; return 0; }
@@ -614,7 +618,7 @@ show_summary() {
   # Surface adapter limitations before installation instead of hiding them in README.
   if [[ $auto_integration -eq 1 ]]; then
     local selected_csv=",${agents_arg},"
-    [[ "$agents_arg" == "all" ]] && selected_csv=",opencode,codex,cursor,pi,claude,gemini,copilot,windsurf,"
+    [[ "$agents_arg" == "all" ]] && selected_csv=",opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,"
     if [[ "$behavior" == "preview" && "$selected_csv" =~ ,(codex|copilot|windsurf), ]]; then
       if [[ "$UI_LANG" == "ru" ]]; then
         printf '\n%bПримечание:%b для Codex/Copilot/Windsurf PREVIEW зависит от доступного UI агента и может работать как текстовый preview + явное подтверждение.\n' "$YELLOW" "$RESET"
@@ -624,9 +628,9 @@ show_summary() {
     fi
     if [[ "$prompt_scope" == "first" && "$selected_csv" =~ ,(codex|claude|copilot|windsurf), ]]; then
       if [[ "$UI_LANG" == "ru" ]]; then
-        printf '%bПримечание:%b точный FIRST-turn state гарантирован нативными адаптерами OpenCode/Pi/Cursor/Gemini CLI; для статических rule-based адаптеров это best-effort.\n' "$YELLOW" "$RESET"
+        printf '%bПримечание:%b точный FIRST-turn state гарантирован нативными адаптерами OpenCode/Pi/OMP/Cursor/Gemini CLI; для статических rule-based адаптеров это best-effort.\n' "$YELLOW" "$RESET"
       else
-        printf '%bNote:%b exact FIRST-turn state is guaranteed by OpenCode/Pi/Cursor/Gemini CLI native adapters; static rule-based adapters are best-effort.\n' "$YELLOW" "$RESET"
+        printf '%bNote:%b exact FIRST-turn state is guaranteed by OpenCode/Pi/OMP/Cursor/Gemini CLI native adapters; static rule-based adapters are best-effort.\n' "$YELLOW" "$RESET"
       fi
     fi
     if [[ "$scope" == "global" && "$selected_csv" == *",cursor,"* ]]; then

@@ -15,6 +15,37 @@ installer = importlib.util.module_from_spec(SPEC)
 assert SPEC.loader
 SPEC.loader.exec_module(installer)
 
+
+class OmpInstallerTests(unittest.TestCase):
+    def test_omp_native_install_doctor_and_uninstall(self):
+        for scope, relative in (("project", ".omp/extensions"), ("global", ".omp/agent/extensions")):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                root = Path(raw)
+                install = installer.install_project if scope == "project" else installer.install_global
+                install(root, {"omp"}, True, "auto", "all", "skip", "adaptive", False, False, sys.executable)
+                extension = root / relative / "prompt-optimizer/index.ts"
+                self.assertTrue(extension.is_file())
+                self.assertEqual(installer.doctor(root, scope), 0)
+                install(root, {"omp"}, True, "auto", "all", "skip", "adaptive", False, False, sys.executable)
+                self.assertFalse(list(root.rglob("*.prompt-optimizer.bak")))
+                installer.uninstall(root, scope)
+                self.assertFalse(extension.exists())
+
+    def test_omp_install_rejects_symlink_extension_root(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw) / "project"
+            outside = Path(raw) / "outside"
+            root.mkdir()
+            outside.mkdir()
+            (root / ".omp").mkdir()
+            try:
+                (root / ".omp/extensions").symlink_to(outside, target_is_directory=True)
+            except OSError:
+                self.skipTest("symlinks unavailable")
+            with self.assertRaises((SystemExit, ValueError)):
+                installer.install_project(root, {"omp"}, True, "auto", "all", "skip", "adaptive", False, False, sys.executable)
+            self.assertEqual(list(outside.iterdir()), [])
+
 CONTRACT_SPEC = importlib.util.spec_from_file_location("config_contract", ROOT / "config_contract.py")
 config_contract = importlib.util.module_from_spec(CONTRACT_SPEC)
 assert CONTRACT_SPEC.loader
@@ -322,11 +353,6 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(cleaned[0]["command"], "user-command")
         self.assertEqual(cleaned[1]["hooks"], [{"name": "user", "command": "keep"}])
 
-    def test_pi_preview_does_not_consume_turn_without_interactive_ui(self):
-        source = (ROOT / "adapters" / "pi" / "extensions" / "prompt-optimizer.ts").read_text(encoding="utf-8")
-        ui_check = source.index("if (!ctx.hasUI)")
-        preview_state = source.index("previewedTurns.set(sid, turn)")
-        self.assertLess(ui_check, preview_state)
 
     def test_remove_json_fields_preserves_custom_fields(self):
         with tempfile.TemporaryDirectory() as raw:

@@ -51,7 +51,7 @@ START = "<!-- prompt-optimizer:auto:start -->"
 END = "<!-- prompt-optimizer:auto:end -->"
 MANAGED_HOOK_NAME = 'prompt-optimizer'
 MANAGED_HOOK_OWNER = 'universal-prompt-optimizer'
-_PLANNED_AUTO_ADAPTERS = frozenset({'opencode', 'pi', 'cursor', 'gemini', 'claude', 'codex', 'copilot', 'windsurf'})
+_PLANNED_AUTO_ADAPTERS = frozenset({'opencode', 'pi', 'omp', 'cursor', 'gemini', 'claude', 'codex', 'copilot', 'windsurf'})
 IGNORE_START = '# prompt-optimizer:runtime:start'
 IGNORE_END = '# prompt-optimizer:runtime:end'
 
@@ -693,6 +693,9 @@ def install_opencode(base: Path, behavior: str, scope: str, unsupported: str, qu
 def install_pi(base: Path, *, backup=True, dry_run=False) -> list[str]:
     return [copy_tree(PACKAGE_ROOT/'adapters/pi/extensions',base/'extensions',backup=backup,dry_run=dry_run,label='Pi native extension')]
 
+def install_omp(base: Path, *, backup=True, dry_run=False) -> list[str]:
+    return [copy_tree(PACKAGE_ROOT/'adapters/omp/extensions',base/'extensions',backup=backup,dry_run=dry_run,label='OMP native extension')]
+
 def install_cursor(root: Path, python_bin: str, *, backup=True, dry_run=False) -> list[str]:
     out=[copy_file(PACKAGE_ROOT/'adapters/cursor/hooks/prompt-optimizer-state.py',root/'.cursor/hooks/prompt-optimizer-state.py',backup=backup,dry_run=dry_run,executable=True,label='Cursor model-state hook'),
          copy_file(PACKAGE_ROOT/'adapters/cursor/rules/prompt-optimizer.mdc',root/'.cursor/rules/prompt-optimizer.mdc',backup=backup,dry_run=dry_run,label='Cursor always rule')]
@@ -756,6 +759,7 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
     out.append(write_shared_config(root/'.prompt-optimizer.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(root/'.opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(root/'.pi',backup=backup,dry_run=dry_run))
+    if 'omp' in selected: out.extend(install_omp(root/'.omp',backup=backup,dry_run=dry_run))
     if 'cursor' in selected: out.extend(install_cursor(root,python_bin,backup=backup,dry_run=dry_run))
     if 'gemini' in selected:
         out.extend(install_gemini(root,python_bin,backup=backup,dry_run=dry_run))
@@ -804,6 +808,7 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
     out.append(write_shared_config(home/'.config/prompt-optimizer/config.json',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'opencode' in selected: out.extend(install_opencode(home/'.config/opencode',behavior,scope,unsupported,quality_gate,backup=backup,dry_run=dry_run))
     if 'pi' in selected: out.extend(install_pi(home/'.pi/agent',backup=backup,dry_run=dry_run))
+    if 'omp' in selected: out.extend(install_omp(home/'.omp/agent',backup=backup,dry_run=dry_run))
     if 'claude' in selected: out.append(merge_block(home/'.claude/CLAUDE.md',configured_block('auto/CLAUDE.snippet.md',behavior,scope,quality_gate,unsupported),backup=backup,dry_run=dry_run))
     if 'gemini' in selected:
         # Global Gemini hooks use a home-relative command instead of GEMINI_PROJECT_DIR.
@@ -844,7 +849,7 @@ def main():
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
     ap.add_argument('--scope',choices=['project','global'],help='Installation location; prompted in a terminal, otherwise project')
     ap.add_argument('--project',default='.')
-    ap.add_argument('--agents',help='opencode,codex,cursor,pi,claude,gemini,copilot,windsurf,all; defaults to installed agents or all')
+    ap.add_argument('--agents',help='opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,all; defaults to installed agents or all')
     integration = ap.add_mutually_exclusive_group()
     integration.add_argument('--auto',action='store_true',default=None,help='Install automatic/preview/off adapter integration in addition to skills')
     integration.add_argument('--no-auto',dest='auto',action='store_false',help='Install skills/commands only')

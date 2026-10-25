@@ -11,10 +11,12 @@
     "types/host-modules.d.ts",
     "adapters/opencode/plugin/*.ts",
     "adapters/opencode/tui/*.tsx",
-    "adapters/pi/extensions/*.ts",
+    "adapters/pi/extensions/**/*.ts",
+    "adapters/omp/extensions/**/*.ts",
     "tests/opencode-runtime.test.ts",
     "tests/eval-contract.test.ts",
     "tests/model-routing.test.ts"
-    ,"tests/pi-model-routing.test.ts"
+    ,"tests/pi-model-routing.test.ts",
+    "tests/omp-runtime.test.ts"
   ]
 }

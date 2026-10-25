@@ -32,7 +32,9 @@ def owned_path(root: Path, scope: str, relative: str) -> Path:
     files.update(mapping["opencode-commands"][1] / name for name in ("prompt.md", "prompt-only.md", "prompt-optimizer.md"))
     files.update(mapping["opencode-tui-plugin"][1] / name for name in ("prompt-optimizer.tsx", ".prompt-optimizer-owner.json"))
     # Pi shares its extension directory with user extensions.
-    files.update(mapping["pi-extension"][1] / name for name in ("prompt-optimizer.ts", "model-registry.ts"))
+    files.update(mapping["pi-extension"][1] / name for name in ("prompt-optimizer.ts", "model-registry.ts", "prompt-optimizer/runtime.ts"))
+    # OMP also shares its native extension root with unrelated user modules.
+    files.update(mapping["omp-extension"][1] / "prompt-optimizer" / name for name in ("index.ts", "runtime.ts", "model-registry.ts"))
     if path not in files:
         raise ValueError(f"inventory path is not package-owned: {relative}")
     return path

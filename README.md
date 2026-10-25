@@ -34,9 +34,11 @@ and lower total tokens per completed task. No separate optimizer LLM call is req
 
 ## Supported agents
 
-OpenCode, Pi, Gemini CLI, Cursor, Claude Code, OpenAI Codex, GitHub Copilot CLI,
-and Windsurf. Native model visibility and PREVIEW capabilities vary by adapter;
+OpenCode, OMP (Oh My Pi), Pi, Gemini CLI, Cursor, Claude Code, OpenAI Codex,
+GitHub Copilot CLI, and Windsurf. Native model visibility and PREVIEW capabilities vary by adapter;
 see the [compatibility matrix](COMPATIBILITY.md).
+
+For OMP installation, commands, and approval limitations, see the [OMP adapter guide](adapters/omp/README.md). OMP has its own native extension; the Pi package is not interchangeable with OMP.
 
 ## Universal commands
 
@@ -100,7 +102,7 @@ V4.1 Flash is the canonical `deepseek-flash` model. The retired `deepseek-v4-fla
 ### Other
 Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Argon (`gemini-4-argon`); Grok 4.6.
 
-Gemini 4 Argon has a separate profile based on its official developer guide and shared Google prompting practices, with API settings documented separately. It is available through all eight adapters; exact automatic selection depends on the host exposing the model ID. The optimizer does not change the host's model or provider availability. Similar IDs and the separate cyber-permissive variant are not aliases.
+Gemini 4 Argon has a separate profile based on its official developer guide and shared Google prompting practices, with API settings documented separately. It is available through all supported adapters; exact automatic selection depends on the host exposing the model ID. The optimizer does not change the host's model or provider availability. Similar IDs and the separate cyber-permissive variant are not aliases.
 
 ## Modes
 
