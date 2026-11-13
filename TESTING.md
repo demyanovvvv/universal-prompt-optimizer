@@ -28,7 +28,7 @@ Focused checks do not replace additional checks required by the specific change 
 - Final Review can return to agent selection, settings, or location before installation.
 - Python install/uninstall and `bash ./uninstall.sh` ask for project/global scope when run in a terminal without `--scope` or `--yes`; project choice asks for its path. `q` cancels without writes.
 - `--uninstall --interactive` uses the removal location/confirmation flow, not installation settings.
-- Non-wizard Bash and Python updates preserve saved settings unless overridden; the full Bash wizard applies its reviewed choices.
+- Non-wizard Bash and Python updates preserve saved settings unless overridden; global defaults union locally detected and recorded adapters, while project defaults retain recorded adapters. The full Bash wizard applies its reviewed choices.
 
 ## Versioned install/uninstall lifecycle
 
@@ -36,6 +36,11 @@ Focused checks do not replace additional checks required by the specific change 
 automation, version reporting, current-config preservation, inventories in both
 scopes, obsolete-file deletion, repeated complete removal, dry-run, rollback,
 and rejection of inventory paths outside package-owned destinations.
+
+`tests/test_agent_detection.py` covers PATH/home/application discovery without
+launching agents and separation of global detection from project-local directories.
+Global CLI checks cover fresh detected-only installs, adding newly detected adapters
+on update, explicit selection, empty detection, read-only listing and config preservation.
 
 Run `python -m unittest discover -s tests -v`, `npm run verify`,
 `bash -n install.sh uninstall.sh` and `npm run verify:bash` for launcher/lifecycle changes.

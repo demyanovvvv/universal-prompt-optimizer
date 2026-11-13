@@ -168,8 +168,12 @@ python install.py --scope project --project /path/to/project --yes
 python install.py --scope global --yes
 ```
 
-On Windows, replace `python` with `py -3`. The installer displays the previous and
-target versions; no release download or new adapter selection is performed.
+On Windows, replace `python` with `py -3`. Global installation without `--agents`
+auto-detects agents and adds them to the recorded adapter set while preserving
+settings. Project updates keep their recorded adapter set. Use `--list-agents` to
+inspect detection without writes, `--agents` for an explicit selection, or
+`--agents all` to install all adapters. No detected/recorded agents means no install;
+the installer does not download missing agents. The previous and target versions are displayed.
 
 Preview removal before applying it:
 

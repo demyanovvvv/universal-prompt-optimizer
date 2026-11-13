@@ -5,14 +5,14 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VERSION="$(tr -d '\r\n' < "$SCRIPT_DIR/VERSION")"
 
-AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "OMP" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf" "DeepSeek Harness")
 
 scope="project"
 scope_explicit=0
 project="."
 agents_arg=""
-agent_selection_mode=""  # detected | all | manual | cli
+agent_selection_mode=""  # auto | detected | all | manual | cli
 detect_requested=0
+list_requested=0
 interactive=0
 auto_integration=1
 integration_explicit=0
@@ -27,8 +27,6 @@ assume_yes=0
 doctor_mode=0
 uninstall_mode=0
 UI_LANG="en"
-APPDATA_DIR="${APPDATA:-}"
-LOCALAPPDATA_DIR="${LOCALAPPDATA:-}"
 
 is_tty() { [[ -t 0 && -t 1 ]]; }
 command_exists() { command -v "$1" >/dev/null 2>&1; }
@@ -41,17 +39,24 @@ resolve_python() {
   return 1
 }
 load_agent_ids() {
-  local candidate output
+  local candidate output id label
   for candidate in "${PYTHON_BIN:-}" python3 python py; do
     [[ -n "$candidate" ]] || continue
     command -v "$candidate" >/dev/null 2>&1 || continue
-    output=$("$candidate" -c 'import json,sys; print(" ".join(json.load(open(sys.argv[1], encoding="utf-8"))["adapters"]))' "$SCRIPT_DIR/adapters/manifest.json") || continue
-    read -r -a AGENT_IDS <<< "$output"
+    output=$("$candidate" -B -c 'import json,sys; from pathlib import Path; root=Path(sys.argv[1]); sys.path.insert(0,str(root)); from installer.detection import AGENT_NAMES; print("\n".join(agent + "\t" + AGENT_NAMES[agent] for agent in json.loads((root / "adapters/manifest.json").read_text(encoding="utf-8"))["adapters"]))' "$SCRIPT_DIR") || continue
+    AGENT_IDS=(); AGENT_NAMES=()
+    while IFS=$'\t' read -r id label; do
+      [[ -n "$id" ]] && { AGENT_IDS+=("$id"); AGENT_NAMES+=("$label"); }
+    done <<< "$output"
     ((${#AGENT_IDS[@]} > 0)) && return 0
   done
   return 1
 }
 AGENT_IDS=()
+AGENT_NAMES=()
+DETECTED_IDS=()
+DETECTED_REASONS=()
+DETECTION_READY=0
 load_agent_ids || { printf '%s\n' 'Python 3 is required to read adapters/manifest.json' >&2; exit 1; }
 lower() { printf "%s" "$1" | tr "[:upper:]" "[:lower:]"; }
 
@@ -154,7 +159,8 @@ Universal Prompt Optimizer v${VERSION} — установщик
 доступны прямо внутри мастера; флаги нужны только для автоматизации/CI.
 
 Обновление: запустите установщик из папки нового релиза в той же области и проекте.
-Без мастера установленные агенты и настройки сохраняются, если не заданы явно.
+Без мастера настройки сохраняются; глобально найденные агенты добавляются к ранее установленным.
+Если ни одного агента не обнаружено и не записано, файлы не устанавливаются.
 
 Необязательные флаги:
   ru, --ru, -ru          Русский интерфейс
@@ -195,7 +201,8 @@ Every installer setting is configurable inside the wizard; CLI flags are optiona
 are kept only for automation/CI.
 
 Update: rerun the installer from the new release folder in the same scope and target.
-Non-wizard updates preserve installed agents and settings unless explicitly overridden.
+Non-wizard updates preserve settings; global installs add detected agents to recorded adapters.
+If no agents are detected or recorded, no files are installed.
 
 Optional flags:
   ru, --ru, -ru
@@ -232,61 +239,35 @@ section() {
   printf '%b%s%b\n' "$DIM" "$(tr_ui divider)" "$RESET"
 }
 
+refresh_agent_detection() {
+  local output id reason
+  resolve_python || return 1
+  output=$("$PYTHON_BIN" -B -c 'import sys; from pathlib import Path; sys.path.insert(0,sys.argv[1]); from installer.detection import detect_agents; project=Path(sys.argv[3]).expanduser() if sys.argv[2] == "project" else None; print("\n".join(agent + "\t" + reason for agent,reason in detect_agents(Path.home(), project=project).items()))' "$SCRIPT_DIR" "$scope" "$project") || return 1
+  DETECTED_IDS=(); DETECTED_REASONS=()
+  while IFS=$'\t' read -r id reason; do
+    [[ -n "$id" ]] && { DETECTED_IDS+=("$id"); DETECTED_REASONS+=("$reason"); }
+  done <<< "$output"
+  DETECTION_READY=1
+}
+
 agent_detect_reason() {
-  local id="$1" p="${project%/}" h="$HOME"
-  local command_label="$(tr_ui command)" config_label="$(tr_ui config_dir)" app_label="$(tr_ui app_dir)"
-  case "$id" in
-    opencode)
-      command_exists opencode && { echo "$command_label: opencode"; return 0; }
-      [[ -d "$p/.opencode" || -d "$h/.config/opencode" ]] && { echo "$config_label"; return 0; }
-      ;;
-    codex)
-      command_exists codex && { echo "$command_label: codex"; return 0; }
-      [[ -d "$p/.codex" || -d "$h/.codex" ]] && { echo "$config_label"; return 0; }
-      ;;
-    cursor)
-      command_exists cursor && { echo "$command_label: cursor"; return 0; }
-      [[ -d "$p/.cursor" || -d "$h/.cursor" || -d "$h/Library/Application Support/Cursor" \
-         || ( -n "$APPDATA_DIR" && -d "$APPDATA_DIR/Cursor" ) \
-         || ( -n "$LOCALAPPDATA_DIR" && -d "$LOCALAPPDATA_DIR/Programs/cursor" ) ]] && { echo "$app_label"; return 0; }
-      ;;
-    pi)
-      command_exists pi && { echo "$command_label: pi"; return 0; }
-      [[ -d "$p/.pi" || -d "$h/.pi" ]] && { echo "$config_label"; return 0; }
-      ;;
-    omp)
-      command_exists omp && { echo "$command_label: omp"; return 0; }
-      [[ -d "$p/.omp" || -d "$h/.omp" ]] && { echo "$config_label"; return 0; }
-      ;;
-    claude)
-      command_exists claude && { echo "$command_label: claude"; return 0; }
-      [[ -d "$p/.claude" || -d "$h/.claude" ]] && { echo "$config_label"; return 0; }
-      ;;
-    gemini)
-      command_exists gemini && { echo "$command_label: gemini"; return 0; }
-      [[ -d "$p/.gemini" || -d "$h/.gemini" ]] && { echo "$config_label"; return 0; }
-      ;;
-    copilot)
-      command_exists copilot && { echo "$command_label: copilot"; return 0; }
-      command_exists github-copilot-cli && { echo "$command_label: github-copilot-cli"; return 0; }
-      [[ -d "$h/.copilot" ]] && { echo "$config_label"; return 0; }
-      ;;
-    windsurf)
-      command_exists windsurf && { echo "$command_label: windsurf"; return 0; }
-      [[ -d "$p/.windsurf" || -d "$h/.codeium/windsurf" || -d "$h/Library/Application Support/Windsurf" \
-         || ( -n "$APPDATA_DIR" && -d "$APPDATA_DIR/Windsurf" ) \
-         || ( -n "$LOCALAPPDATA_DIR" && -d "$LOCALAPPDATA_DIR/Programs/Windsurf" ) ]] && { echo "$app_label"; return 0; }
-      ;;
-    deepseek-harness)
-      command_exists dsh && { echo "$command_label: dsh"; return 0; }
-      command_exists deepseek-harness && { echo "$command_label: deepseek-harness"; return 0; }
-      [[ -d "$p/.dsh" || -d "$h/.dsh" ]] && { echo "$config_label"; return 0; }
-      ;;
-  esac
+  local id="$1" i reason
+  for i in "${!DETECTED_IDS[@]}"; do
+    [[ "$id" == "${DETECTED_IDS[$i]}" ]] || continue
+    reason="${DETECTED_REASONS[$i]}"
+    case "$reason" in
+      "command: "*) printf '%s: %s\n' "$(tr_ui command)" "${reason#command: }" ;;
+      "config directory") printf '%s\n' "$(tr_ui config_dir)" ;;
+      "config/application directory") printf '%s\n' "$(tr_ui app_dir)" ;;
+      *) printf '%s\n' "$reason" ;;
+    esac
+    return 0
+  done
   return 1
 }
 
 detected_agents_csv() {
+  [[ $DETECTION_READY -eq 1 ]] || refresh_agent_detection || return 1
   local found=() id
   for id in "${AGENT_IDS[@]}"; do agent_detect_reason "$id" >/dev/null 2>&1 && found+=("$id"); done
   local IFS=,; echo "${found[*]}"
@@ -294,6 +275,10 @@ detected_agents_csv() {
 
 csv_agent_names() {
   local csv="$1" out=() id i
+  if [[ "$csv" == "auto" ]]; then
+    if [[ "$UI_LANG" == "ru" ]]; then printf '%s' 'Автоопределение + ранее установленные адаптеры'; else printf '%s' 'Auto-detected + previously installed adapters'; fi
+    return
+  fi
   if [[ "$csv" == "all" ]]; then
     if [[ "$UI_LANG" == "ru" ]]; then printf 'Все поддерживаемые агенты (%d)' "${#AGENT_IDS[@]}"; else printf 'All supported agents (%d)' "${#AGENT_IDS[@]}"; fi
     return
@@ -309,6 +294,7 @@ csv_agent_names() {
 }
 
 print_agent_status() {
+  [[ $DETECTION_READY -eq 1 ]] || refresh_agent_detection || return 1
   local i id reason
   for i in "${!AGENT_IDS[@]}"; do
     id="${AGENT_IDS[$i]}"
@@ -341,6 +327,7 @@ read_yes_no() {
 }
 
 manual_agent_selector() {
+  [[ $DETECTION_READY -eq 1 ]] || refresh_agent_detection || return 1
   local -a selected=()
   local i input token
   for i in "${!AGENT_IDS[@]}"; do selected[$i]=0; done
@@ -377,6 +364,7 @@ manual_agent_selector() {
         a|все) for i in "${!selected[@]}"; do selected[$i]=1; done ;;
         n|none|нет) for i in "${!selected[@]}"; do selected[$i]=0; done ;;
         d|detect|авто)
+          refresh_agent_detection || return 1
           for i in "${!selected[@]}"; do selected[$i]=0; agent_detect_reason "${AGENT_IDS[$i]}" >/dev/null 2>&1 && selected[$i]=1; done
           ;;
         ''|*[!0-9]*) echo "$(tr_ui ignored): $token" ;;
@@ -397,6 +385,7 @@ manual_agent_selector() {
 choose_agents_interactive() {
   local detected choice
   while true; do
+    refresh_agent_detection || return 1
     if [[ "$UI_LANG" == "ru" ]]; then
       section "1/4  Автоопределение агентов"
       echo "Установщик автоматически проверяет команды и известные каталоги конфигурации/приложений."
@@ -481,13 +470,12 @@ configure_scope_interactive() {
   if [[ "$scope" == "project" ]]; then
     if [[ "$UI_LANG" == "ru" ]]; then read_value "Путь к проекту" "$project"; else read_value "Project path" "$project"; fi
     project="$REPLY"
-    # If the user chose the auto-detected set, changing project path may reveal
-    # project-local agents/configs. Refresh that selection automatically.
-    if [[ "$agent_selection_mode" == "detected" ]]; then
-      local refreshed
-      refreshed="$(detected_agents_csv)"
-      if [[ -n "$refreshed" ]]; then agents_arg="$refreshed"; fi
-    fi
+  fi
+  DETECTION_READY=0
+  if [[ "$agent_selection_mode" == "detected" ]]; then
+    refresh_agent_detection || return 1
+    agents_arg="$(detected_agents_csv)"
+    print_agent_status
   fi
 }
 
@@ -666,7 +654,10 @@ show_summary() {
   fi
   if [[ $auto_integration -eq 1 && ( "${agents_arg}" == "all" || ",${agents_arg}," == *",deepseek-harness,"* ) ]]; then
     local overlay_root="$project"
-    [[ "$scope" == "global" ]] && overlay_root="$HOME"
+    if [[ "$scope" == "global" ]]; then
+      resolve_python || return 1
+      overlay_root=$("$PYTHON_BIN" -B -c 'from pathlib import Path; print(Path.home().as_posix())') || return 1
+    fi
     local overlay="$overlay_root/.dsh/prompt-optimizer.patch.yml"
     # %q quotes the path safely for the current shell (spaces, apostrophes).
     local command
@@ -721,7 +712,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --interactive) interactive=1; shift ;;
     --detect-agents) detect_requested=1; agent_selection_mode="detected"; shift ;;
-    --list-agents) header; print_agent_status; exit 0 ;;
+    --list-agents) list_requested=1; shift ;;
     --agents) agents_arg="${2:?missing value for --agents}"; agent_selection_mode="cli"; shift 2 ;;
     --agents=*) agents_arg="${1#*=}"; agent_selection_mode="cli"; shift ;;
     --scope) scope="${2:?missing value for --scope}"; scope_explicit=1; shift 2 ;;
@@ -768,11 +759,9 @@ if [[ $detect_requested -eq 1 ]]; then
     if [[ "$UI_LANG" == ru ]]; then echo "Используйте либо --detect-agents, либо --agents, но не оба сразу." >&2; else echo "Use either --detect-agents or --agents, not both." >&2; fi
     exit 2
   fi
-  agents_arg="$(detected_agents_csv)"
-  if [[ -z "$agents_arg" ]]; then if [[ "$UI_LANG" == ru ]]; then echo "Поддерживаемые агенты не обнаружены." >&2; else echo "No supported agents detected." >&2; fi; exit 1; fi
 fi
-[[ -z "$agents_arg" ]] && { agents_arg=all; agent_selection_mode="all"; }
-if [[ $uninstall_mode -eq 1 && "$agents_arg" != all ]]; then
+[[ $detect_requested -eq 1 ]] && { agents_arg=auto; agent_selection_mode="detected"; }
+if [[ $uninstall_mode -eq 1 && -n "$agents_arg" && "$agents_arg" != all ]]; then
   if [[ "$UI_LANG" == ru ]]; then echo "Uninstall удаляет всю установку; не указывайте --agents или используйте --agents all." >&2; else echo "Uninstall removes the complete installation; omit --agents or use --agents all." >&2; fi
   exit 2
 fi
@@ -782,12 +771,24 @@ if ! resolve_python; then
   exit 1
 fi
 
+if [[ $list_requested -eq 1 ]]; then
+  exec "$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --list-agents
+fi
+
 if [[ $doctor_mode -eq 1 ]]; then
   exec "$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --doctor
 fi
 
 if [[ $assume_yes -eq 0 && $scope_explicit -eq 0 && ( $interactive -eq 0 || $uninstall_mode -eq 1 ) ]] && is_tty; then
   configure_scope_interactive
+fi
+
+if [[ -z "$agents_arg" && "$agent_selection_mode" != detected ]]; then
+  if [[ "$scope" == global && $uninstall_mode -eq 0 ]]; then
+    agents_arg=auto; agent_selection_mode="auto"
+  else
+    agents_arg=all; agent_selection_mode="all"
+  fi
 fi
 
 if [[ $uninstall_mode -eq 1 && $assume_yes -eq 0 ]] && is_tty; then
@@ -811,7 +812,11 @@ elif [[ $interactive -eq 0 && $assume_yes -eq 0 ]] && is_tty; then
 fi
 
 cmd=("$PYTHON_BIN" -B "$SCRIPT_DIR/install.py" --lang "$UI_LANG" --scope "$scope" --project "$project" --python-bin "$PYTHON_BIN" --yes)
-[[ "$agent_selection_mode" != all || $interactive -eq 1 ]] && cmd+=(--agents "$agents_arg")
+if [[ "$agent_selection_mode" == detected ]]; then
+  cmd+=(--detect-agents)
+elif [[ "$agent_selection_mode" != auto && ( "$agent_selection_mode" != all || $interactive -eq 1 ) ]]; then
+  cmd+=(--agents "$agents_arg")
+fi
 # Defaults do not overwrite settings on a repeat installation. Wizard choices
 # and explicit flags are intentional overrides; Python resolves saved values.
 if [[ $interactive -eq 1 && $uninstall_mode -eq 0 ]]; then

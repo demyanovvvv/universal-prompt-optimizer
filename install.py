@@ -15,6 +15,7 @@ from pathlib import Path
 
 from installer.catalog import load_catalog
 from installer.content import merge_json as _merge_json, merge_managed_block as _merge_managed_block
+from installer.detection import AGENT_NAMES as _AGENT_NAMES, detect_agents
 from installer.filesystem import atomic_write_bytes as _atomic_write_bytes
 from installer.transaction import InstallTransaction, record_path as _record_path
 from installer.locking import InstallLock as _InstallLock
@@ -906,6 +907,44 @@ def choose_install_scope(project: str) -> tuple[str, str] | None:
         print(L('Choose 1, 2 or q.', 'Выберите 1, 2 или q.'))
 
 
+def print_agent_status(detected: dict[str, str]) -> None:
+    """Print every supported agent with its detection status; writes nothing."""
+    for id, name in _AGENT_NAMES.items():
+        reason = detected.get(id)
+        if reason is None:
+            print(f'  [ ] {name:<22} {L("not detected", "не обнаружен")}')
+        else:
+            print(f'  [x] {name:<22} {L("detected", "обнаружен")}  {reason}')
+
+
+def requested_agents(args, *, previous: dict | None, root: Path, uninstall: bool) -> set[str]:
+    """Resolve the adapter selection for a single installer invocation.
+
+    Explicit ``--agents`` always wins. Uninstall keeps removing everything.
+    Otherwise a project install keeps the saved selection; a global install
+    installs the union of previously recorded adapters and locally detectable
+    ones, so updates add newly available agents without dropping old ones.
+    The detection scan runs once, prints every agent's status, and is reused
+    for the selected set.
+    """
+    if args.agents is not None:
+        if not args.agents.strip():
+            fail(L('--agents requires a comma-separated adapter list or all',
+                   '--agents требует список адаптеров через запятую или all'))
+        return parse_agents(args.agents)
+    if uninstall:
+        return set(AGENTS)
+    detected = detect_agents(Path.home(), project=root if args.scope == 'project' else None)
+    print(L('Agent detection:', 'Обнаружение агентов:'))
+    print_agent_status(detected)
+    if args.detect_agents:
+        return set(detected)
+    if args.scope != 'global':
+        return parse_agents(','.join(previous['adapters'])) if previous else set(AGENTS)
+    selected = set(previous['adapters']) if previous else set()
+    return selected | set(detected)
+
+
 def main():
     # Redirected Windows streams can use a code page that cannot represent Russian.
     for stream in (sys.stdout, sys.stderr):
@@ -913,11 +952,17 @@ def main():
             stream.reconfigure(encoding='utf-8')
     ap=argparse.ArgumentParser(
         description=f'Install Universal Prompt Optimizer v{VERSION}',
-        epilog='To update, rerun this installer from the new release folder in the same scope and target. Saved adapters and settings are preserved unless explicitly overridden.')
+        epilog='To update, rerun this installer from the new release folder in the same scope and target. '
+               'A global install without --agents keeps the previously installed adapters and adds every locally '
+               'detected agent; project installs keep the saved selection. Saved settings and automatic integration '
+               'are preserved unless explicitly overridden. --list-agents is read-only.')
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
     ap.add_argument('--scope',choices=['project','global'],help='Installation location; prompted in a terminal, otherwise project')
     ap.add_argument('--project',default='.')
-    ap.add_argument('--agents',help='opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,deepseek-harness,all; aliases: dsh, deepseek; defaults to installed agents or all')
+    selection = ap.add_mutually_exclusive_group()
+    selection.add_argument('--agents',help='opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,deepseek-harness,all; aliases: dsh, deepseek; defaults to saved agents (project) or saved plus locally detected agents (global)')
+    selection.add_argument('--detect-agents',action='store_true',help='Install the locally detected agents only; scans PATH and known config/application directories without changing them')
+    ap.add_argument('--list-agents',action='store_true',help='Read-only: list every supported agent with its local detection status, then exit')
     integration = ap.add_mutually_exclusive_group()
     integration.add_argument('--auto',action='store_true',default=None,help='Install automatic/preview/off adapter integration in addition to skills')
     integration.add_argument('--no-auto',dest='auto',action='store_false',help='Install skills/commands only')
@@ -936,6 +981,15 @@ def main():
     args=ap.parse_args()
     global UI_LANG
     UI_LANG=args.lang
+    if args.list_agents:
+        extra = [name for name in ('--doctor', '--uninstall', '--dry-run') if getattr(args, name[2:].replace('-', '_'))]
+        if extra:
+            fail(L(f'--list-agents is read-only; remove {", ".join(extra)}',
+                   f'--list-agents только читает состояние; уберите {", ".join(extra)}'))
+        project = Path(args.project).expanduser().resolve() if args.scope != 'global' else None
+        print(f'Universal Prompt Optimizer v{VERSION} - {L("agent detection", "обнаружение агентов")}')
+        print_agent_status(detect_agents(Path.home(), project=project))
+        return
     if args.doctor and args.uninstall:
         fail(L('Choose either --doctor or --uninstall, not both', 'Выберите либо --doctor, либо --uninstall, но не оба параметра'))
     if args.scope is None:
@@ -973,10 +1027,16 @@ def main():
     args.quality_gate = quality_gate
     args.unsupported_model=args.unsupported_model or saved.get('unsupported_model', 'generic')
     args.auto=args.auto if args.auto is not None else (previous['automatic'] if previous else args.default_auto)
+    if args.detect_agents and (args.doctor or args.uninstall):
+        fail(L('--detect-agents applies only to installation; use --list-agents to inspect detection',
+               '--detect-agents применим только к установке; для просмотра используйте --list-agents'))
     if args.opencode_mode:
         if args.opencode_mode=='off': behavior='off'
         else: behavior='auto'; scope=args.opencode_mode
-    selected=parse_agents(args.agents or (','.join(previous['adapters']) if previous and not args.uninstall else 'all'))
+    selected = requested_agents(args, previous=previous, root=root, uninstall=args.uninstall)
+    if not selected:
+        fail(L('No supported agent is detectable or recorded. Install one, pass --agents ..., or --agents all.\nDetected adapters are listed by --list-agents.',
+               'Не найден и не сохранен ни один поддерживаемый агент. Установите агент, укажите --agents ... или --agents all.\nОбнаружение показывает --list-agents.'))
     backup=not args.no_backup
     if not args.uninstall:
         old = previous['version'] if previous else L('not recorded', 'не зафиксирована')

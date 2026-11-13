@@ -32,7 +32,13 @@ class InstallCliTests(unittest.TestCase):
         for action in ([], ["--uninstall"]):
             with self.subTest(action=action), tempfile.TemporaryDirectory() as raw:
                 home = Path(raw)
-                output = self.run_interactive([*action, "--dry-run"], ["2"], home)
+                args = [*action, "--dry-run"]
+                if not action:
+                    # Without global detection this subcase keeps install-all
+                    # semantics; --agents all makes it independent of the
+                    # ambient PATH and home directories.
+                    args += ["--agents", "all"]
+                output = self.run_interactive(args, ["2"], home)
                 self.assertIn("scope: global", output)
                 self.assertFalse(any(home.iterdir()))
 

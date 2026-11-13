@@ -2,6 +2,7 @@
 
 ## 5.15 — 2026-11-13
 
+- Global Python/Bash installation now auto-detects locally available agents by default, adds newly detected adapters to recorded installations, preserves current settings, and reports read-only discovery through `--list-agents`. Explicit selection and project update behavior remain available; empty detection never silently installs every adapter.
 - Added DeepSeek Harness as the tenth adapter: native Cordis prompt-section integration, exact per-step model routing from the canonical skill, AUTO/PREVIEW/OFF and durable first-turn scope, project/global installation, detection, dry-run and removal. Activation uses an explicit generated `--patch` overlay without modifying host profiles, approvals, reasoning or network settings; PREVIEW is textual/advisory.
 - Added seven distinct profiles for Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder, bringing the shared registry to 34 profiles across ten adapters. Preserved exact variant routing and unknown-model fallback.
 - Refreshed Gemini 4 Argon and DeepSeek V4.1 Flash guidance from current primary sources; added the user-requested `-1017` snapshot alias to the V4.1 Flash profile and corrected outdated DeepSeek V4 Pro redirection and Argon cache-threshold notes.

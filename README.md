@@ -227,9 +227,14 @@ needs to select the Russian UI without using the dedicated wrapper.
 Re-run the installer from the new release folder in the **same scope** to update
 to that folder's `VERSION`. It displays the previous and target versions and
 replaces package files, including obsolete files recorded by earlier installs.
-Python and non-wizard Bash runs retain installed adapters, native integration,
-and current shared-config settings unless explicitly overridden. The full Bash
-wizard applies the choices made in its review screen. No release is downloaded.
+Python and non-wizard Bash runs retain native integration and current shared-config
+settings unless explicitly overridden. Global installation without `--agents`
+auto-detects agents from PATH and known home/application directories and adds them
+to previously installed adapters; project updates retain the recorded adapter set.
+Use `--agents` for an explicit selection or `--agents all` for all supported adapters.
+If no agents are detected or recorded, no files are installed. `--list-agents` shows
+the read-only detection results; `--detect-agents` also enables detection explicitly
+in project scope. The full Bash wizard applies its reviewed choices. No release is downloaded.
 
 Installation metadata contains version, adapters, settings and package file
 paths, never prompts: `.prompt-optimizer-install.json` in projects, or
