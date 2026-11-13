@@ -89,20 +89,20 @@ Model aliases are internal routing data. Unknown or ambiguous models follow
 `unsupportedModel=skip|generic`; they are never assigned a guessed vendor profile.
 
 ### Z.ai / GLM
-GLM-5.2; GLM-5.3; GLM-5.3-Flash.
+GLM-5.2; GLM-5.3; GLM-5.3-Flash; GLM-5.3-FlashX (`glm-5.3-flashx`, separate from Flash).
 
 ### DeepSeek
 DeepSeek V4.1 Flash; DeepSeek V4 Flash; DeepSeek V4 Pro.
 
-V4.1 Flash is the canonical `deepseek-flash` model. The retired `deepseek-v4-flash` and `deepseek-v4-flash-vision-exp` IDs still resolve to it on the official API, so they map to the V4.1 Flash profile for routing; `deepseek-v4-pro` remains its own profile. A bare `deepseek-v4` is ambiguous and follows the configured unsupported-model policy.
+V4.1 Flash uses one profile for `deepseek-v4.1-flash`, `deepseek-flash`, and `deepseek-v4.1-flash-1017`. The `-1017` spelling is an optimizer snapshot alias; the official API serves the current snapshot as `deepseek-flash`. Historical V4 Flash and V4 Pro IDs retain their separate optimizer profiles; provider-side retirement or redirection does not silently change that routing contract. A bare `deepseek-v4` is ambiguous and follows the configured unsupported-model policy.
 
 ### Anthropic / Claude
-  Claude Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.5; Sonnet 5.
+Claude Fable 5.2 (`claude-fable-5.2` / vendor spelling `claude-fable-5-2`); Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.5; Sonnet 5.
 
 ### Other
-Kimi K3; Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Argon (`gemini-4-argon`); Grok 4.6.
+Kimi K3.1 Pro (`kimi-k3.1-pro`); Kimi K3; MiniMax M3.1 Flash (`minimax-m3.1-flash`); Muse Wonder (`muse-wonder`, vendor ID `muse-wonder-1.0`); Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Hydrogen, Carbon and Argon (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-argon`); Grok 4.6.
 
-Gemini 4 Argon has a separate profile based on its official developer guide and shared Google prompting practices, with API settings documented separately. It is available through all supported adapters; exact automatic selection depends on the host exposing the model ID. The optimizer does not change the host's model or provider availability. Similar IDs and the separate cyber-permissive variant are not aliases.
+The 34 profiles share the same canonical registry across all nine supported adapters. Provider-qualified IDs such as `google/gemini-4-hydrogen` resolve by their exact model leaf where the host exposes it. Gemini 4 variants, GLM FlashX/Flash, Kimi K3.1 Pro/K3 and Muse Wonder/Spark remain distinct; cyber-permissive, legal, highspeed and Wonder Full variants are not inferred. The optimizer selects prompt guidance, not the host's model, provider access or API settings. Profiles distinguish model-specific sources, inherited family practices and derived heuristics; see [source provenance](SOURCES.md). Thinking, sampling, caching and tool-history requirements stay in separate harness notes.
 
 ## Modes
 

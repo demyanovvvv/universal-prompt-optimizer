@@ -566,6 +566,121 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
             self.assertEqual([entry["name"] for entry in entries], ["user-hook", "prompt-optimizer"])
             self.assertIn("python-custom", entries[1]["command"])
 
+    def test_gemini_hook_routes_requested_models_to_their_own_profile(self):
+        import ast
+        source = ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py'
+        tree = ast.parse(source.read_text(encoding='utf-8'))
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'exact_profile_for']
+        namespace = {}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
+        resolve = namespace['exact_profile_for']
+        for model, profile in (
+            ('gemini-4-hydrogen', 'gemini-4-hydrogen'),
+            ('google/gemini-4-hydrogen', 'gemini-4-hydrogen'),
+            ('claude-fable-5.2', 'claude-fable-5.2'),
+            ('anthropic/CLAUDE_FABLE_5_2-latest', 'claude-fable-5.2'),
+            ('z-ai/glm-5.3-flashx', 'glm-5.3-flashx'),
+            ('glm-5-3-flashx', 'glm-5.3-flashx'),
+            ('moonshotai/kimi-k3.1-pro', 'kimi-k3.1-pro'),
+            ('kimi-k3-1-pro', 'kimi-k3.1-pro'),
+            ('minimax/minimax-m3.1-flash', 'minimax-m3.1-flash'),
+            ('minimax-m3-1-flash', 'minimax-m3.1-flash'),
+            ('deepseek/deepseek-v4.1-flash-1017', 'deepseek-v4.1-flash'),
+            ('meta/muse-wonder', 'muse-wonder'),
+            ('muse-wonder-1.0', 'muse-wonder'),
+            ('google/gemini-4-argon', 'gemini-4-argon'),
+        ):
+            with self.subTest(model=model):
+                self.assertEqual(resolve(model), profile)
+
+    def test_gemini_hook_rejects_unknown_suffixes_and_family_only_ids(self):
+        import ast
+        source = ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py'
+        tree = ast.parse(source.read_text(encoding='utf-8'))
+        functions = [node for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == 'exact_profile_for']
+        namespace = {}
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
+        resolve = namespace['exact_profile_for']
+        for model in (
+            'gemini-4', 'gemini-4.0-hydrogen', 'gemini-4-hydrogen-extra', 'gemini-4-hydrogens',
+            'gemini-4-carbon-copy', 'claude-fable', 'claude-fable-5.2-extra', 'claude-fable-5.20',
+            'glm-5', 'glm-5.3-flashxx', 'glm-5.30-flashx', 'glm-5.3-flashh',
+            'glm-5.3-flashx-legal', 'glm-5.3-flashx-legals',
+            'kimi-k3.1', 'kimi-k3.10-pro', 'kimi-k3-pro',
+            'minimax-m3.1', 'minimax-m3', 'minimax-m3.10-flash',
+            'muse', 'muse-spark', 'muse-wonder-1.1', 'muse-wonder-extra', 'muse-wonder-full', 'muse-wonderful',
+            'deepseek-v4.1-flash-1018', 'deepseek-v4.1-flash-10170', 'deepseek-flashx',
+        ):
+            with self.subTest(model=model):
+                self.assertIsNone(resolve(model))
+
+    def test_gemini_hook_renders_reasoned_profile_labels_for_requested_models(self):
+        import subprocess
+        import sys
+        import os
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
+            for model, expected in (
+                ('gemini-4-hydrogen', 'Resolved model profile: Gemini 4 Hydrogen.'),
+                ('gemini-4-carbon', 'Resolved model profile: Gemini 4 Carbon.'),
+                ('claude-fable-5.2', 'Resolved Claude profile: claude-fable-5.2.'),
+                ('glm-5.3-flashx', 'Resolved model profile: glm-5.3-flashx.'),
+                ('kimi-k3.1-pro', 'Resolved model profile: kimi-k3.1-pro.'),
+                ('minimax-m3.1-flash', 'Resolved model profile: minimax-m3.1-flash.'),
+                ('muse-wonder', 'Resolved model profile: muse-wonder.'),
+                ('deepseek-v4.1-flash-1017', 'Resolved model profile: deepseek-v4.1-flash.'),
+                ('gemini-4-argon', 'Resolved model profile: Gemini 4 Argon.'),
+            ):
+                with self.subTest(model=model):
+                    env = dict(os.environ, GEMINI_MODEL=model)
+                    run = subprocess.run(
+                        [sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')],
+                        input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}),
+                        text=True, capture_output=True, env=env, check=True,
+                    )
+                    context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']
+                    self.assertIn(expected, context)
+                    self.assertNotIn('No exact installed model profile', context)
+                    self.assertNotIn('model family or variant', context)
+
+    def test_gemini_hook_never_promotes_unknown_variants_to_a_sibling_profile(self):
+        import subprocess
+        import sys
+        import os
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
+            for model in ('gemini-4-hydrogen-extra', 'glm-5.3-flashxx', 'kimi-k3.1', 'muse-wonder-extra',
+                          'claude-fable-5.2-extra', 'deepseek-v4.1-flash-1018', 'kerosene-model'):
+                with self.subTest(model=model):
+                    env = dict(os.environ, GEMINI_MODEL=model)
+                    run = subprocess.run(
+                        [sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')],
+                        input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}),
+                        text=True, capture_output=True, env=env, check=True,
+                    )
+                    context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']
+                    self.assertEqual(context, '')
+
+    def test_gemini_generic_policy_keeps_unknown_variants_model_agnostic(self):
+        import subprocess
+        import sys
+        import os
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"generic"}', encoding='utf-8')
+            env = dict(os.environ, GEMINI_MODEL='muse-wonder-extra')
+            run = subprocess.run(
+                [sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')],
+                input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}),
+                text=True, capture_output=True, env=env, check=True,
+            )
+            context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']
+            self.assertIn('Observed/configured model: muse-wonder-extra', context)
+            self.assertIn('No exact installed model profile', context)
+            self.assertNotIn('Muse Wonder', context)
+
     def test_gemini_routes_every_canonical_alias(self):
         import ast
         source = ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py'
@@ -577,6 +692,19 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         for profile in registry['profiles']:
             for alias in profile['aliases']:
                 self.assertEqual(namespace['exact_profile_for'](alias), profile['id'], alias)
+        # Independent expectation of the profile IDs this table must resolve, so a
+        # registry and hook that drift together cannot hide a dropped model.
+        resolved = {namespace['exact_profile_for'](alias) for profile in registry['profiles'] for alias in profile['aliases']}
+        self.assertLessEqual({
+            'astra', 'sol', 'gpt-6.1-sol', 'terra', 'luna', 'gpt-5.6-sol', 'gpt-5.6-luna',
+            'glm-5.2', 'glm-5.3', 'glm-5.3-flash', 'glm-5.3-flashx',
+            'deepseek-v4.1-flash', 'deepseek-v4-flash', 'deepseek-v4-pro',
+            'claude-fable-5.2', 'claude-fable-5.1', 'claude-fable-5',
+            'claude-opus-5.5', 'claude-opus-5', 'claude-opus-4.8', 'claude-sonnet-5', 'claude-sonnet-5.5',
+            'kimi-k3', 'kimi-k3.1-pro', 'minimax-m3.1-flash', 'muse-spark-1.3', 'muse-wonder',
+            'hy4-preview', 'qwen3.8-max',
+            'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-4-carbon', 'gemini-3.8-flash', 'grok-4.6',
+        }, resolved)
 
     def test_gemini_supported_profiles_render_without_false_fallback(self):
         import subprocess

@@ -91,8 +91,8 @@ def package_hygiene() -> tuple[bool, str]:
         return False, "adapter manifest must contain nine unique adapters"
     registry = json.loads((ROOT / ".agents/skills/prompt-optimizer/references/model-registry.json").read_text(encoding="utf-8"))
     profiles = registry.get("profiles", [])
-    if len(profiles) != 27:
-        return False, f"expected 27 profiles, got {len(profiles)}"
+    if len(profiles) != 34:
+        return False, f"expected 34 profiles, got {len(profiles)}"
     ids = [item["id"] for item in profiles]
     if len(set(ids)) != len(ids):
         return False, "duplicate profile IDs"

@@ -1,6 +1,6 @@
 # Gemini 4 Argon prompt profile
 
-**Provenance:** official model-specific developer/API guide plus official Google family prompting guidance, checked 2026-10-21. The official model ID is `gemini-4-argon`, not `gemini-4.0-argon`.
+**Provenance:** official model-specific developer/API guide plus official Google family prompting guidance, checked 2026-11-13. The official model ID is `gemini-4-argon`, not `gemini-4.0-argon`.
 
 Use clear, specific instructions: preserve the goal, relevant context, constraints, expected output and observable completion criteria. Add structure or examples only when they resolve ambiguity. These are shared Google prompting practices, not a newly prescribed Argon prompt template.
 

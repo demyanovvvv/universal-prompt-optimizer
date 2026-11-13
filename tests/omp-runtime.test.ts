@@ -6,6 +6,24 @@ import { join } from "node:path"
 import omp from "../adapters/omp/extensions/prompt-optimizer/index"
 
 import type { RuntimeContext, RuntimeTool, RuntimeCommand } from "../adapters/omp/extensions/prompt-optimizer/runtime"
+
+// Newly supported exact profiles (leaf ids) and the labels the shipped runtime
+// must inject for them.
+const profileLabels = [
+  ["gemini-4-hydrogen", "Gemini 4 Hydrogen"],
+  ["google/gemini-4-hydrogen", "Gemini 4 Hydrogen"],
+  ["gemini-4-carbon", "Gemini 4 Carbon"],
+  ["claude-fable-5.2", "Claude Fable 5.2"],
+  ["claude-fable-5-2", "Claude Fable 5.2"],
+  ["glm-5.3-flashx", "GLM-5.3 FlashX"],
+  ["z-ai/GLM_5.3_FLASHX-latest", "GLM-5.3 FlashX"],
+  ["kimi-k3.1-pro", "Kimi K3.1 Pro"],
+  ["moonshotai/kimi-k3-1-pro-latest", "Kimi K3.1 Pro"],
+  ["minimax-m3.1-flash", "MiniMax M3.1 Flash"],
+  ["muse-wonder", "Muse Wonder"],
+  ["meta/muse-wonder-1.0", "Muse Wonder"],
+] as const
+
 function harness(t: TestContext, config: unknown = {}) {
   const root = mkdtempSync(join(tmpdir(), "upo-omp-"))
   t.after(() => rmSync(root, { recursive: true, force: true }))
@@ -88,4 +106,43 @@ test("global invalid configuration cannot be masked by project settings", async 
   mkdirSync(dir, { recursive: true })
   writeFileSync(join(dir, "config.json"), JSON.stringify({ schemaVersion: 2 }))
   assert.equal(await h.start(), undefined)
+})
+
+test("OMP injects each newly supported profile hint after the host prompt", async t => {
+  const h = harness(t, { qualityGate: "full" })
+  for (const [id, label] of profileLabels) {
+    h.ctx.model = { id, provider: "proxy" }
+    const result = await h.start()
+    assert.ok(result, id)
+    assert.match(result.systemPrompt, /^HOST POLICY\n\n/, id)
+    assert.ok(result.systemPrompt.includes(`${label}:`), `${id} must inject ${label} guidance`)
+    assert.match(result.systemPrompt, /Prompt Optimizer v5\.14/)
+    assert.match(result.systemPrompt, /Preserve intent, exact literals, hard constraints/)
+  }
+})
+
+test("OMP leaves unknown variants to the unsupported-model policy", async t => {
+  const h = harness(t)
+  for (const id of [
+    "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "glm-5.3-flashxx",
+    "glm-5.3-flashh", "glm-5.3-flashx-legal", "glm-5.3-flashx-legals", "glm-5.30-flashx",
+    "kimi-k3.1", "kimi-k3.10-pro", "kimi-k3-pro", "minimax-m3.1", "minimax-m31-flash",
+    "muse", "muse-spark", "muse-wonder-1.1", "muse-wonder-extra", "muse-wonder-full", "muse-wonderful",
+    "claude-fable-5.2-extra", "claude-fable-5.20", "deepseek-v4.1-flash-1018",
+  ]) {
+    h.ctx.model = { id, provider: "proxy" }
+    assert.equal(await h.start(), undefined, id)
+  }
+  h.ctx.model = { id: "unknown", provider: "muse-wonder" }
+  assert.equal(await h.start(), undefined)
+})
+
+test("OMP generic fallback stays model-agnostic for a newly supported leaf", async t => {
+  const h = harness(t, { unsupportedModel: "generic" })
+  h.ctx.model = { id: "muse-wonder-extra", provider: "meta" }
+  const result = await h.start()
+  assert.ok(result)
+  assert.match(result.systemPrompt, /^HOST POLICY\n\n/)
+  assert.match(result.systemPrompt, /Neutral model fallback/)
+  assert.doesNotMatch(result.systemPrompt, /Muse Wonder/)
 })

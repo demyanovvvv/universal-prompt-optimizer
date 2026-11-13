@@ -54,16 +54,16 @@ LLM-вызов для переписывания запроса не требу�
 | Семейство | Профили |
 |---|---|
 | OpenAI | GPT-6 Astra, GPT-6.1 Sol, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Terra, GPT-5.6 Sol, GPT-5.6 Luna |
-| Claude | Fable 5.1, Fable 5, Opus 5.5, Opus 5, Opus 4.8, Sonnet 5.5, Sonnet 5 |
-| GLM | GLM-5.2, GLM-5.3, GLM-5.3-Flash |
-| DeepSeek | V4.1 Flash, V4 Flash, V4 Pro |
-| Другие | Kimi K3, Muse Spark 1.3, Hy4-preview, Qwen3.8-Max, Gemini 3.8 Flash, Gemini 4 Argon (`gemini-4-argon`), Grok 4.6 |
+| Claude | Fable 5.2 (`claude-fable-5.2` / `claude-fable-5-2`), Fable 5.1, Fable 5, Opus 5.5, Opus 5, Opus 4.8, Sonnet 5.5, Sonnet 5 |
+| GLM | GLM-5.2, GLM-5.3, GLM-5.3-Flash, GLM-5.3-FlashX (`glm-5.3-flashx`, отдельно от Flash) |
+| DeepSeek | V4.1 Flash (включая `deepseek-v4.1-flash-1017`), V4 Flash, V4 Pro |
+| Другие | Kimi K3.1 Pro (`kimi-k3.1-pro`), Kimi K3, MiniMax M3.1 Flash (`minimax-m3.1-flash`), Muse Wonder (`muse-wonder`, API ID `muse-wonder-1.0`), Muse Spark 1.3, Hy4-preview, Qwen3.8-Max, Gemini 3.8 Flash, Gemini 4 Hydrogen / Carbon / Argon (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-argon`), Grok 4.6 |
 
 Профиль выбирается по точному ID активной модели, если агент его предоставляет.
 Поддерживаемые aliases перечислены во внутреннем [реестре моделей](.agents/skills/prompt-optimizer/references/model-registry.json).
-Неоднозначный `deepseek-v4` не выбирает вариант автоматически.
+Неоднозначный `deepseek-v4` не выбирает вариант автоматически. `deepseek-v4.1-flash-1017` — алиас snapshot в оптимизаторе, а официальный API обслуживает текущую версию через `deepseek-flash`. Исторические ID V4 Flash и V4 Pro сохраняют отдельные профили оптимизатора независимо от перенаправлений у провайдера.
 
-Для Gemini 4 Argon добавлен отдельный профиль по официальному developer guide и общим рекомендациям Google; параметры API описаны отдельно. Профиль доступен во всех поддерживаемых адаптерах, автоматический выбор зависит от доступности точного ID в агенте. Оптимизатор не переключает модель и не меняет её доступность у провайдера. Похожие ID и отдельный вариант cyber-permissive не считаются алиасами.
+Все 34 профиля используют общий канонический реестр в девяти поддерживаемых адаптерах. ID с провайдером, например `google/gemini-4-hydrogen`, выбираются по точному имени модели, если host его предоставляет. Варианты Gemini 4, GLM FlashX/Flash, Kimi K3.1 Pro/K3 и Muse Wonder/Spark не подменяют друг друга; cyber-permissive, legal, highspeed и Wonder Full автоматически не угадываются. Оптимизатор выбирает рекомендации, но не переключает модель, не открывает доступ у провайдера и не меняет API-настройки. Профили различают модельные источники, общие практики семейства и производные эвристики; см. [источники](SOURCES.md). Thinking, sampling, caching и требования к истории tool calls описаны отдельно в harness notes.
 
 ## Универсальные команды
 

@@ -208,14 +208,20 @@ def exact_profile_for(model: str | None) -> str | None:
         "glm-5-3": "glm-5.3",
         "glm-5.3-flash": "glm-5.3-flash",
         "glm-5-3-flash": "glm-5.3-flash",
+        "glm-5.3-flashx": "glm-5.3-flashx",
+        "glm-5-3-flashx": "glm-5.3-flashx",
         "deepseek-v4.1-flash": "deepseek-v4.1-flash",
         "deepseek-v4-1-flash": "deepseek-v4.1-flash",
+        "deepseek-v4.1-flash-1017": "deepseek-v4.1-flash",
+        "deepseek-v4-1-flash-1017": "deepseek-v4.1-flash",
         "deepseek-flash": "deepseek-v4.1-flash",
         "deepseek-v4-flash": "deepseek-v4-flash",
         "deepseek-v4-flash-0731": "deepseek-v4-flash",
         "deepseek-v4-pro": "deepseek-v4-pro",
         "claude-fable-5.1": "claude-fable-5.1",
         "claude-fable-5-1": "claude-fable-5.1",
+        "claude-fable-5.2": "claude-fable-5.2",
+        "claude-fable-5-2": "claude-fable-5.2",
         "claude-fable-5": "claude-fable-5",
         "claude-opus-5.5": "claude-opus-5.5",
         "claude-opus-5-5": "claude-opus-5.5",
@@ -226,6 +232,13 @@ def exact_profile_for(model: str | None) -> str | None:
         "claude-sonnet-5.5": "claude-sonnet-5.5",
         "claude-sonnet-5-5": "claude-sonnet-5.5",
         "kimi-k3": "kimi-k3",
+        "kimi-k3.1-pro": "kimi-k3.1-pro",
+        "kimi-k3-1-pro": "kimi-k3.1-pro",
+        "muse-wonder": "muse-wonder",
+        "muse-wonder-1.0": "muse-wonder",
+        "muse-wonder-1-0": "muse-wonder",
+        "minimax-m3.1-flash": "minimax-m3.1-flash",
+        "minimax-m3-1-flash": "minimax-m3.1-flash",
         "muse-spark-1.3": "muse-spark-1.3",
         "muse-spark-1-3": "muse-spark-1.3",
         "hy4-preview": "hy4-preview",
@@ -234,6 +247,8 @@ def exact_profile_for(model: str | None) -> str | None:
         "qwen3.8-max-0902": "qwen3.8-max",
         "qwen3.8-max-2026-09-02": "qwen3.8-max",
         "gemini-4-argon": "gemini-4-argon",
+        "gemini-4-hydrogen": "gemini-4-hydrogen",
+        "gemini-4-carbon": "gemini-4-carbon",
         "gemini-3.8-flash": "gemini-3.8-flash",
         "grok-4.6": "grok-4.6"
     }
@@ -336,13 +351,17 @@ if profile == "gemini-3.8-flash":
     )
 elif profile == "gemini-4-argon":
     base += "Resolved model profile: Gemini 4 Argon. Use clear goals, relevant context, constraints and expected output; add multi-file scope, dependencies and verification only when useful. Preserve precise short requests, leave output room in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Gemini Flash guidance. "
+elif profile == "gemini-4-hydrogen":
+    base += "Resolved model profile: Gemini 4 Hydrogen. Use clear goals, relevant context, constraints and expected output; add structure, examples, multi-file scope, dependencies and verification only when they remove real ambiguity. Preserve precise short requests, leave output headroom in the unified context window, do not pad prompts for caching, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Carbon or Gemini Flash guidance. "
+elif profile == "gemini-4-carbon":
+    base += "Resolved model profile: Gemini 4 Carbon. Use clear goals, relevant context, constraints and expected output; for multi-file engineering make scope, dependencies and required validation explicit, and for image or document input state what to extract, with host tools governing access. Preserve precise short requests without Gemini Flash's aggressive gating, leave output headroom in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Hydrogen or Gemini Flash guidance. "
 elif profile == "gpt-6.1-sol":
     base += "Resolved model profile: GPT-6.1 Sol. Preserve decisive context, scope, approval boundaries and observable completion; continue authorized work through relevant validation, use bounded current evidence, and keep reasoning effort in runtime rather than prompt text. "
 elif profile == "sol":
     base += "Resolved model profile: GPT-6 Sol. Preserve decisive context, hard constraints, approval boundaries and observable completion; follow through on authorized work with proportionate validation. "
 elif profile == "claude-sonnet-5.5":
     base += "Resolved model profile: Claude Sonnet 5.5. Use a bounded objective, scope, initiative boundary, deliverable and verification; continue authorized work without premature check-ins, batch independent tools, and report completed versus verified versus unconfirmed work. "
-elif profile in {"claude-sonnet-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-fable-5.1", "claude-fable-5"}:
+elif profile in {"claude-sonnet-5", "claude-opus-5.5", "claude-opus-5", "claude-opus-4.8", "claude-fable-5.2", "claude-fable-5.1", "claude-fable-5"}:
     base += f"Resolved Claude profile: {profile}. Use clear scope, concrete completion criteria, relevant tool evidence and behavior verification; use examples/XML and long-context source ordering only when they materially clarify the task. Keep effort and thinking in runtime. "
 elif profile:
     base += f"Resolved model profile: {profile}. Apply only its matching profile from the installed prompt-optimizer skill; preserve scope, constraints and required verification. "

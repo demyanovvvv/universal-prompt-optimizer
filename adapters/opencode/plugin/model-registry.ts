@@ -10,10 +10,12 @@ export type Profile =
   | "glm-5.2"
   | "glm-5.3"
   | "glm-5.3-flash"
+  | "glm-5.3-flashx"
   | "deepseek-v4.1-flash"
   | "deepseek-v4-flash"
   | "deepseek-v4-pro"
   | "claude-fable-5.1"
+  | "claude-fable-5.2"
   | "claude-fable-5"
   | "claude-opus-5.5"
   | "claude-opus-5"
@@ -21,10 +23,15 @@ export type Profile =
   | "claude-sonnet-5"
   | "claude-sonnet-5.5"
   | "kimi-k3"
+  | "kimi-k3.1-pro"
+  | "muse-wonder"
+  | "minimax-m3.1-flash"
   | "muse-spark-1.3"
   | "hy4-preview"
   | "qwen3.8-max"
   | "gemini-4-argon"
+  | "gemini-4-hydrogen"
+  | "gemini-4-carbon"
   | "gemini-3.8-flash"
   | "grok-4.6"
 
@@ -39,10 +46,12 @@ export const PROFILE_IDS = [
   "glm-5.2",
   "glm-5.3",
   "glm-5.3-flash",
+  "glm-5.3-flashx",
   "deepseek-v4.1-flash",
   "deepseek-v4-flash",
   "deepseek-v4-pro",
   "claude-fable-5.1",
+  "claude-fable-5.2",
   "claude-fable-5",
   "claude-opus-5.5",
   "claude-opus-5",
@@ -50,10 +59,15 @@ export const PROFILE_IDS = [
   "claude-sonnet-5",
   "claude-sonnet-5.5",
   "kimi-k3",
+  "kimi-k3.1-pro",
+  "muse-wonder",
+  "minimax-m3.1-flash",
   "muse-spark-1.3",
   "hy4-preview",
   "qwen3.8-max",
   "gemini-4-argon",
+  "gemini-4-hydrogen",
+  "gemini-4-carbon",
   "gemini-3.8-flash",
   "grok-4.6",
 ] as const satisfies readonly Profile[]
@@ -77,14 +91,20 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "glm-5-3": "glm-5.3",
   "glm-5.3-flash": "glm-5.3-flash",
   "glm-5-3-flash": "glm-5.3-flash",
+  "glm-5.3-flashx": "glm-5.3-flashx",
+  "glm-5-3-flashx": "glm-5.3-flashx",
   "deepseek-v4.1-flash": "deepseek-v4.1-flash",
   "deepseek-v4-1-flash": "deepseek-v4.1-flash",
+  "deepseek-v4.1-flash-1017": "deepseek-v4.1-flash",
+  "deepseek-v4-1-flash-1017": "deepseek-v4.1-flash",
   "deepseek-flash": "deepseek-v4.1-flash",
   "deepseek-v4-flash": "deepseek-v4-flash",
   "deepseek-v4-flash-0731": "deepseek-v4-flash",
   "deepseek-v4-pro": "deepseek-v4-pro",
   "claude-fable-5.1": "claude-fable-5.1",
   "claude-fable-5-1": "claude-fable-5.1",
+  "claude-fable-5.2": "claude-fable-5.2",
+  "claude-fable-5-2": "claude-fable-5.2",
   "claude-fable-5": "claude-fable-5",
   "claude-opus-5.5": "claude-opus-5.5",
   "claude-opus-5-5": "claude-opus-5.5",
@@ -95,6 +115,13 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "claude-sonnet-5.5": "claude-sonnet-5.5",
   "claude-sonnet-5-5": "claude-sonnet-5.5",
   "kimi-k3": "kimi-k3",
+  "kimi-k3.1-pro": "kimi-k3.1-pro",
+  "kimi-k3-1-pro": "kimi-k3.1-pro",
+  "muse-wonder": "muse-wonder",
+  "muse-wonder-1.0": "muse-wonder",
+  "muse-wonder-1-0": "muse-wonder",
+  "minimax-m3.1-flash": "minimax-m3.1-flash",
+  "minimax-m3-1-flash": "minimax-m3.1-flash",
   "muse-spark-1.3": "muse-spark-1.3",
   "muse-spark-1-3": "muse-spark-1.3",
   "hy4-preview": "hy4-preview",
@@ -103,6 +130,8 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "qwen3.8-max-0902": "qwen3.8-max",
   "qwen3.8-max-2026-09-02": "qwen3.8-max",
   "gemini-4-argon": "gemini-4-argon",
+  "gemini-4-hydrogen": "gemini-4-hydrogen",
+  "gemini-4-carbon": "gemini-4-carbon",
   "gemini-3.8-flash": "gemini-3.8-flash",
   "grok-4.6": "grok-4.6",
 }

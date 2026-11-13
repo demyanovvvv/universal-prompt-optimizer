@@ -39,7 +39,7 @@ For OMP, replace `--agents opencode` with `--agents omp`, enable `--auto`, and r
 
 ## 2. Send a normal task
 
-For Gemini 4 Argon, select `gemini-4-argon` in your host/provider. All supported adapters share its dedicated profile; automatic routing uses the exact ID where observable, otherwise name `gemini-4-argon` explicitly when invoking the skill. This selects prompt guidance, not a provider/model switch. Thinking and sampling settings remain host-controlled; see the [Argon harness notes](.agents/skills/prompt-optimizer/references/harness-gemini-4-argon.md).
+Select the model in your host/provider; the optimizer does not switch it. All supported adapters share the [canonical profiles and aliases](.agents/skills/prompt-optimizer/references/model-registry.json), including Gemini 4 Hydrogen/Carbon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder. Automatic routing uses the exact model ID where observable, including provider-qualified IDs; otherwise name the exact profile when invoking the skill. DeepSeek V4.1 Flash and its `-1017` snapshot use one profile. Unknown variants still follow `skip`/`generic`. Thinking, sampling, cache and tool-history settings remain host-controlled; see each profile's linked harness notes and [source provenance](SOURCES.md).
 
 With automatic integration enabled, write your request normally:
 

@@ -92,10 +92,21 @@
       "provenance": "official-model"
     },
     {
+      "id": "glm-5.3-flashx",
+      "aliases": [
+        "glm-5.3-flashx",
+        "glm-5-3-flashx"
+      ],
+      "file": "glm-5.3-flashx.md",
+      "provenance": "official-model+official-family"
+    },
+    {
       "id": "deepseek-v4.1-flash",
       "aliases": [
         "deepseek-v4.1-flash",
         "deepseek-v4-1-flash",
+        "deepseek-v4.1-flash-1017",
+        "deepseek-v4-1-flash-1017",
         "deepseek-flash"
       ],
       "file": "deepseek-v4.1-flash.md",
@@ -126,6 +137,15 @@
       ],
       "file": "claude-fable-5.1.md",
       "provenance": "official-model"
+    },
+    {
+      "id": "claude-fable-5.2",
+      "aliases": [
+        "claude-fable-5.2",
+        "claude-fable-5-2"
+      ],
+      "file": "claude-fable-5.2.md",
+      "provenance": "official-model+official-prompting-guide"
     },
     {
       "id": "claude-fable-5",
@@ -187,6 +207,34 @@
       "provenance": "official-model-card"
     },
     {
+      "id": "kimi-k3.1-pro",
+      "aliases": [
+        "kimi-k3.1-pro",
+        "kimi-k3-1-pro"
+      ],
+      "file": "kimi-k3.1-pro.md",
+      "provenance": "official-model+api+model-card"
+    },
+    {
+      "id": "muse-wonder",
+      "aliases": [
+        "muse-wonder",
+        "muse-wonder-1.0",
+        "muse-wonder-1-0"
+      ],
+      "file": "muse-wonder.md",
+      "provenance": "official-model+api+derived-prompt"
+    },
+    {
+      "id": "minimax-m3.1-flash",
+      "aliases": [
+        "minimax-m3.1-flash",
+        "minimax-m3-1-flash"
+      ],
+      "file": "minimax-m3.1-flash.md",
+      "provenance": "official-model+api+derived-prompt"
+    },
+    {
       "id": "muse-spark-1.3",
       "aliases": [
         "muse-spark-1.3",
@@ -220,6 +268,22 @@
         "gemini-4-argon"
       ],
       "file": "gemini-4-argon.md",
+      "provenance": "official-model+api+family"
+    },
+    {
+      "id": "gemini-4-hydrogen",
+      "aliases": [
+        "gemini-4-hydrogen"
+      ],
+      "file": "gemini-4-hydrogen.md",
+      "provenance": "official-model+api+family"
+    },
+    {
+      "id": "gemini-4-carbon",
+      "aliases": [
+        "gemini-4-carbon"
+      ],
+      "file": "gemini-4-carbon.md",
       "provenance": "official-model+api+family"
     },
     {

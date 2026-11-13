@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "kind": "matrix-baseline",
-  "fingerprint": "8e8c2c4184bf35e140d8de5717e90cdf112e4f090cef7785dfc75b7543852c10",
+  "fingerprint": "3858a0b1a771fbf4336303aaf0e026cdecc47f27a9e21226af6b23269c677996",
   "modes": [
     "OFF",
     "AUTO",
@@ -9,47 +9,47 @@
   ],
   "input": {
     "format": "jsonl",
-    "sha256": "19b5c49bac325a9895460f487c49057e4b7463d28cd6dd812e820b02e241a2aa"
+    "sha256": "3ef6fa609baaffbc3737148f29252d672c284840b51832796082e6fa159587d2"
   },
-  "providerCalls": 183,
+  "providerCalls": 231,
   "failures": 0,
   "runs": {
     "OFF": {
-      "cases": 61,
-      "measured": 61,
+      "cases": 77,
+      "measured": 77,
       "approvalRequired": 0,
       "failed": 0
     },
     "AUTO": {
-      "cases": 61,
-      "measured": 61,
+      "cases": 77,
+      "measured": 77,
       "approvalRequired": 0,
       "failed": 0
     },
     "PREVIEW": {
-      "cases": 61,
-      "measured": 61,
+      "cases": 77,
+      "measured": 77,
       "approvalRequired": 0,
       "failed": 0
     }
   },
   "quality": {
     "OFF": {
-      "cases": 61,
-      "scored": 61,
-      "passed": 61,
+      "cases": 77,
+      "scored": 77,
+      "passed": 77,
       "passRate": 1.0
     },
     "AUTO": {
-      "cases": 61,
-      "scored": 61,
-      "passed": 61,
+      "cases": 77,
+      "scored": 77,
+      "passed": 77,
       "passRate": 1.0
     },
     "PREVIEW": {
-      "cases": 61,
-      "scored": 61,
-      "passed": 61,
+      "cases": 77,
+      "scored": 77,
+      "passed": 77,
       "passRate": 1.0
     }
   },
@@ -61,8 +61,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 61,
-        "outputTokens": 61,
+        "inputTokens": 77,
+        "outputTokens": 77,
         "cost": 0.0
       }
     },
@@ -73,8 +73,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 61,
-        "outputTokens": 61,
+        "inputTokens": 77,
+        "outputTokens": 77,
         "cost": 0.0
       }
     },
@@ -85,8 +85,8 @@
         "outputTokens"
       ],
       "total": {
-        "inputTokens": 61,
-        "outputTokens": 61,
+        "inputTokens": 77,
+        "outputTokens": 77,
         "cost": 0.0
       }
     }
@@ -942,6 +942,59 @@
       }
     },
     {
+      "id": "deepseek-v41-flash-1017-snapshot",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c010207a7dd8988a742639288c37de66d7a6a3d092ae8a6a9c7e0ce86b2d4406",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c010207a7dd8988a742639288c37de66d7a6a3d092ae8a6a9c7e0ce86b2d4406",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "c010207a7dd8988a742639288c37de66d7a6a3d092ae8a6a9c7e0ce86b2d4406",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "deepseek-v41-flash-json",
       "modes": {
         "OFF": {
@@ -1260,6 +1313,165 @@
       }
     },
     {
+      "id": "fable52-long-run-compaction",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b8d6aadce723ffb21c1c92ebdfc715f35bc1229ab2ecad2482b59abb8e9ef469",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b8d6aadce723ffb21c1c92ebdfc715f35bc1229ab2ecad2482b59abb8e9ef469",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "b8d6aadce723ffb21c1c92ebdfc715f35bc1229ab2ecad2482b59abb8e9ef469",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "fable52-preserve-required-verification",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e8983578f195dcac1f0b1829778dafa20812b1d4cd6d4e683af20a619413656a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e8983578f195dcac1f0b1829778dafa20812b1d4cd6d4e683af20a619413656a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "e8983578f195dcac1f0b1829778dafa20812b1d4cd6d4e683af20a619413656a",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "fable52-targeted-edits",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3c373dc8d3314f5a36f5896005ccce225688012100bf62a648b60886a8cb1662",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3c373dc8d3314f5a36f5896005ccce225688012100bf62a648b60886a8cb1662",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 5,
+            "matched": 5,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3c373dc8d3314f5a36f5896005ccce225688012100bf62a648b60886a8cb1662",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "gemini38-concise",
       "modes": {
         "OFF": {
@@ -1419,6 +1631,218 @@
       }
     },
     {
+      "id": "gemini4-carbon-long-context",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fe1e3462d1f67c6af10641938cbd1b953cf45ffbb68e6ce32e0efbd952c4a420",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fe1e3462d1f67c6af10641938cbd1b953cf45ffbb68e6ce32e0efbd952c4a420",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "fe1e3462d1f67c6af10641938cbd1b953cf45ffbb68e6ce32e0efbd952c4a420",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini4-carbon-plan-only",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "349aec9588f538503f0508e888a4a83699b499c74bf1cb904c6f65517f1f3d3c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "349aec9588f538503f0508e888a4a83699b499c74bf1cb904c6f65517f1f3d3c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "349aec9588f538503f0508e888a4a83699b499c74bf1cb904c6f65517f1f3d3c",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini4-hydrogen-multifile",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6938d8f040818a5c3f7cab722977ba7e3df9039f46af611261c3a9734744286e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6938d8f040818a5c3f7cab722977ba7e3df9039f46af611261c3a9734744286e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6938d8f040818a5c3f7cab722977ba7e3df9039f46af611261c3a9734744286e",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "gemini4-hydrogen-precise",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6f5b0996c81a4353e314c4d14a1a0a6dfd312a73a9302acaf5b28b3e7de7b5e4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6f5b0996c81a4353e314c4d14a1a0a6dfd312a73a9302acaf5b28b3e7de7b5e4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "6f5b0996c81a4353e314c4d14a1a0a6dfd312a73a9302acaf5b28b3e7de7b5e4",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "glm52-architecture",
       "modes": {
         "OFF": {
@@ -1569,6 +1993,112 @@
           },
           "qualityPassed": true,
           "responseSha256": "162e95638dc5313a5bbdf009a4226b2974349abe71b34bedda6be168b6523b19",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "glm53-flashx-autonomy",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1836c2aed127a63a947ec5c10c386a84734354a191e84f944b38a0799316d966",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1836c2aed127a63a947ec5c10c386a84734354a191e84f944b38a0799316d966",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "1836c2aed127a63a947ec5c10c386a84734354a191e84f944b38a0799316d966",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "glm53-flashx-limited-scope",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "836bcc1a32bb70307bc5bbd23b554f389c595a97a5012bfac61a5de4e1ea23e9",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "836bcc1a32bb70307bc5bbd23b554f389c595a97a5012bfac61a5de4e1ea23e9",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "836bcc1a32bb70307bc5bbd23b554f389c595a97a5012bfac61a5de4e1ea23e9",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,
@@ -1896,6 +2426,112 @@
       }
     },
     {
+      "id": "kimi-k31-pro-explicit-scope",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "56e6fb97c66e0f71e901a220eb6edf771389d3e698412832927788aa77d0c13d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "56e6fb97c66e0f71e901a220eb6edf771389d3e698412832927788aa77d0c13d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "56e6fb97c66e0f71e901a220eb6edf771389d3e698412832927788aa77d0c13d",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "kimi-k31-pro-native-thinking",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3262ada26f6022d85c9ab051444e0197e8081d8be8f96f392638c88894c17460",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3262ada26f6022d85c9ab051444e0197e8081d8be8f96f392638c88894c17460",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "3262ada26f6022d85c9ab051444e0197e8081d8be8f96f392638c88894c17460",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "luna-bounded",
       "modes": {
         "OFF": {
@@ -1949,6 +2585,112 @@
       }
     },
     {
+      "id": "minimax-m31-flash-compact",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "54e7a8ae97bea77d1248dc75511235e3adc03418c259ccae975a497ef8c98065",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "54e7a8ae97bea77d1248dc75511235e3adc03418c259ccae975a497ef8c98065",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "54e7a8ae97bea77d1248dc75511235e3adc03418c259ccae975a497ef8c98065",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "minimax-m31-flash-visual",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "acbaa7279393550edbfaf7231af2e65aad21d26968979e0390e3594d5c545fcd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "acbaa7279393550edbfaf7231af2e65aad21d26968979e0390e3594d5c545fcd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "acbaa7279393550edbfaf7231af2e65aad21d26968979e0390e3594d5c545fcd",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
       "id": "muse-deliverable-not-tools",
       "modes": {
         "OFF": {
@@ -1993,6 +2735,112 @@
           },
           "qualityPassed": true,
           "responseSha256": "882fda31550131782271e06e6fcb2d485a951e6c8d3ea7768638c4bda87b8794",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "muse-wonder-confirm-consequential",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7138d7dac72bc6b55ccaaad51880c343903b1fe65e07aaed33ce3f4babf8b4fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7138d7dac72bc6b55ccaaad51880c343903b1fe65e07aaed33ce3f4babf8b4fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "7138d7dac72bc6b55ccaaad51880c343903b1fe65e07aaed33ce3f4babf8b4fc",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        }
+      }
+    },
+    {
+      "id": "muse-wonder-deliverable",
+      "modes": {
+        "OFF": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "10a56000600fd96f657db18a9cf1662cad4ffa9abeb308cfcc7b860040099f30",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "AUTO": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "10a56000600fd96f657db18a9cf1662cad4ffa9abeb308cfcc7b860040099f30",
+          "metrics": {
+            "inputTokens": 1,
+            "outputTokens": 1,
+            "cost": 0.0
+          }
+        },
+        "PREVIEW": {
+          "status": "measured",
+          "quality": {
+            "expected": 4,
+            "matched": 4,
+            "passed": true,
+            "missing": []
+          },
+          "qualityPassed": true,
+          "responseSha256": "10a56000600fd96f657db18a9cf1662cad4ffa9abeb308cfcc7b860040099f30",
           "metrics": {
             "inputTokens": 1,
             "outputTokens": 1,

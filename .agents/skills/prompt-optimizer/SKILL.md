@@ -35,9 +35,11 @@ Profiles:
 - GLM-5.2 -> `references/glm-5.2.md`
 - GLM-5.3 -> `references/glm-5.3.md`
 - GLM-5.3-Flash -> `references/glm-5.3-flash.md`
-- DeepSeek V4.1 Flash / `deepseek-flash` -> `references/deepseek-v4.1-flash.md`
+- GLM-5.3-FlashX -> `references/glm-5.3-flashx.md`
+- DeepSeek V4.1 Flash / `deepseek-flash` / `deepseek-v4.1-flash-1017` -> `references/deepseek-v4.1-flash.md`
 - DeepSeek V4 Flash -> `references/deepseek-v4-flash.md`
 - DeepSeek V4 Pro -> `references/deepseek-v4-pro.md`
+- Claude Fable 5.2 -> `references/claude-fable-5.2.md`
 - Claude Fable 5.1 -> `references/claude-fable-5.1.md`
 - Claude Fable 5 -> `references/claude-fable-5.md`
 - Claude Opus 5.5 -> `references/claude-opus-5.5.md`
@@ -46,11 +48,16 @@ Profiles:
 - Claude Sonnet 5 -> `references/claude-sonnet-5.md`
 - Claude Sonnet 5.5 -> `references/claude-sonnet-5.5.md`
 - Kimi K3 -> `references/kimi-k3.md`
+- Kimi K3.1 Pro -> `references/kimi-k3.1-pro.md`
+- Muse Wonder / `muse-wonder-1.0` -> `references/muse-wonder.md`
+- MiniMax M3.1 Flash -> `references/minimax-m3.1-flash.md`
 - Muse Spark 1.3 -> `references/muse-spark-1.3.md`
 - Hy4-preview -> `references/hy4-preview.md`
 - Qwen3.8-Max -> `references/qwen3.8-max.md`
 - Gemini 3.8 Flash -> `references/gemini-3.8-flash.md`
 - Gemini 4 Argon / `gemini-4-argon` -> `references/gemini-4-argon.md`
+- Gemini 4 Hydrogen / `gemini-4-hydrogen` -> `references/gemini-4-hydrogen.md`
+- Gemini 4 Carbon / `gemini-4-carbon` -> `references/gemini-4-carbon.md`
 - Grok 4.6 -> `references/grok-4.6.md`
 - Unknown -> `references/generic-agent.md` only when neutral fallback is enabled.
 
