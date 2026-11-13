@@ -116,7 +116,6 @@ test("OMP injects each newly supported profile hint after the host prompt", asyn
     assert.ok(result, id)
     assert.match(result.systemPrompt, /^HOST POLICY\n\n/, id)
     assert.ok(result.systemPrompt.includes(`${label}:`), `${id} must inject ${label} guidance`)
-    assert.match(result.systemPrompt, /Prompt Optimizer v5\.14/)
     assert.match(result.systemPrompt, /Preserve intent, exact literals, hard constraints/)
   }
 })

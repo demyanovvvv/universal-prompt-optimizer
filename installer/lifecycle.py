@@ -19,7 +19,10 @@ Scope = Literal["project", "global"]
 
 _BLOCK_LOGICAL = frozenset({"claude-block", "gemini-block", "copilot-block", "codex-block", "windsurf-block"})
 _CONFIG_LOGICAL = frozenset({"shared-config", "opencode-config"})
-_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension", "omp-extension"})
+_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension", "omp-extension", "dsh-skills", "dsh-plugin"})
+# DeepSeek Harness owns exactly these trees inside <root>/.dsh; they are removed
+# after per-file cleanups so backups, state and locks inside them go first.
+_DSH_LOGICAL = frozenset({"dsh-skills", "dsh-plugin"})
 
 
 def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
@@ -57,6 +60,20 @@ def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tu
         "omp-extension": (
             package_root / "adapters/omp/extensions",
             root / (".omp/extensions" if project else ".omp/agent/extensions"),
+        ),
+        # DeepSeek Harness always installs under <root>/.dsh in both scopes. The
+        # native skill copy is installed even without automatic integration.
+        "dsh-skills": (
+            package_root / ".agents/skills",
+            root / ".dsh/skills",
+        ),
+        "dsh-plugin": (
+            package_root / "adapters/deepseek-harness/plugin",
+            root / ".dsh/plugins/prompt-optimizer",
+        ),
+        "dsh-overlay": (
+            package_root / "adapters/deepseek-harness/prompt-optimizer.patch.yml",
+            root / ".dsh/prompt-optimizer.patch.yml",
         ),
         "cursor-hook": (
             package_root / "adapters/cursor/hooks/prompt-optimizer-state.py",
@@ -119,6 +136,7 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
     """
     targets = uninstall_targets(root, package_root, scope)
     operations: list[Operation] = []
+    deferred_trees: list[Operation] = []
     for logical, (source, destination, strategy) in targets.items():
         if strategy == "block":
             operations.append(Operation("delete_block", destination, source=source, label=logical))
@@ -130,13 +148,24 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                 tui_config = root / (".opencode/tui.json" if scope == "project" else ".config/opencode/tui.json")
                 operations.append(Operation("delete_json_plugin_specs", tui_config, label="opencode-tui-registration",
                                             params={"specs": [_TUI_PLUGIN_SPEC]}))
-            if logical == "opencode-plugin":
+            if logical in _DSH_LOGICAL:
+                # DeepSeek Harness trees are removed after the per-file cleanups
+                # below, so backups, state and locks inside them go first.
+                # .dsh/skills is shared with user skills: only the exact
+                # prompt-optimizer copy is removed, never neighbors. The plugin
+                # tree is wholly installer-owned, so plain cleanup is safe there.
+                params: dict = {"remove_modified": True, "remove_unlisted": True}
+                if logical == "dsh-skills":
+                    params["include"] = ["prompt-optimizer"]
+                deferred_trees.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
+                                                params=params))
+            elif logical == "opencode-plugin":
                 opencode_config = root / (".opencode/opencode.json" if scope == "project" else ".config/opencode/opencode.json")
                 operations.append(Operation("delete_json_plugin_specs", opencode_config, label="opencode-server-registration",
                                             params={"specs": [_SERVER_PLUGIN_SPEC]}))
                 operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
                                             params={"remove_modified": True, "remove_unlisted": True}))
-            if logical == "opencode-tui-plugin":
+            elif logical == "opencode-tui-plugin":
                 operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
                                             params={"requires_owner": True, "owner_name": _TUI_PLUGIN_NAME,
                                                     "remove_modified": True, "remove_unlisted": True}))
@@ -194,6 +223,7 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
     operations.extend((Operation("delete_owned_file", metadata, label="installation metadata"),
                        Operation("delete_owned_file", metadata.with_name(metadata.name + ".prompt-optimizer.bak"), label="metadata backup")))
     directories = set()
+    operations.extend(deferred_trees)
     for operation in operations:
         parent = operation.path.parent
         while parent != root and root in parent.parents:

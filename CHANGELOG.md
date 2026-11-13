@@ -1,14 +1,16 @@
 # Changelog
 
-## Unreleased
+## 5.15 — 2026-11-13
 
-- Added seven distinct profiles for Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder, bringing the shared registry to 34 profiles across nine adapters. Preserved exact variant routing and unknown-model fallback.
+- Added DeepSeek Harness as the tenth adapter: native Cordis prompt-section integration, exact per-step model routing from the canonical skill, AUTO/PREVIEW/OFF and durable first-turn scope, project/global installation, detection, dry-run and removal. Activation uses an explicit generated `--patch` overlay without modifying host profiles, approvals, reasoning or network settings; PREVIEW is textual/advisory.
+- Added seven distinct profiles for Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder, bringing the shared registry to 34 profiles across ten adapters. Preserved exact variant routing and unknown-model fallback.
 - Refreshed Gemini 4 Argon and DeepSeek V4.1 Flash guidance from current primary sources; added the user-requested `-1017` snapshot alias to the V4.1 Flash profile and corrected outdated DeepSeek V4 Pro redirection and Argon cache-threshold notes.
 - Separated model-specific prompt advice, inherited family practices and derived heuristics from host/API reasoning, sampling, caching and tool-history requirements; documented source and effectiveness limits without adding model calls or changing host settings.
 - Extended executable routing/hook contracts and deterministic evaluation fixtures for the new variants and snapshot. The mock baseline is intentionally extended for those fixtures; it is not evidence of measured model-answer quality.
 - Added a native OMP (Oh My Pi) adapter with exact runtime-model routing, host-native schemas, session controls, advisory PREVIEW approval, and managed project/global installation and removal.
-- Added the exact `gemini-4-argon` profile across all eight adapters, using Google's Argon developer guide and clearly labeled shared prompting practices; separated runtime/API notes and preserved fallback for other Gemini variants.
-- Adapted project instructions, all project-local skills, and reusable FULL/PREVIEW briefs for OMP system/session precedence and real file tools; documented version-matched Orca CLI discovery, embedded-page-only automation, native computer-use verification, and read-only research boundaries without adding an OMP adapter or changing user-global skills.
+- Added the exact `gemini-4-argon` profile across supported adapters, using Google's Argon developer guide and clearly labeled shared prompting practices; separated runtime/API notes and preserved fallback for other Gemini variants.
+- Adapted project instructions, all project-local skills, and reusable FULL/PREVIEW briefs for OMP system/session precedence and real file tools; documented version-matched Orca CLI discovery, embedded-page-only automation, native computer-use verification, and read-only research boundaries without changing user-global skills or runtime configuration.
+- Synchronized package, skill, registry, adapter, runtime, and documentation versions at v5.15.0. Python and Bash installers use the shared `VERSION` and retain saved settings when updating in the same scope.
 
 ## 5.14 — 2026-10-12
 

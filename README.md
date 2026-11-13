@@ -1,4 +1,4 @@
-# Universal Prompt Optimizer v5.14
+# Universal Prompt Optimizer v5.15
 
 **Language:** English · [Русский README](README.ru.md)
 
@@ -34,11 +34,13 @@ and lower total tokens per completed task. No separate optimizer LLM call is req
 
 ## Supported agents
 
-OpenCode, OMP (Oh My Pi), Pi, Gemini CLI, Cursor, Claude Code, OpenAI Codex,
+OpenCode, OMP (Oh My Pi), Pi, DeepSeek Harness, Gemini CLI, Cursor, Claude Code, OpenAI Codex,
 GitHub Copilot CLI, and Windsurf. Native model visibility and PREVIEW capabilities vary by adapter;
 see the [compatibility matrix](COMPATIBILITY.md).
 
 For OMP installation, commands, and approval limitations, see the [OMP adapter guide](adapters/omp/README.md). OMP has its own native extension; the Pi package is not interchangeable with OMP.
+
+For DeepSeek Harness, install with `--agents deepseek-harness --auto` (alias `dsh`), then launch with the generated `.dsh/prompt-optimizer.patch.yml` overlay. Loading is explicit, not automatic profile discovery; see the [DeepSeek Harness guide](adapters/deepseek-harness/README.md).
 
 ## Universal commands
 
@@ -102,7 +104,7 @@ Claude Fable 5.2 (`claude-fable-5.2` / vendor spelling `claude-fable-5-2`); Fabl
 ### Other
 Kimi K3.1 Pro (`kimi-k3.1-pro`); Kimi K3; MiniMax M3.1 Flash (`minimax-m3.1-flash`); Muse Wonder (`muse-wonder`, vendor ID `muse-wonder-1.0`); Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Hydrogen, Carbon and Argon (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-argon`); Grok 4.6.
 
-The 34 profiles share the same canonical registry across all nine supported adapters. Provider-qualified IDs such as `google/gemini-4-hydrogen` resolve by their exact model leaf where the host exposes it. Gemini 4 variants, GLM FlashX/Flash, Kimi K3.1 Pro/K3 and Muse Wonder/Spark remain distinct; cyber-permissive, legal, highspeed and Wonder Full variants are not inferred. The optimizer selects prompt guidance, not the host's model, provider access or API settings. Profiles distinguish model-specific sources, inherited family practices and derived heuristics; see [source provenance](SOURCES.md). Thinking, sampling, caching and tool-history requirements stay in separate harness notes.
+The 34 profiles share the same canonical registry across all ten supported adapters. Provider-qualified IDs such as `google/gemini-4-hydrogen` resolve by their exact model leaf where the host exposes it. Gemini 4 variants, GLM FlashX/Flash, Kimi K3.1 Pro/K3 and Muse Wonder/Spark remain distinct; cyber-permissive, legal, highspeed and Wonder Full variants are not inferred. The optimizer selects prompt guidance, not the host's model, provider access or API settings. Profiles distinguish model-specific sources, inherited family practices and derived heuristics; see [source provenance](SOURCES.md). Thinking, sampling, caching and tool-history requirements stay in separate harness notes.
 
 ## Modes
 

@@ -1,4 +1,4 @@
-# Choosing a configuration — v5.14
+# Choosing a configuration — v5.15
 
 This is the decision guide for the three user-facing questions: **which agent**,
 **which behavior**, and **which quality gate**. For the raw capability table see
@@ -8,7 +8,7 @@ see [Usage](USAGE.md) or [Руководство пользователя](USAGE
 
 ## 1. Which agent should I install for?
 
-All eight agents share the canonical optimizer skill and the same internal model profiles. They differ only
+All ten agents share the canonical optimizer skill and the same internal model profiles. They differ only
 in how reliably the adapter can (a) discover the exact active model before the
 first call and (b) enforce an approval barrier in PREVIEW.
 

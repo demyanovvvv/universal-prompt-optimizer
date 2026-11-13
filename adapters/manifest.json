@@ -9,6 +9,7 @@
     "claude",
     "gemini",
     "copilot",
-    "windsurf"
+    "windsurf",
+    "deepseek-harness"
   ]
 }

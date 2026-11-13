@@ -87,8 +87,8 @@ def package_hygiene() -> tuple[bool, str]:
     manifest = json.loads((ROOT / "adapters/manifest.json").read_text(encoding="utf-8"))
     if manifest.get("schemaVersion") != 1 or not isinstance(manifest.get("adapters"), list):
         return False, "invalid adapter manifest"
-    if len(manifest["adapters"]) != 9 or len(set(manifest["adapters"])) != 9:
-        return False, "adapter manifest must contain nine unique adapters"
+    if len(manifest["adapters"]) != 10 or len(set(manifest["adapters"])) != 10:
+        return False, "adapter manifest must contain ten unique adapters"
     registry = json.loads((ROOT / ".agents/skills/prompt-optimizer/references/model-registry.json").read_text(encoding="utf-8"))
     profiles = registry.get("profiles", [])
     if len(profiles) != 34:
@@ -292,6 +292,8 @@ def real_install_smoke() -> tuple[bool, str]:
             ".cursor/hooks.json", ".pi/extensions/prompt-optimizer.ts", ".gemini/settings.json",
             ".omp/extensions/prompt-optimizer/index.ts", ".omp/extensions/prompt-optimizer/runtime.ts",
             ".omp/extensions/prompt-optimizer/model-registry.ts",
+            ".dsh/plugins/prompt-optimizer/index.mjs", ".dsh/prompt-optimizer.patch.yml",
+            ".dsh/skills/prompt-optimizer/SKILL.md",
             "CLAUDE.md", ".github/copilot-instructions.md", ".windsurf/rules/prompt-optimizer.md", "AGENTS.md",
         ]
         missing = [rel for rel in expected if not (directory / rel).exists()]

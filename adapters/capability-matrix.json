@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "5.14",
+  "version": "5.15",
   "adapters": [
     {
       "id": "opencode",
@@ -60,6 +60,27 @@
       "knownLimitations": [
         "PREVIEW is advisory rather than a host-enforced execution barrier.",
         "Non-interactive sessions require explicit confirmation instead of an interactive editor."
+      ]
+    },
+    {
+      "id": "deepseek-harness",
+      "name": "DeepSeek Harness",
+      "sharedSkills": true,
+      "integration": "native",
+      "exactModelRouting": true,
+      "firstTurnRouting": "exact",
+      "behaviors": ["AUTO", "PREVIEW", "OFF"],
+      "previewEnforcement": "advisory",
+      "hostEnforcedApproval": false,
+      "qualityGateSupport": "native",
+      "sessionState": "none",
+      "persistence": "none",
+      "telemetry": "none",
+      "mechanism": "Cordis systemPrompt.section provider with modelSelection.model and explicit --patch activation",
+      "knownLimitations": [
+        "PREVIEW is a textual model instruction, not a tool-execution barrier or native confirmation dialog.",
+        "Generated overlay must be passed explicitly; installation does not modify Harness profiles or home patches.",
+        "Host complete-prompt presets suppress cooperative prompt sections; host session-log and telemetry policies are unchanged."
       ]
     },
     {

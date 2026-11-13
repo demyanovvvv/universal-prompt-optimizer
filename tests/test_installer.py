@@ -134,18 +134,23 @@ class InstallerTests(unittest.TestCase):
             installer.copy_skills = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("legacy copy_skills path used"))
             installer.copy_commands = lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("legacy copy_commands path used"))
             try:
-                installer.install_project(root, {"opencode", "claude"}, False, "auto", "all", "skip", "adaptive", False, False, sys.executable)
+                installer.install_project(root, {"opencode", "claude", "deepseek-harness"}, False, "auto", "all", "skip", "adaptive", False, False, sys.executable)
             finally:
                 installer.copy_skills = original_skills
                 installer.copy_commands = original_commands
             self.assertTrue((root / ".agents/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".claude/skills/prompt-optimizer/SKILL.md").is_file())
+            self.assertTrue((root / ".dsh/skills/prompt-optimizer/SKILL.md").is_file())
             self.assertTrue((root / ".opencode/commands/prompt.md").is_file())
             self.assertTrue((root / ".opencode/commands/prompt-only.md").is_file())
             self.assertTrue((root / ".opencode/commands/prompt-optimizer.md").is_file())
             self.assertFalse((root / ".opencode/commands/prompt-luna.md").exists())
             self.assertFalse((root / ".opencode/plugins/prompt-optimizer").exists())
             self.assertFalse((root / ".opencode/opencode.json").exists())
+            # A no-auto DeepSeek Harness install stays in manual mode: native
+            # skill discovery only, no Cordis plugin and no overlay.
+            self.assertFalse((root / ".dsh/plugins").exists())
+            self.assertFalse((root / ".dsh/prompt-optimizer.patch.yml").exists())
 
     def test_install_reports_current_resources_without_legacy_cleanup_as_installed(self):
         for global_scope in (False, True):

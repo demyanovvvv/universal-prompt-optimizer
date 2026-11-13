@@ -1,4 +1,4 @@
-# Universal Prompt Optimizer v5.14
+# Universal Prompt Optimizer v5.15
 
 **Язык:** Русский · [English README](README.md)
 
@@ -40,6 +40,7 @@ LLM-вызов для переписывания запроса не требу�
 | OpenCode | native server plugin + TUI | Да | Native | Advisory | Да |
 | Pi | native extension | Да | Native | Native | Да |
 | OMP (Oh My Pi) | native extension | Да | Native | Native confirm/editor, advisory | Да |
+| DeepSeek Harness | native Cordis plugin + явный `--patch` | Да, `modelSelection.model` | Native | Текстовый preview, advisory | Да |
 | Cursor | hooks + rule | Да, если модель передана runtime | Да | Question/fallback | Да |
 | Gemini CLI | hooks + `GEMINI.md` | Точная после BeforeModel; явная модель до первого вызова | Да | `ask_user`/fallback | Да |
 | Claude Code | skill + `CLAUDE.md` | Семейство Claude | Да | Question/fallback | Да |
@@ -48,6 +49,8 @@ LLM-вызов для переписывания запроса не требу�
 | Windsurf | rules | Best effort | Да | Fallback | Да |
 
 Установка, команды и ограничения подтверждения описаны в [руководстве OMP](adapters/omp/README.md). OMP использует отдельное расширение, а не пакет Pi.
+
+Для DeepSeek Harness используйте `--agents deepseek-harness --auto` (алиас `dsh`), затем запускайте Harness с созданным overlay `.dsh/prompt-optimizer.patch.yml`. Это явная загрузка через `--patch`, не автоматическое обнаружение профилем; см. [руководство DeepSeek Harness](adapters/deepseek-harness/README.md).
 
 ## Поддерживаемые модели
 
@@ -63,7 +66,7 @@ LLM-вызов для переписывания запроса не требу�
 Поддерживаемые aliases перечислены во внутреннем [реестре моделей](.agents/skills/prompt-optimizer/references/model-registry.json).
 Неоднозначный `deepseek-v4` не выбирает вариант автоматически. `deepseek-v4.1-flash-1017` — алиас snapshot в оптимизаторе, а официальный API обслуживает текущую версию через `deepseek-flash`. Исторические ID V4 Flash и V4 Pro сохраняют отдельные профили оптимизатора независимо от перенаправлений у провайдера.
 
-Все 34 профиля используют общий канонический реестр в девяти поддерживаемых адаптерах. ID с провайдером, например `google/gemini-4-hydrogen`, выбираются по точному имени модели, если host его предоставляет. Варианты Gemini 4, GLM FlashX/Flash, Kimi K3.1 Pro/K3 и Muse Wonder/Spark не подменяют друг друга; cyber-permissive, legal, highspeed и Wonder Full автоматически не угадываются. Оптимизатор выбирает рекомендации, но не переключает модель, не открывает доступ у провайдера и не меняет API-настройки. Профили различают модельные источники, общие практики семейства и производные эвристики; см. [источники](SOURCES.md). Thinking, sampling, caching и требования к истории tool calls описаны отдельно в harness notes.
+Все 34 профиля используют общий канонический реестр в десяти поддерживаемых адаптерах. ID с провайдером, например `google/gemini-4-hydrogen`, выбираются по точному имени модели, если host его предоставляет. Варианты Gemini 4, GLM FlashX/Flash, Kimi K3.1 Pro/K3 и Muse Wonder/Spark не подменяют друг друга; cyber-permissive, legal, highspeed и Wonder Full автоматически не угадываются. Оптимизатор выбирает рекомендации, но не переключает модель, не открывает доступ у провайдера и не меняет API-настройки. Профили различают модельные источники, общие практики семейства и производные эвристики; см. [источники](SOURCES.md). Thinking, sampling, caching и требования к истории tool calls описаны отдельно в harness notes.
 
 ## Универсальные команды
 

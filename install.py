@@ -20,6 +20,7 @@ from installer.transaction import InstallTransaction, record_path as _record_pat
 from installer.locking import InstallLock as _InstallLock
 from installer.domain import InstallRequest as _InstallRequest
 from installer.planning import plan_install as _plan_install
+from installer.planning import shell_command
 from installer.executor import execute_plan as _execute_plan
 from installer.state import read_state
 from installer.lifecycle import (
@@ -51,7 +52,7 @@ START = "<!-- prompt-optimizer:auto:start -->"
 END = "<!-- prompt-optimizer:auto:end -->"
 MANAGED_HOOK_NAME = 'prompt-optimizer'
 MANAGED_HOOK_OWNER = 'universal-prompt-optimizer'
-_PLANNED_AUTO_ADAPTERS = frozenset({'opencode', 'pi', 'omp', 'cursor', 'gemini', 'claude', 'codex', 'copilot', 'windsurf'})
+_PLANNED_AUTO_ADAPTERS = frozenset({'opencode', 'pi', 'omp', 'cursor', 'gemini', 'claude', 'codex', 'copilot', 'windsurf', 'deepseek-harness'})
 IGNORE_START = '# prompt-optimizer:runtime:start'
 IGNORE_END = '# prompt-optimizer:runtime:end'
 
@@ -198,11 +199,32 @@ def validate_project_root(root: Path) -> None:
 def parse_agents(value: str) -> set[str]:
     vals={v.strip().lower() for v in value.split(',') if v.strip()}
     if not vals or 'all' in vals: return set(AGENTS)
-    aliases={'claude-code':'claude','gemini-cli':'gemini','github-copilot':'copilot','github-copilot-cli':'copilot','openai-codex':'codex'}
+    aliases={'claude-code':'claude','gemini-cli':'gemini','github-copilot':'copilot','github-copilot-cli':'copilot','openai-codex':'codex','dsh':'deepseek-harness','deepseek':'deepseek-harness'}
     vals={aliases.get(v,v) for v in vals}
     unknown=vals-AGENTS
     if unknown: raise SystemExit(L(f"Unknown agent(s): {', '.join(sorted(unknown))}", f"Неизвестные агенты: {', '.join(sorted(unknown))}"))
     return vals
+
+def install_deepseek_harness_skill(root: Path, *, backup=True, dry_run=False) -> str:
+    """Deploy the canonical skill to the Harness-native discovery directory.
+
+    Manual/no-auto installs use this path so the default Harness skill discovery
+    works even with a custom DSH_AGENTS_HOME; the automatic planner copies the
+    same canonical skill without this helper.
+    """
+    destination = root / '.dsh/skills'
+    if SKILLS_SRC.resolve() == destination.resolve():
+        fail(L(f"Refusing to overwrite package skills: {destination}", f"Отказано: нельзя перезаписывать skills самого пакета: {destination}"))
+    if destination.exists() and not destination.is_dir():
+        fail(L(f"DeepSeek Harness skills destination is not a directory: {destination}",
+               f"Назначение skills DeepSeek Harness не является каталогом: {destination}"))
+    if destination.is_symlink() or any(component.is_symlink() for component in destination.parents):
+        fail(L(f"Refusing to write through symlink: {destination}", f"Отказано: запись через символическую ссылку запрещена: {destination}"))
+    if dry_run: return L(f"would install DeepSeek Harness skills: {destination}", f"будут установлены skills DeepSeek Harness: {destination}")
+    destination.mkdir(parents=True, exist_ok=True)
+    copy_tree(SKILLS_SRC / 'prompt-optimizer', destination / 'prompt-optimizer', backup=backup,
+              label='DeepSeek Harness skill prompt-optimizer')
+    return L(f"installed DeepSeek Harness skills: {destination}", f"установлены skills DeepSeek Harness: {destination}")
 
 def backup_once(path: Path) -> None:
     if not path.exists(): return
@@ -476,6 +498,24 @@ def doctor(root: Path, scope: str) -> int:
     print(f'installer lock: {"present" if lock.exists() else "clear"}')
     if lock.exists():
         errors.append(f'stale or active installer lock: {lock}')
+    dsh_overlay = root / '.dsh/prompt-optimizer.patch.yml'
+    if dsh_overlay.exists():
+        try:
+            overlay = dsh_overlay.read_text(encoding='utf-8')
+        except (OSError, UnicodeError) as exc:
+            errors.append(f'unreadable DeepSeek Harness overlay {dsh_overlay}: {exc}')
+            print(f'deepseek-harness overlay: unreadable ({dsh_overlay})')
+        else:
+            if "name: './plugins/prompt-optimizer/index.mjs'" in overlay or 'name: "./plugins/prompt-optimizer/index.mjs"' in overlay:
+                print(f'deepseek-harness overlay: valid ({dsh_overlay})')
+                found += 1
+            else:
+                errors.append(f'DeepSeek Harness overlay does not reference ./plugins/prompt-optimizer/index.mjs: {dsh_overlay}')
+                print(f'deepseek-harness overlay: invalid ({dsh_overlay})')
+    dsh_plugin = root / '.dsh/plugins/prompt-optimizer/index.mjs'
+    if dsh_plugin.exists():
+        print(f'deepseek-harness plugin: present ({dsh_plugin})')
+        found += 1
     for logical, (source, destination) in installed_file_map(root, scope).items():
         if logical in {'shared-config', 'opencode-config'}:
             continue
@@ -719,7 +759,29 @@ def _execute_plan_checked(plan, *, dry_run: bool, backup: bool) -> None:
     except ValueError as exc:
         fail(L(str(exc), str(exc)))
 
-def _install_plan_messages(plan, *, dry_run: bool) -> list[str]:
+def deepseek_harness_hint(root: Path, scope: str, *, dry_run: bool = False) -> str:
+    """Return the exact activation instruction for the installed Cordis overlay.
+
+    The overlay path is quoted for the current platform so paths with spaces keep
+    working. Dry runs only describe the post-install activation command.
+    """
+    overlay = root / '.dsh/prompt-optimizer.patch.yml'
+    command = shell_command(['dsh', '--profile', 'web', '--patch', str(overlay)])
+    if dry_run:
+        return L(
+            f'To activate after installation: {command} (place --patch before the app arguments; '
+            f'global installs must pass --patch explicitly). The installer never edits your Harness profile, cordis.patch.yml or package manifests.',
+            f'Для активации после установки: {command} (указывайте --patch до аргументов приложения; '
+            f'при глобальной установке передайте --patch явно). Установщик не изменяет профиль Harness, cordis.patch.yml и манифесты пакетов.',
+        )
+    return L(
+        f'DeepSeek Harness plugin and skill installed. To activate after installation: {command} (place --patch before the app arguments; '
+        f'global installs must pass --patch explicitly). The installer never edits your Harness profile, cordis.patch.yml or package manifests.',
+        f'Плагин и skill DeepSeek Harness установлены. Для активации после установки: {command} (указывайте --patch до аргументов приложения; '
+        f'при глобальной установке передайте --patch явно). Установщик не изменяет профиль Harness, cordis.patch.yml и манифесты пакетов.',
+    )
+
+def _install_plan_messages(plan, *, dry_run: bool, root: Path | None = None, scope: str | None = None) -> list[str]:
     messages = []
     action = L("would install", "будет установлено") if dry_run else L("installed", "установлено")
     for operation in plan.operations:
@@ -731,6 +793,8 @@ def _install_plan_messages(plan, *, dry_run: bool) -> list[str]:
         elif operation.kind == "copy_tree" and operation.params and operation.params.get("include"):
             paths = [operation.path / name for name in operation.params["include"]]
         messages.extend(f"{action} {operation.label}: {path}" for path in paths)
+    if root is not None and any(operation.label == "DeepSeek Harness overlay" for operation in plan.operations):
+        messages.append(deepseek_harness_hint(root, scope or "project", dry_run=dry_run))
     return messages
 
 
@@ -742,16 +806,17 @@ def install_project(root: Path, selected: set[str], auto: bool, behavior: str, s
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
-        return _install_plan_messages(plan, dry_run=dry_run)
-    if not auto and selected <= {"opencode", "claude"}:
+        return _install_plan_messages(plan, dry_run=dry_run, root=root, scope="project")
+    if not auto and selected <= {"opencode", "claude", "deepseek-harness"}:
         request = _InstallRequest(root, "project", frozenset(selected), automatic=False, behavior=behavior,
                                   prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan_checked(plan, dry_run=dry_run, backup=backup)
-        return _install_plan_messages(plan, dry_run=dry_run)
+        return _install_plan_messages(plan, dry_run=dry_run, root=root, scope="project")
     out=[copy_skills(root/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(root/'.claude/skills',backup=backup,dry_run=dry_run))
+    if 'deepseek-harness' in selected: out.append(install_deepseek_harness_skill(root,backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',root/'.opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(root/'.opencode',backup=backup,dry_run=dry_run))
@@ -788,19 +853,20 @@ def install_global(home: Path, selected: set[str], auto: bool, behavior: str, sc
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
-        out = _install_plan_messages(plan, dry_run=dry_run)
+        out = _install_plan_messages(plan, dry_run=dry_run, root=home, scope="global")
         if 'cursor' in selected:
             out.append(L('Cursor global hook/rule installation is intentionally not automated because global hooks/rules are user-environment specific; use adapters/cursor/README.md or project install', 'Глобальная установка hook/rule для Cursor намеренно не автоматизируется, потому что глобальные hooks/rules зависят от окружения пользователя; используйте adapters/cursor/README.md или установку в проект'))
         return out
-    if not auto and selected <= {"opencode", "claude"}:
+    if not auto and selected <= {"opencode", "claude", "deepseek-harness"}:
         request = _InstallRequest(home, "global", frozenset(selected), automatic=False, behavior=behavior,
                                   prompt_scope=scope, quality_gate=quality_gate, unsupported_model=unsupported,
                                   dry_run=dry_run, backup=backup, python_bin=python_bin)
         plan = _plan_install(request, load_catalog(PACKAGE_ROOT))
         _execute_plan(plan, source_root=PACKAGE_ROOT, dry_run=dry_run, backup=backup)
-        return _install_plan_messages(plan, dry_run=dry_run)
+        return _install_plan_messages(plan, dry_run=dry_run, root=home, scope="global")
     out=[copy_skills(home/'.agents/skills',backup=backup,dry_run=dry_run)]
     if 'claude' in selected: out.append(copy_skills(home/'.claude/skills',backup=backup,dry_run=dry_run))
+    if 'deepseek-harness' in selected: out.append(install_deepseek_harness_skill(home,backup=backup,dry_run=dry_run))
     if 'opencode' in selected:
         out.append(copy_commands(PACKAGE_ROOT/'adapters/opencode/commands',home/'.config/opencode/commands',backup=backup,dry_run=dry_run))
         if auto: out.extend(install_opencode_tui(home/'.config/opencode',backup=backup,dry_run=dry_run))
@@ -845,11 +911,13 @@ def main():
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, 'reconfigure'):
             stream.reconfigure(encoding='utf-8')
-    ap=argparse.ArgumentParser(description=f'Install Universal Prompt Optimizer v{VERSION}')
+    ap=argparse.ArgumentParser(
+        description=f'Install Universal Prompt Optimizer v{VERSION}',
+        epilog='To update, rerun this installer from the new release folder in the same scope and target. Saved adapters and settings are preserved unless explicitly overridden.')
     ap.add_argument('--lang',choices=['en','ru'],default='en',help='Installer output language')
     ap.add_argument('--scope',choices=['project','global'],help='Installation location; prompted in a terminal, otherwise project')
     ap.add_argument('--project',default='.')
-    ap.add_argument('--agents',help='opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,all; defaults to installed agents or all')
+    ap.add_argument('--agents',help='opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,deepseek-harness,all; aliases: dsh, deepseek; defaults to installed agents or all')
     integration = ap.add_mutually_exclusive_group()
     integration.add_argument('--auto',action='store_true',default=None,help='Install automatic/preview/off adapter integration in addition to skills')
     integration.add_argument('--no-auto',dest='auto',action='store_false',help='Install skills/commands only')

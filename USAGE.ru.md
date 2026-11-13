@@ -39,6 +39,16 @@ python install.py --agents opencode --auto --scope project --project /path/to/pr
 
 Для OMP замените `--agents opencode` на `--agents omp`, включите `--auto` и перезапустите OMP. `/prompt-optimizer status` показывает состояние расширения; `/prompt-optimizer auto|preview|off` меняет режим только в текущей сессии. Пути загрузки и ограничения PREVIEW — в [руководстве OMP](adapters/omp/README.md).
 
+Для DeepSeek Harness (`dsh`) установите адаптер и запустите его из выбранного проекта:
+
+```bash
+python install.py --agents deepseek-harness --auto --scope project --project /path/to/project --yes
+cd /path/to/project
+dsh --profile web --patch .dsh/prompt-optimizer.patch.yml
+```
+
+Harness должен быть уже установлен: инсталлер не скачивает его и не запускает его пакетный менеджер. Для глобальной установки задайте `--scope global` и передавайте абсолютный путь созданного overlay при каждом запуске. `--patch` указывается до аргументов приложения. Используется общий JSON-конфиг ниже; PREVIEW — текстовый и рекомендательный. Настройки приватности самого Harness и ограничения полного системного промпта описаны в [руководстве Harness](adapters/deepseek-harness/README.md).
+
 ## 2. Отправьте обычную задачу
 
 При включённой автоматической интеграции пишите запрос как обычно:
@@ -151,6 +161,16 @@ Session override может влиять на результат до сброс
 Распакуйте новый релиз и повторите установку в ту же область и проект.
 Python и Bash без мастера сохраняют настройки; мастер Bash позволяет выбрать
 новые значения. Затем перезапустите агент.
+
+```bash
+# Обновить проектную установку до этого релиза, сохранив её настройки
+python install.py --scope project --project /path/to/project --yes
+# Обновить глобальную установку текущего пользователя
+python install.py --scope global --yes
+```
+
+В Windows замените `python` на `py -3`. Установщик показывает старую и новую
+версии; он не скачивает релиз и не добавляет новые адаптеры без явного выбора.
 
 Перед удалением просмотрите план:
 

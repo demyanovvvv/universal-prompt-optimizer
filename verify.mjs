@@ -111,9 +111,10 @@ if (tsc) {
       ".tmp-tests/opencode/tests/opencode-runtime.test.js",
       ".tmp-tests/opencode/tests/eval-contract.test.js",
       ".tmp-tests/opencode/tests/model-routing.test.js",
+      "tests/deepseek-harness-runtime.test.mjs",
     ]);
-    if (runtime.status === 0) ok("OpenCode runtime behavior tests", "Поведенческие тесты OpenCode runtime");
-    else fail(`OpenCode runtime tests: ${runtime.stdout}${runtime.stderr}`, `Поведенческие тесты OpenCode: ${runtime.stdout}${runtime.stderr}`);
+    if (runtime.status === 0) ok("OpenCode and DeepSeek Harness runtime behavior tests", "Поведенческие тесты OpenCode и DeepSeek Harness runtime");
+    else fail(`Runtime tests: ${runtime.stdout}${runtime.stderr}`, `Поведенческие тесты runtime: ${runtime.stdout}${runtime.stderr}`);
   } else {
     fail(`TypeScript test build: ${testTs.stdout}${testTs.stderr}`, `TypeScript test build: ${testTs.stdout}${testTs.stderr}`);
   }

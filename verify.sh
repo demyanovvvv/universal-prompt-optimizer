@@ -47,8 +47,8 @@ if [[ -n "$TSC_BIN" ]]; then
   "$TSC_BIN" -p tsconfig.verify.json
   ok "Синтаксис TypeScript" "TypeScript syntax"
   "$TSC_BIN" -p tsconfig.test.json
-  node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js .tmp-tests/opencode/tests/model-routing.test.js >/dev/null
-  ok "Поведенческие тесты OpenCode runtime" "OpenCode runtime behavior tests"
+  node --test .tmp-tests/opencode/tests/opencode-runtime.test.js .tmp-tests/opencode/tests/eval-contract.test.js .tmp-tests/opencode/tests/model-routing.test.js tests/deepseek-harness-runtime.test.mjs >/dev/null
+  ok "Поведенческие тесты OpenCode и DeepSeek Harness runtime" "OpenCode and DeepSeek Harness runtime behavior tests"
 else
   warn "tsc не найден — синтаксис TypeScript не проверен локально" "tsc not found — TypeScript syntax check skipped"
 fi

@@ -37,6 +37,16 @@ multi-agent installation and dry-run commands.
 
 For OMP, replace `--agents opencode` with `--agents omp`, enable `--auto`, and restart OMP. `/prompt-optimizer status` inspects the extension; `/prompt-optimizer auto|preview|off` changes session-only behavior. See the [OMP guide](adapters/omp/README.md) for loading paths and PREVIEW limitations.
 
+For DeepSeek Harness (`dsh`), install and start from the selected project:
+
+```bash
+python install.py --agents deepseek-harness --auto --scope project --project /path/to/project --yes
+cd /path/to/project
+dsh --profile web --patch .dsh/prompt-optimizer.patch.yml
+```
+
+Harness must already be installed; this installer does not download it or run its package manager. Global installation uses `--scope global`; pass the generated overlay's absolute path on every launch. `--patch` must precede app arguments. Configuration uses the same shared JSON below; PREVIEW is textual and advisory. See the [Harness guide](adapters/deepseek-harness/README.md) for host privacy settings and complete-prompt limitations.
+
 ## 2. Send a normal task
 
 Select the model in your host/provider; the optimizer does not switch it. All supported adapters share the [canonical profiles and aliases](.agents/skills/prompt-optimizer/references/model-registry.json), including Gemini 4 Hydrogen/Carbon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder. Automatic routing uses the exact model ID where observable, including provider-qualified IDs; otherwise name the exact profile when invoking the skill. DeepSeek V4.1 Flash and its `-1017` snapshot use one profile. Unknown variants still follow `skip`/`generic`. Thinking, sampling, cache and tool-history settings remain host-controlled; see each profile's linked harness notes and [source provenance](SOURCES.md).
@@ -150,6 +160,16 @@ See the [configuration guide](DECISION-GUIDE.md) for adapter-specific details.
 To update, extract the new release and reinstall into the same scope and target.
 Saved settings are preserved by Python/non-wizard updates; the Bash settings wizard
 lets you choose new values. Restart the agent afterward.
+
+```bash
+# Update an existing project installation to this release, keeping its settings
+python install.py --scope project --project /path/to/project --yes
+# Update the current user's global installation
+python install.py --scope global --yes
+```
+
+On Windows, replace `python` with `py -3`. The installer displays the previous and
+target versions; no release download or new adapter selection is performed.
 
 Preview removal before applying it:
 

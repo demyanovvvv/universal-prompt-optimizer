@@ -120,7 +120,7 @@ intentional changes with `npm run update:evals:baseline`.
 The manual real-provider workflow accepts that artifact name and its workflow run
 ID as the baseline, then writes the candidate report to the same `matrix.json`
 path before comparing the selected mode.
-- Real project-scope installation for all eight agents.
+- Real project-scope installation for all ten adapters.
 - Existing Prompt Optimizer JSON plus unrelated custom fields survives an update.
 - Cursor `scope=first`: first generation active, second inactive.
 - Pi session state is keyed by session ID.
@@ -154,6 +154,7 @@ path before comparing the selected mode.
 - Hook command planning covers global Gemini script location and Windows quoting.
 - Gemini routing covers every canonical alias and supported profile output.
 - Project Windsurf uninstall removes unchanged rules and preserves user edits.
+- DeepSeek Harness checks deploy canonical native skills plus an explicit overlay in both scopes; no host profile/YAML or dependency-manager changes. Runtime tests exercise the installed JavaScript with captured model selection, all canonical aliases, unknown/generic routes, AUTO/PREVIEW/OFF, exact quality gates, malformed global/project configuration and durable first-turn scope across tool steps and resume. The adapter uses no provider or telemetry clients; actual Harness boot compatibility must be reported separately from the deterministic service-contract tests.
 - OpenCode session duplicate protection does not discard a new turn merely because
   its text matches the previous turn; the current prompt is reserved before the
   context hook and only committed as processed after the decision.

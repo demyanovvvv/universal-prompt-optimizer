@@ -42,7 +42,7 @@ $ARGUMENTS
 class InstallerModuleTests(unittest.TestCase):
     def test_catalog_is_explicit_and_validates_unknown_adapter(self):
         value = catalog.load_catalog(ROOT)
-        self.assertEqual(value.ids, frozenset({"opencode", "codex", "cursor", "pi", "omp", "claude", "gemini", "copilot", "windsurf"}))
+        self.assertEqual(value.ids, frozenset({"opencode", "codex", "cursor", "pi", "omp", "claude", "gemini", "copilot", "windsurf", "deepseek-harness"}))
         with self.assertRaises(ValueError):
             value.require({"missing"})
 

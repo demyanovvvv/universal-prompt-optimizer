@@ -11,6 +11,9 @@ prompt; it is advisory, not a host-enforced execution barrier.
 ## Pi
 `before_agent_start` has `ctx.model`, so routing is exact. PREVIEW registers a custom `prompt_optimizer_preview` tool backed by `ctx.ui.confirm` and `ctx.ui.editor`. Pi session commands can toggle behavior without reinstalling.
 
+## DeepSeek Harness
+The Cordis plugin registers `ctx.systemPrompt.section()` with `interpolate: false` and resolves only the captured `modelSelection.model`. It preserves all other prompt sections, tools, route controls and history. `ctx.agents.turnBoundaryOf(agent.session).lastTurn` supplies first-turn eligibility across tool steps and resumed sessions. Install with `--agents deepseek-harness --auto` and pass the generated `.dsh/prompt-optimizer.patch.yml` via `--patch`; host profiles are unchanged. PREVIEW requests an exact textual prompt and explicit user confirmation, not a host execution barrier. A host `complete: true` prompt intentionally suppresses cooperative sections.
+
 ## Cursor
 `beforeSubmitPrompt` includes `model`, `model_id`, `model_params` in the common hook schema but cannot inject arbitrary additional context. The hook records those values to `.cursor/.prompt-optimizer-runtime.json`; the always rule consumes it.
 

@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.14
+# Source provenance — Universal Prompt Optimizer v5.15
 
 Checked: **2026-11-13** for Gemini 4 Hydrogen/Carbon/Argon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash, DeepSeek V4.1 Flash / 1017 and Muse Wonder. Other profiles retain their per-file checked dates. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
 
@@ -117,6 +117,7 @@ The registry supports provider-qualified model leaves and documented spelling al
 - OpenCode v2 plugins: https://opencode.ai/v2/docs/build/plugins/
 - OpenCode question tool: https://opencode.ai/docs/tools/
 - Pi extensions: https://pi.dev/docs/latest/extensions
+- DeepSeek Harness native adapter contract checked **2026-11-13**, upstream `0.2.2-rc.3` APIs: [system-prompt section registration](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/core/system-prompt/README.md), [assembly context](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/system-prompt.md), [model selection and durable turn boundary](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/core.md), [working directory](https://github.com/deepseek-ai/deepseek-harness/blob/master/docs/subsystems/working-directory.md), [CLI overlays and host telemetry](https://github.com/deepseek-ai/deepseek-harness/blob/master/apps/cli/reference/README.md), [native skill discovery](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/skill/skill-filesystem/README.md). This is host integration support, separate from the DeepSeek model profiles and API harness notes.
 - Cursor hooks: https://cursor.com/docs/hooks
 - Gemini CLI hooks: https://geminicli.com/docs/hooks/
 - Gemini CLI hook reference: https://geminicli.com/docs/hooks/reference/

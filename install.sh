@@ -5,7 +5,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PYTHON_BIN="${PYTHON_BIN:-}"
 VERSION="$(tr -d '\r\n' < "$SCRIPT_DIR/VERSION")"
 
-AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "OMP" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf")
+AGENT_NAMES=("OpenCode" "OpenAI Codex" "Cursor" "Pi" "OMP" "Claude Code" "Gemini CLI" "GitHub Copilot CLI" "Windsurf" "DeepSeek Harness")
 
 scope="project"
 scope_explicit=0
@@ -153,12 +153,15 @@ Universal Prompt Optimizer v${VERSION} — установщик
 поддерживаемых агентов или вручную отметить любое сочетание. Все настройки
 доступны прямо внутри мастера; флаги нужны только для автоматизации/CI.
 
+Обновление: запустите установщик из папки нового релиза в той же области и проекте.
+Без мастера установленные агенты и настройки сохраняются, если не заданы явно.
+
 Необязательные флаги:
   ru, --ru, -ru          Русский интерфейс
   en, --en, -en          Английский интерфейс
   --lang ru|en           Язык интерфейса
   --detect-agents        Автоопределение агентов без мастера
-  --agents all|opencode,cursor,...
+  --agents all|opencode,cursor,deepseek-harness,...
   --scope project|global
   --project PATH
   --auto | --no-auto
@@ -191,12 +194,15 @@ set with one Enter, choose all supported agents, or select any combination manua
 Every installer setting is configurable inside the wizard; CLI flags are optional and
 are kept only for automation/CI.
 
+Update: rerun the installer from the new release folder in the same scope and target.
+Non-wizard updates preserve installed agents and settings unless explicitly overridden.
+
 Optional flags:
   ru, --ru, -ru
   en, --en, -en
   --lang ru|en
   --detect-agents
-  --agents all|opencode,cursor,...
+  --agents all|opencode,cursor,deepseek-harness,...
   --scope project|global
   --project PATH
   --auto | --no-auto
@@ -271,6 +277,11 @@ agent_detect_reason() {
          || ( -n "$APPDATA_DIR" && -d "$APPDATA_DIR/Windsurf" ) \
          || ( -n "$LOCALAPPDATA_DIR" && -d "$LOCALAPPDATA_DIR/Programs/Windsurf" ) ]] && { echo "$app_label"; return 0; }
       ;;
+    deepseek-harness)
+      command_exists dsh && { echo "$command_label: dsh"; return 0; }
+      command_exists deepseek-harness && { echo "$command_label: deepseek-harness"; return 0; }
+      [[ -d "$p/.dsh" || -d "$h/.dsh" ]] && { echo "$config_label"; return 0; }
+      ;;
   esac
   return 1
 }
@@ -330,8 +341,9 @@ read_yes_no() {
 }
 
 manual_agent_selector() {
-  local -a selected=(0 0 0 0 0 0 0 0)
+  local -a selected=()
   local i input token
+  for i in "${!AGENT_IDS[@]}"; do selected[$i]=0; done
   for i in "${!AGENT_IDS[@]}"; do agent_detect_reason "${AGENT_IDS[$i]}" >/dev/null 2>&1 && selected[$i]=1; done
   while true; do
     if [[ "$UI_LANG" == "ru" ]]; then
@@ -367,8 +379,12 @@ manual_agent_selector() {
         d|detect|авто)
           for i in "${!selected[@]}"; do selected[$i]=0; agent_detect_reason "${AGENT_IDS[$i]}" >/dev/null 2>&1 && selected[$i]=1; done
           ;;
-        [1-8]) i=$((token-1)); [[ "${selected[$i]}" -eq 1 ]] && selected[$i]=0 || selected[$i]=1 ;;
-        *) echo "$(tr_ui ignored): $token" ;;
+        ''|*[!0-9]*) echo "$(tr_ui ignored): $token" ;;
+        *)
+          i=$((10#$token - 1))  # base-10 so '08' is not parsed as octal
+          [[ "$i" -ge 0 && "$i" -lt "${#AGENT_IDS[@]}" ]] || { echo "$(tr_ui ignored): $token"; continue; }
+          [[ "${selected[$i]}" -eq 1 ]] && selected[$i]=0 || selected[$i]=1
+          ;;
       esac
     done
   done
@@ -618,7 +634,7 @@ show_summary() {
   # Surface adapter limitations before installation instead of hiding them in README.
   if [[ $auto_integration -eq 1 ]]; then
     local selected_csv=",${agents_arg},"
-    [[ "$agents_arg" == "all" ]] && selected_csv=",opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,"
+    [[ "$agents_arg" == "all" ]] && selected_csv=",opencode,codex,cursor,pi,omp,claude,gemini,copilot,windsurf,deepseek-harness,"
     if [[ "$behavior" == "preview" && "$selected_csv" =~ ,(codex|copilot|windsurf), ]]; then
       if [[ "$UI_LANG" == "ru" ]]; then
         printf '\n%bПримечание:%b для Codex/Copilot/Windsurf PREVIEW зависит от доступного UI агента и может работать как текстовый preview + явное подтверждение.\n' "$YELLOW" "$RESET"
@@ -646,6 +662,19 @@ show_summary() {
       else
         printf '%bNote:%b Gemini CLI does not expose the resolved model in BeforeAgent. If GEMINI_MODEL/model.name is not an exact ID, the first turn with SKIP passes without model-specific preflight; BeforeModel records the exact model for later turns. Choose GENERIC for a neutral first-turn preflight.\n' "$YELLOW" "$RESET"
       fi
+    fi
+  fi
+  if [[ $auto_integration -eq 1 && ( "${agents_arg}" == "all" || ",${agents_arg}," == *",deepseek-harness,"* ) ]]; then
+    local overlay_root="$project"
+    [[ "$scope" == "global" ]] && overlay_root="$HOME"
+    local overlay="$overlay_root/.dsh/prompt-optimizer.patch.yml"
+    # %q quotes the path safely for the current shell (spaces, apostrophes).
+    local command
+    printf -v command 'dsh --profile web --patch %q' "$overlay"
+    if [[ "$UI_LANG" == "ru" ]]; then
+      printf '%bАктивация DeepSeek Harness:%b %s (укажите --patch до аргументов приложения; профиль и cordis.patch.yml не изменяются).\n' "$CYAN" "$RESET" "$command"
+    else
+      printf '%bDeepSeek Harness activation:%b %s (place --patch before the app arguments; your profile and cordis.patch.yml are never modified).\n' "$CYAN" "$RESET" "$command"
     fi
   fi
 }

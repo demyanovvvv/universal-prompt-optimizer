@@ -148,6 +148,19 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
     if "omp" in request.adapters and request.automatic:
         base = root / (".omp/extensions" if request.scope == "project" else ".omp/agent/extensions")
         operations.append(Operation("copy_tree", base, source=Path("adapters/omp/extensions"), label="OMP extension"))
+    if "deepseek-harness" in request.adapters:
+        # The canonical skill copy at .dsh/skills is the Harness discovery target.
+        # An automatic install additionally deploys the Cordis plugin and the
+        # installer-owned overlay; manual installs only provide the native skill.
+        operations.append(Operation("copy_tree", root / ".dsh/skills", source=Path(".agents/skills"),
+                                    label="DeepSeek Harness skills", params=skill_params))
+        if request.automatic:
+            operations.append(Operation("copy_tree", root / ".dsh/plugins/prompt-optimizer",
+                                        source=Path("adapters/deepseek-harness/plugin"),
+                                        label="DeepSeek Harness plugin"))
+            operations.append(Operation("copy_file", root / ".dsh/prompt-optimizer.patch.yml",
+                                        source=Path("adapters/deepseek-harness/prompt-optimizer.patch.yml"),
+                                        label="DeepSeek Harness overlay"))
     runtime_ignores: list[str] = []
     if request.automatic and request.scope == "project" and "cursor" in request.adapters:
         operations.extend((

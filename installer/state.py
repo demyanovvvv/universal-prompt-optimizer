@@ -35,6 +35,13 @@ def owned_path(root: Path, scope: str, relative: str) -> Path:
     files.update(mapping["pi-extension"][1] / name for name in ("prompt-optimizer.ts", "model-registry.ts", "prompt-optimizer/runtime.ts"))
     # OMP also shares its native extension root with unrelated user modules.
     files.update(mapping["omp-extension"][1] / "prompt-optimizer" / name for name in ("index.ts", "runtime.ts", "model-registry.ts"))
+    # DeepSeek Harness owns only its plugin tree and overlay inside <root>/.dsh;
+    # the native skill copy is limited to the canonical prompt-optimizer skill.
+    if mapping["dsh-skills"][1] / "prompt-optimizer" in path.parents:
+        return path
+    if mapping["dsh-plugin"][1] in path.parents:
+        return path
+    files.add(mapping["dsh-overlay"][1])
     if path not in files:
         raise ValueError(f"inventory path is not package-owned: {relative}")
     return path

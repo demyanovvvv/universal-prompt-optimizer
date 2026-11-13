@@ -1,4 +1,4 @@
-# OpenCode adapter — v5.14
+# OpenCode adapter — v5.15
 
 Start with [Usage](../../USAGE.md) or [Руководство пользователя](../../USAGE.ru.md)
 for installation, first tasks, settings, updates, and troubleshooting.

@@ -1,0 +1,12 @@
+# Prompt Optimizer overlay for the DeepSeek Harness (Cordis) profile system.
+#
+# This file is owned by the installer: do not merge it into a user profile or
+# cordis.patch.yml. Apply it explicitly, before the app arguments:
+#
+#   dsh --profile web --patch <overlay> ...
+#   dsh --profile web --patch ~/.dsh/prompt-optimizer.patch.yml ...
+#
+# The plugin path is resolved relative to this overlay file.
+- insert:
+    - id: universal-prompt-optimizer
+      name: './plugins/prompt-optimizer/index.mjs'

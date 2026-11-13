@@ -8,7 +8,7 @@ import { clearSessionSettings, loadSessionSettings } from "./tui-config"
 import { TurnStore } from "./turn-store"
 import type { ModelResolution, Profile, SessionOverride, SessionState } from "./types"
 
-// Universal Prompt Optimizer v5.14
+// Universal Prompt Optimizer v5.15
 
 type Settings = import("./types").Settings
 
