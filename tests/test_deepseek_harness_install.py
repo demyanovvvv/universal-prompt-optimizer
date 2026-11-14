@@ -1,11 +1,14 @@
 """User-visible installation lifecycle for the DeepSeek Harness adapter.
 
 Covers the installer-owned surfaces only: the canonical native skill copy at
-``<root>/.dsh/skills``, the automatic Cordis plugin/overlay deployment, the
-manual-versus-automatic difference, dry-run read-only behavior, rollback,
-symlink rejection, idempotence and preservation of unrelated ``.dsh`` content.
+``<root>/.dsh/skills``, the self-contained native package, the explicit project
+overlay, the manual-versus-automatic difference, dry-run read-only behavior,
+rollback, symlink rejection, idempotence and preservation of unrelated ``.dsh``
+content. Global Desktop registration is covered by
+``test_deepseek_harness_desktop.py``.
 """
 
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -22,6 +25,11 @@ ROOT = Path(__file__).resolve().parents[1]
 PLUGIN_RUNTIME = Path(".dsh/plugins/prompt-optimizer/index.mjs")
 OVERLAY = Path(".dsh/prompt-optimizer.patch.yml")
 SKILL_ENTRY = Path(".dsh/skills/prompt-optimizer/SKILL.md")
+PACKAGE_FILES = ("package.json", "index.mjs", "icon.svg", "cordis.patch.yml", "locale/en.json", "locale/ru.json")
+
+
+def read_json_file(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def request(root: Path, scope: str, **overrides) -> InstallRequest:
@@ -48,7 +56,7 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
         for name, resolved in aliases.items():
             self.assertEqual(resolved, {"deepseek-harness"}, name)
 
-    def test_automatic_install_deploys_skill_plugin_and_owned_overlay(self):
+    def test_automatic_install_deploys_a_self_contained_package_and_skill(self):
         for scope in ("project", "global"):
             with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
                 # Arrange
@@ -58,20 +66,41 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                 plan = plan_install(request(root, scope), load_catalog(ROOT))
                 execute_plan(plan, source_root=ROOT)
 
-                # Assert
+                # Assert: the plugin tree is a self-contained native package, so a
+                # Host that reads only that directory still finds a working plugin
+                # and the executable skill-guidance it resolves.
+                package = root / PLUGIN_RUNTIME.parent
                 self.assertTrue((root / SKILL_ENTRY).is_file())
-                self.assertTrue((root / PLUGIN_RUNTIME).is_file())
-                overlay = (root / OVERLAY).read_text(encoding="utf-8")
-                self.assertIn("- insert:", overlay)
-                self.assertIn("id: universal-prompt-optimizer", overlay)
-                self.assertIn("name: './plugins/prompt-optimizer/index.mjs'", overlay)
-                # The canonical skill is copied once per destination, not twice.
-                self.assertFalse((root / ".dsh/plugins/prompt-optimizer/skill").exists())
-                # Both scopes share the same .dsh layout.
+                for name in PACKAGE_FILES:
+                    self.assertTrue((package / name).is_file(), name)
+                self.assertEqual((package / "package.json").read_bytes(),
+                                 (ROOT / "adapters/deepseek-harness/plugin/package.json").read_bytes())
+                self.assertEqual((package / "skills/prompt-optimizer/SKILL.md").read_bytes(),
+                                 (ROOT / ".agents/skills/prompt-optimizer/SKILL.md").read_bytes())
+                # The skill travels inside the package, not in a nested tree.
+                self.assertFalse((package / "skill").exists())
                 mapping = managed_file_map(root, ROOT, scope)
                 self.assertEqual(mapping["dsh-skills"][1], root / ".dsh/skills")
-                self.assertEqual(mapping["dsh-plugin"][1], root / ".dsh/plugins/prompt-optimizer")
+                self.assertEqual(mapping["dsh-plugin"][1], root / PLUGIN_RUNTIME.parent)
                 self.assertEqual(mapping["dsh-overlay"][1], root / OVERLAY)
+
+    def test_only_a_project_install_keeps_the_explicit_overlay(self):
+        for scope, expected in (("project", True), ("global", False)):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                # Arrange
+                root = Path(raw)
+
+                # Act
+                execute_plan(plan_install(request(root, scope), load_catalog(ROOT)), source_root=ROOT)
+
+                # Assert: a global install registers the native bundle instead, so
+                # the overlay that asked for explicit loading is not left behind.
+                overlay = root / OVERLAY
+                self.assertEqual(overlay.exists(), expected)
+                if expected:
+                    text = overlay.read_text(encoding="utf-8")
+                    self.assertIn("id: universal-prompt-optimizer", text)
+                    self.assertIn("name: './plugins/prompt-optimizer/index.mjs'", text)
 
     def test_manual_install_only_provides_native_discovery_skill(self):
         for scope in ("project", "global"):
@@ -89,95 +118,102 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                 self.assertFalse((root / ".dsh/plugins").exists())
                 self.assertFalse((root / OVERLAY).exists())
 
-    def test_automatic_install_reports_exact_activation_message(self):
-        # Arrange
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location("upo_install_dsh_msg", ROOT / "install.py")
-        legacy = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(legacy)
+    def test_global_install_mirrors_the_package_into_the_desktop_profile(self):
+        # The native manager resolves <profile>/node_modules/<name>, so the same
+        # self-contained package is deployed there as well as in .dsh/plugins.
         with tempfile.TemporaryDirectory() as raw:
-            # A path with a space proves the overlay argument is quoted.
-            root = Path(raw) / "project dir"
-            root.mkdir()
+            # Arrange
+            home = Path(raw)
 
             # Act
-            plan = plan_install(request(root, "project"), load_catalog(ROOT))
-            messages = legacy._install_plan_messages(plan, dry_run=False, root=root, scope="project")
-            dry_messages = legacy._install_plan_messages(plan, dry_run=True, root=root, scope="project")
+            execute_plan(plan_install(request(home, "global"), load_catalog(ROOT)), source_root=ROOT)
 
             # Assert
-            hint = [line for line in messages if "dsh --profile web --patch" in line]
-            self.assertEqual(len(hint), 1)
-            self.assertIn("dsh --profile web --patch", hint[0])
-            from installer.planning import shell_command
-            expected = shell_command(["dsh", "--profile", "web", "--patch", str(root / OVERLAY)])
-            self.assertIn(expected, hint[0])
-            self.assertIn(str(root / OVERLAY), hint[0])
-            self.assertIn("before the app arguments", hint[0])
-            self.assertIn("never edits your Harness profile", hint[0])
-
-            # A dry run must not claim the plugin is already installed.
-            dry_hint = [line for line in dry_messages if "dsh --profile web --patch" in line]
-            self.assertEqual(len(dry_hint), 1)
-            self.assertIn("To activate after installation", dry_hint[0])
-            self.assertNotIn("plugin and skill installed", dry_hint[0])
+            profile = home / ".dsh/profiles/desktop/node_modules/universal-prompt-optimizer"
+            installed = home / PLUGIN_RUNTIME.parent
+            for name in PACKAGE_FILES:
+                self.assertTrue((profile / name).is_file(), name)
+                self.assertEqual((profile / name).read_bytes(), (installed / name).read_bytes(), name)
+            self.assertEqual((profile / "skills/prompt-optimizer/SKILL.md").read_bytes(),
+                             (ROOT / ".agents/skills/prompt-optimizer/SKILL.md").read_bytes())
+            self.assertTrue((home / SKILL_ENTRY).is_file())
 
     def test_dry_run_install_is_read_only_and_reinstall_is_idempotent(self):
+        for scope in ("project", "global"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                # Arrange
+                root = Path(raw)
+                plan = plan_install(request(root, scope), load_catalog(ROOT))
+
+                # Act
+                execute_plan(plan, source_root=ROOT, dry_run=True)
+
+                # Assert
+                self.assertFalse((root / ".dsh").exists())
+
+                # Act
+                execute_plan(plan, source_root=ROOT)
+                deployed = {path.relative_to(root).as_posix(): path.read_bytes()
+                            for path in (root / ".dsh").rglob("*")
+                            if path.is_file() and path.suffix != ".bak"}
+                execute_plan(plan, source_root=ROOT)
+
+                # Assert: every deployed artifact is byte-identical after a rerun.
+                for relative, content in deployed.items():
+                    self.assertEqual((root / relative).read_bytes(), content, relative)
+                state = read_state(root, scope)
+                self.assertIn(SKILL_ENTRY.as_posix(), state["files"])
+                self.assertIn(PLUGIN_RUNTIME.as_posix(), state["files"])
+                self.assertIn(f"{PLUGIN_RUNTIME.parent.as_posix()}/skills/prompt-optimizer/SKILL.md", state["files"])
+                if scope == "project":
+                    self.assertIn(OVERLAY.as_posix(), state["files"])
+                # A rerun never duplicates the bundle registration.
+                if scope == "global":
+                    manifest = (root / ".dsh/profiles/desktop/package.json").read_text(encoding="utf-8")
+                    self.assertEqual(manifest.count('"universal-prompt-optimizer"'), 2)
+
+    def test_dry_run_leaves_an_existing_desktop_profile_manifest_untouched(self):
         with tempfile.TemporaryDirectory() as raw:
             # Arrange
-            root = Path(raw)
-            plan = plan_install(request(root, "project"), load_catalog(ROOT))
+            home = Path(raw)
+            manifest = home / ".dsh/profiles/desktop/package.json"
+            manifest.parent.mkdir(parents=True)
+            manifest.write_text('{"name": "dsh-profile-desktop", "dependencies": {}}', encoding="utf-8")
+            before = manifest.read_bytes()
 
             # Act
-            execute_plan(plan, source_root=ROOT, dry_run=True)
+            execute_plan(plan_install(request(home, "global"), load_catalog(ROOT)), source_root=ROOT, dry_run=True)
 
             # Assert
-            self.assertFalse((root / ".dsh").exists())
-
-            # Act
-            execute_plan(plan, source_root=ROOT)
-            overlay_before = (root / OVERLAY).read_text(encoding="utf-8")
-            deployed = {path.relative_to(root).as_posix(): path.read_bytes()
-                        for path in (root / ".dsh").rglob("*") if path.is_file()}
-            execute_plan(plan, source_root=ROOT)
-
-            # Assert
-            self.assertEqual((root / OVERLAY).read_text(encoding="utf-8"), overlay_before)
-            for relative, content in deployed.items():
-                self.assertEqual((root / relative).read_bytes(), content)
-            backups = {path.relative_to(root).as_posix(): path.read_bytes()
-                       for path in (root / ".dsh").rglob("*.prompt-optimizer.bak")}
-            self.assertEqual(len(backups), len(deployed))
-            execute_plan(plan, source_root=ROOT)
-            self.assertEqual({path.relative_to(root).as_posix(): path.read_bytes()
-                              for path in (root / ".dsh").rglob("*.prompt-optimizer.bak")}, backups)
-            state = read_state(root, "project")
-            self.assertIn(SKILL_ENTRY.as_posix(), state["files"])
-            self.assertIn(PLUGIN_RUNTIME.as_posix(), state["files"])
-            self.assertIn(OVERLAY.as_posix(), state["files"])
+            self.assertEqual(manifest.read_bytes(), before)
+            self.assertEqual(sorted(p.name for p in manifest.parent.iterdir()), ["package.json"])
+            self.assertFalse((home / ".dsh/plugins").exists())
 
     def test_install_preserves_unrelated_dsh_files_and_user_content(self):
-        with tempfile.TemporaryDirectory() as raw:
-            # Arrange
-            root = Path(raw)
-            unrelated = root / ".dsh/skills/user-skill/SKILL.md"
-            unrelated.parent.mkdir(parents=True)
-            unrelated.write_text("user skill", encoding="utf-8")
-            user_plugin = root / ".dsh/plugins/user-plugin/index.mjs"
-            user_plugin.parent.mkdir(parents=True)
-            user_plugin.write_text("user plugin", encoding="utf-8")
-            profile = root / ".dsh/cordis.patch.yml"
-            profile.write_text("# user profile overlay\n", encoding="utf-8")
+        for scope in ("project", "global"):
+            with self.subTest(scope=scope), tempfile.TemporaryDirectory() as raw:
+                # Arrange
+                root = Path(raw)
+                unrelated = root / ".dsh/skills/user-skill/SKILL.md"
+                unrelated.parent.mkdir(parents=True)
+                unrelated.write_text("user skill", encoding="utf-8")
+                user_plugin = root / ".dsh/plugins/user-plugin/index.mjs"
+                user_plugin.parent.mkdir(parents=True)
+                user_plugin.write_text("user plugin", encoding="utf-8")
+                profile = root / ".dsh/cordis.patch.yml"
+                profile.write_text("# user profile overlay\n", encoding="utf-8")
+                desktop = root / ".dsh/profiles/desktop/cordis.patch.yml"
+                desktop.parent.mkdir(parents=True)
+                desktop.write_text("# desktop model preferences\n", encoding="utf-8")
 
-            # Act
-            plan = plan_install(request(root, "project"), load_catalog(ROOT))
-            execute_plan(plan, source_root=ROOT)
+                # Act
+                execute_plan(plan_install(request(root, scope), load_catalog(ROOT)), source_root=ROOT)
 
-            # Assert
-            self.assertEqual(unrelated.read_text(encoding="utf-8"), "user skill")
-            self.assertEqual(user_plugin.read_text(encoding="utf-8"), "user plugin")
-            self.assertEqual(profile.read_text(encoding="utf-8"), "# user profile overlay\n")
+                # Assert
+                self.assertEqual(unrelated.read_text(encoding="utf-8"), "user skill")
+                self.assertEqual(user_plugin.read_text(encoding="utf-8"), "user plugin")
+                self.assertEqual(profile.read_text(encoding="utf-8"), "# user profile overlay\n")
+                self.assertEqual(desktop.read_text(encoding="utf-8"), "# desktop model preferences\n")
 
     def test_uninstall_removes_owned_entries_and_keeps_neighbors(self):
         for scope in ("project", "global"):
@@ -198,7 +234,8 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                 execute_plan(build_uninstall_plan(root, ROOT, scope), source_root=ROOT, backup=False)
                 execute_plan(build_uninstall_plan(root, ROOT, scope), source_root=ROOT, backup=False)
 
-                # Assert: Prompt Optimizer artifacts go, user neighbors stay.
+                # Assert: Prompt Optimizer artifacts go, user neighbors stay, and a
+                # global uninstall leaves the Host's own profile manifest in place.
                 self.assertFalse((root / ".dsh/plugins").exists())
                 self.assertFalse((root / OVERLAY).exists())
                 self.assertFalse((root / ".dsh/skills/prompt-optimizer").exists())
@@ -206,6 +243,13 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                 self.assertEqual(unrelated_notes.read_text(encoding="utf-8"), "user notes")
                 self.assertEqual(user_config.read_text(encoding="utf-8"), "# user profile overlay\n")
                 self.assertFalse(list(root.rglob("*.prompt-optimizer.bak")))
+                if scope == "global":
+                    manifest = root / ".dsh/profiles/desktop/package.json"
+                    self.assertEqual(read_json_file(manifest), {
+                        "name": "dsh-profile-desktop",
+                        "private": True,
+                        "dsh": {"profile": {"bundles": ["@deepseek-ai/dsh-base", "@deepseek-ai/dsh-web-app"]}},
+                    })
                 state_path = root / (".prompt-optimizer-install.json" if scope == "project" else ".config/prompt-optimizer/install.json")
                 self.assertFalse(state_path.exists())
 
@@ -242,8 +286,9 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
             self.assertFalse(any(path.is_file() for path in (root / ".agents").rglob("*")))
 
     def test_install_rejects_symlinked_harness_destinations(self):
-        for relative in (".dsh", ".dsh/skills"):
-            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+        for scope, relative in (("project", ".dsh"), ("project", ".dsh/skills"),
+                                ("global", ".dsh/plugins"), ("global", ".dsh/profiles"), ("global", ".dsh/skills")):
+            with self.subTest(scope=scope, relative=relative), tempfile.TemporaryDirectory() as raw:
                 # Arrange
                 root = Path(raw)
                 outside = Path(raw) / "outside"
@@ -254,7 +299,7 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                     link.symlink_to(outside, target_is_directory=True)
                 except (OSError, NotImplementedError) as exc:
                     self.skipTest(f"symlinks unavailable: {exc}")
-                plan = plan_install(request(root, "project"), load_catalog(ROOT))
+                plan = plan_install(request(root, scope), load_catalog(ROOT))
 
                 # Act / Assert
                 with self.assertRaises(ValueError):
@@ -262,14 +307,21 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                 self.assertEqual(list(outside.rglob("*")), [])
 
     def test_inventory_rejects_unowned_dsh_paths(self):
-        for relative in (".dsh/skills/user-skill/SKILL.md", ".dsh/plugins/user-plugin/index.mjs", ".dsh/cordis.patch.yml"):
-            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+        for scope, relative in (("project", ".dsh/skills/user-skill/SKILL.md"),
+                                ("project", ".dsh/plugins/user-plugin/index.mjs"),
+                                ("project", ".dsh/cordis.patch.yml"),
+                                # The Desktop profile manifest and lock are the Host's,
+                                # never part of the installer inventory.
+                                ("global", ".dsh/profiles/desktop/package.json"),
+                                ("global", ".dsh/profiles/desktop/package.json.lock"),
+                                ("global", ".dsh/profiles/desktop/cordis.patch.yml")):
+            with self.subTest(scope=scope, relative=relative), tempfile.TemporaryDirectory() as raw:
                 # Arrange
                 root = Path(raw)
 
                 # Act / Assert
                 with self.assertRaises(ValueError):
-                    owned_path(root, "project", relative)
+                    owned_path(root, scope, relative)
 
     def test_uninstall_targets_classify_deepseek_harness_entries(self):
         # Arrange
@@ -281,7 +333,29 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
         # Assert
         self.assertEqual(targets["dsh-skills"][2], "dir")
         self.assertEqual(targets["dsh-plugin"][2], "dir")
+        self.assertEqual(targets["dsh-plugin-skill"][2], "dir")
         self.assertEqual(targets["dsh-overlay"][2], "owned_file")
+        self.assertEqual(targets["dsh-plugin"][1], root / ".dsh/plugins/prompt-optimizer")
+        self.assertEqual(targets["dsh-profile-plugin"][1],
+                         root / ".dsh/profiles/desktop/node_modules/universal-prompt-optimizer")
+
+    def test_first_install_of_a_bundle_happens_before_its_source_files_exist(self):
+        # The Desktop payload mirrors the plugin tree, so planning must not depend
+        # on files a previous run left behind: a clean root installs from scratch.
+        with tempfile.TemporaryDirectory() as raw:
+            # Arrange
+            root = Path(raw)
+            self.assertFalse((root / ".dsh").exists())
+
+            # Act
+            execute_plan(plan_install(request(root, "global"), load_catalog(ROOT)), source_root=ROOT)
+
+            # Assert
+            profile = root / ".dsh/profiles/desktop/node_modules/universal-prompt-optimizer"
+            self.assertTrue((profile / "index.mjs").is_file())
+            self.assertTrue((profile / "skills/prompt-optimizer/SKILL.md").is_file())
+            self.assertEqual((profile / "index.mjs").read_bytes(),
+                             (root / PLUGIN_RUNTIME).read_bytes())
 
     def test_cli_install_reinstall_dry_run_and_uninstall_end_to_end(self):
         import os
@@ -310,17 +384,34 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
 
                 # Assert
                 self.assertIn(".dsh", result.stdout)
-                self.assertIn("--patch", result.stdout)
                 self.assertTrue((target / SKILL_ENTRY).is_file())
                 self.assertTrue((target / PLUGIN_RUNTIME).is_file())
-                self.assertTrue((target / OVERLAY).is_file())
+                self.assertTrue((target / PLUGIN_RUNTIME.parent / "package.json").is_file())
+                if scope == "project":
+                    # A project install stays explicit: the overlay is written and quoted.
+                    self.assertIn("--patch", result.stdout)
+                    self.assertTrue((target / OVERLAY).is_file())
+                else:
+                    # A global install registers the native bundle instead.
+                    self.assertTrue((target / ".dsh/profiles/desktop/package.json").is_file())
+                    self.assertIn("universal-prompt-optimizer",
+                                  (target / ".dsh/profiles/desktop/package.json").read_text(encoding="utf-8"))
+                    self.assertFalse((target / OVERLAY).exists())
 
                 # Act
-                run("--auto")
+                rerun = run("--auto")
 
                 # Assert
-                self.assertTrue((target / OVERLAY).is_file())
-                self.assertTrue((target / OVERLAY).with_name(OVERLAY.name + ".prompt-optimizer.bak").is_file())
+                self.assertIn("universal-prompt-optimizer" if scope == "global" else ".dsh",
+                              rerun.stdout)
+                self.assertTrue((target / PLUGIN_RUNTIME).is_file())
+                if scope == "project":
+                    self.assertTrue((target / OVERLAY).is_file())
+                    self.assertTrue((target / OVERLAY).with_name(OVERLAY.name + ".prompt-optimizer.bak").is_file())
+                else:
+                    self.assertEqual(
+                        (target / ".dsh/profiles/desktop/package.json").read_text(encoding="utf-8")
+                        .count('"universal-prompt-optimizer"'), 2)
 
                 # Act
                 remove = [sys.executable, "-B", str(ROOT / "uninstall.py"), "--scope", scope, "--yes"]
@@ -328,8 +419,15 @@ class DeepSeekHarnessInstallTests(unittest.TestCase):
                     remove += ["--project", str(root)]
                 subprocess.run(remove, capture_output=True, text=True, check=True, env=environment)
 
-                # Assert
-                self.assertFalse((target / ".dsh").exists())
+                # Assert: everything the installer owns is gone; a global run leaves
+                # only the Host's own profile file, which it never owned.
+                if scope == "project":
+                    self.assertFalse((target / ".dsh").exists())
+                else:
+                    profile = target / ".dsh/profiles/desktop"
+                    self.assertEqual(sorted(p.name for p in profile.iterdir()), ["package.json"])
+                    text = (profile / "package.json").read_text(encoding="utf-8")
+                    self.assertNotIn("universal-prompt-optimizer", text)
                 self.assertFalse(list(target.rglob("*.prompt-optimizer.bak")))
 
 

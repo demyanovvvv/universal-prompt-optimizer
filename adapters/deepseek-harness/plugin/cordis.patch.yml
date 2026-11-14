@@ -1,0 +1,4 @@
+ # Use a readable row ID while retaining the package name as the module reference.
+ - insert:
+     - id: prompt-optimizer
+       name: 'universal-prompt-optimizer'

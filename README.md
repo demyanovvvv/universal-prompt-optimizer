@@ -1,11 +1,11 @@
-# Universal Prompt Optimizer v5.15
+# Universal Prompt Optimizer v5.16
 
 **Language:** English · [Русский README](README.ru.md)
 
 **Quick links:** [Usage guide](USAGE.md) · [Installation](#installation) · [Commands](#universal-commands) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md)
 
-Adaptive, model-aware prompt optimization for coding agents. Preserves user
-intent and constraints, with no extra LLM calls.
+Model-aware optimization of coding-agent prompts. Preserves user intent and
+constraints without extra model calls.
 
 Write a natural request. The active agent applies only useful guidance for its
 resolved model and executes in the same model turn. Clear requests stay lean;
@@ -18,7 +18,7 @@ and lower total tokens per completed task. No separate optimizer LLM call is req
 
 - **Adaptive preflight:** PASS keeps precise requests lean, LIGHT adds a missing
   boundary, and FULL builds a concise brief for complex tasks.
-- **Exact model routing:** 26 internal profiles cover supported OpenAI, Claude,
+- **Exact model routing:** 34 internal profiles cover supported OpenAI, Claude,
   DeepSeek, GLM, Gemini, and other models. Unknown or ambiguous IDs follow the
   configured `generic` or `skip` policy without guessing a model variant.
 - **AUTO / PREVIEW / OFF:** choose silent adaptation, review before execution,
@@ -40,7 +40,7 @@ see the [compatibility matrix](COMPATIBILITY.md).
 
 For OMP installation, commands, and approval limitations, see the [OMP adapter guide](adapters/omp/README.md). OMP has its own native extension; the Pi package is not interchangeable with OMP.
 
-For DeepSeek Harness, install with `--agents deepseek-harness --auto` (alias `dsh`), then launch with the generated `.dsh/prompt-optimizer.patch.yml` overlay. Loading is explicit, not automatic profile discovery; see the [DeepSeek Harness guide](adapters/deepseek-harness/README.md).
+For DeepSeek Harness, `--scope global --agents deepseek-harness --auto` (alias `dsh`) installs and registers a native Desktop plugin with an icon and English/Russian display text. In the Components list it uses the short ID `prompt-optimizer`; the installed package and profile dependency remain `universal-prompt-optimizer`. Project-scope CLI launches retain the explicit `.dsh/prompt-optimizer.patch.yml` overlay. Uninstall removes only Harness entries recorded as installer-owned. See the [DeepSeek Harness guide](adapters/deepseek-harness/README.md).
 
 ## Universal commands
 
@@ -230,7 +230,9 @@ replaces package files, including obsolete files recorded by earlier installs.
 Python and non-wizard Bash runs retain native integration and current shared-config
 settings unless explicitly overridden. Global installation without `--agents`
 auto-detects agents from PATH and known home/application directories and adds them
-to previously installed adapters; project updates retain the recorded adapter set.
+to previously installed adapters. Registered Windows DeepSeek Harness desktop
+installations are also found at their actual install location, even outside PATH.
+Project updates retain the recorded adapter set.
 Use `--agents` for an explicit selection or `--agents all` for all supported adapters.
 If no agents are detected or recorded, no files are installed. `--list-agents` shows
 the read-only detection results; `--detect-agents` also enables detection explicitly

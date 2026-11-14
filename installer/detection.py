@@ -1,8 +1,8 @@
 """Canonical local agent detection shared by the installer front ends.
 
-Detection is strictly read-only: it inspects ``PATH`` lookups and a fixed set
-of well-known configuration/application directories. It never launches,
-downloads or configures anything.
+Detection is strictly read-only: it inspects ``PATH`` lookups, a fixed set
+of well-known configuration/application directories, and registered Windows
+Harness installations. It never launches, downloads or configures anything.
 
 ``AGENT_NAMES`` preserves the adapter-manifest order used by the CLI and the
 Python API. Detection reasons use the same English wording as the historical
@@ -43,6 +43,49 @@ def _home_env(*names: str) -> Path | None:
         value = os.environ.get(name)
         if value:
             return Path(value).expanduser()
+    return None
+
+
+def _windows_harness_installation() -> Path | None:
+    """Find a registered Desktop executable without guessing its install drive."""
+    try:
+        import winreg
+    except ImportError:
+        return None
+    uninstall = r"Software\Microsoft\Windows\CurrentVersion\Uninstall"
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        for view in (winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY):
+            try:
+                with winreg.OpenKey(hive, uninstall, 0, winreg.KEY_READ | view) as root:
+                    for index in range(winreg.QueryInfoKey(root)[0]):
+                        try:
+                            with winreg.OpenKey(root, winreg.EnumKey(root, index)) as entry:
+                                name = winreg.QueryValueEx(entry, "DisplayName")[0]
+                                if not isinstance(name, str) or not (
+                                    name.casefold() == "deepseek harness"
+                                    or name.casefold().startswith("deepseek harness ")
+                                ):
+                                    continue
+                                for field in ("InstallLocation", "DisplayIcon"):
+                                    try:
+                                        value = winreg.QueryValueEx(entry, field)[0]
+                                    except OSError:
+                                        continue
+                                    if not isinstance(value, str) or not value.strip():
+                                        continue
+                                    if field == "DisplayIcon":
+                                        path, separator, suffix = value.rpartition(",")
+                                        if separator and suffix.strip().lstrip("+-").isdigit():
+                                            value = path
+                                    candidate = Path(os.path.expandvars(value.strip().strip('"')))
+                                    if field == "InstallLocation":
+                                        candidate /= "DeepSeek Harness.exe"
+                                    if candidate.name.casefold() == "deepseek harness.exe" and candidate.is_file():
+                                        return candidate
+                        except OSError:
+                            continue
+            except OSError:
+                continue
     return None
 
 
@@ -106,6 +149,9 @@ def _detect(id: str, home: Path, project: Path | None) -> str | None:
         dsh_home = _home_env("DSH_HOME")
         if config_dir(".dsh", ".deepseek-harness") or exists(dsh_home):
             return CONFIG_REASON
+        executable = _windows_harness_installation()
+        if executable is not None:
+            return f"registered application: {executable.parent}"
     return None
 
 

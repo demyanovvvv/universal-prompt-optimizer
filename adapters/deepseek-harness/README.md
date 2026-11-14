@@ -6,7 +6,44 @@ Native service validation exercised **Cordis 4.1.0 + SystemPrompt 0.2.2-rc.3**: 
 
 ## Install and activate
 
+### Desktop: native plugin
+
 From the extracted optimizer release:
+
+```bash
+python install.py --scope global --agents deepseek-harness --auto --yes
+```
+
+Global installation without `--agents` also selects a detected Harness automatically.
+Windows PowerShell: use `py -3` instead of `python`; `dsh` and `deepseek` are installer aliases.
+Open Desktop's **Plugins** page after installation. The native bundle exposes its icon,
+title and description through Harness metadata: Russian for a Russian interface,
+English for an English interface, with English fallback for other locales. No separate
+language setting or locale-detection heuristic is installed.
+The component row uses the short ID `prompt-optimizer`; the npm package and profile
+dependency remain named `universal-prompt-optimizer`.
+
+Automatic global installation writes a self-contained local bundle to
+`~/.dsh/plugins/prompt-optimizer` and its installed package to
+`~/.dsh/profiles/desktop/node_modules/universal-prompt-optimizer`. Both include the
+canonical skill. It adds only the local dependency and the ordered bundle selection
+to `profiles/desktop/package.json`. The local source keeps native file-dependency
+reinstallation available without downloading a package. No npm/pnpm command runs.
+
+The first installation enables the bundle; reinstalling preserves a bundle you
+disabled in Harness. Existing dependencies, bundle order, profile preferences and
+`cordis.patch.yml` are preserved. Without live profile reload, restart Desktop to
+activate the saved change. The installer does not restart it or call any model.
+
+Windows discovery reads the registered application's `InstallLocation` or `DisplayIcon`
+and verifies `DeepSeek Harness.exe`. No drive-wide scan, registry write, PATH change,
+credential access or application-directory write occurs. The application directory
+is not the user's Harness home. Desktop shell **0.2.0-rc.2** currently carries CLI and
+system-prompt API **0.2.2-rc.3**; compatibility follows the bundled runtime, not the
+shell's version label. The bundle declares `engines.dsh` for 0.2.2-rc.3 through 0.2.x;
+other runtime versions require explicit compatibility validation, not an exemption.
+
+### Project CLI: explicit overlay
 
 ```bash
 python install.py --agents deepseek-harness --auto --scope project --project /path/to/project --yes
@@ -14,29 +51,32 @@ cd /path/to/project
 dsh --profile web --patch .dsh/prompt-optimizer.patch.yml
 ```
 
-Windows PowerShell: use `py -3` instead of `python`. `--agents dsh` and `--agents deepseek` are installer aliases. Install Harness separately through its [official instructions](https://github.com/deepseek-ai/deepseek-harness#run); this installer never downloads Harness, invokes `npx`/pnpm, starts it, or changes credentials.
-
-`--patch` is a Harness launcher option: put it **before app arguments**, for example:
+The project plugin lives at `.dsh/plugins/prompt-optimizer`; its canonical skill is
+self-contained. `.dsh/skills/prompt-optimizer` also supports native manual discovery.
+Project installation does not register a plugin in the machine's Desktop profile.
+`--patch` is a launcher option and must precede app arguments:
 
 ```bash
 dsh --profile web --patch .dsh/prompt-optimizer.patch.yml --no-open
 dsh --profile headless --patch .dsh/prompt-optimizer.patch.yml "Fix the failing test"
-dsh --profile web --patch .dsh/prompt-optimizer.patch.yml --dump-config
 ```
 
-The first two commands launch Harness; headless execution makes normal model calls. `--dump-config` inspects the composed rows without booting plugins or calling a model, but Harness may initialize missing profile files.
+These commands launch Harness; headless execution makes normal model calls. Install
+Harness separately through its [official instructions](https://github.com/deepseek-ai/deepseek-harness#run).
+The optimizer installer never downloads Harness or starts it.
 
-The automatic installer creates only these adapter-owned paths beneath the target project (or current user's home for `--scope global`):
+### Updates and removal
 
-- `.dsh/plugins/prompt-optimizer/index.mjs` — native plugin;
-- `.dsh/skills/prompt-optimizer/` — canonical skill, model registry and profile references;
-- `.dsh/prompt-optimizer.patch.yml` — explicit plugin-loading overlay.
+`--no-auto` supplies shared/native manual skills only, without registering a new
+Desktop bundle. Reinstall into the same scope to update; `--dry-run` is read-only.
+Global native installation replaces the former global explicit-overlay workflow;
+project CLI overlays remain supported. Standard `uninstall.py` removes the Harness
+registration and payload only when valid installation state records the corresponding
+ownership. Untracked or manually managed Harness entries and files are preserved.
 
-Existing shared `.agents/skills/prompt-optimizer` installation remains available to other adapters. A `--no-auto` install supplies native/shared skills without installing a plugin or overlay. With the default Harness filesystem-skill provider, the native skill is discoverable for manual invocation; no OpenCode slash commands are installed in Harness.
-
-For global installation, use `--scope global`, then pass the **absolute** path of `~/.dsh/prompt-optimizer.patch.yml` on every launch (PowerShell: `--patch "$HOME/.dsh/prompt-optimizer.patch.yml"`). The overlay path is independent of `DSH_HOME`; a custom Harness home does not relocate optimizer-installed files. For manual skill discovery with a custom `DSH_HOME`, retain the default shared `~/.agents` root or configure Harness's skill roots explicitly. Custom `DSH_AGENTS_HOME`/skill-root settings are not changed by the installer.
-
-**No implicit plugin discovery is claimed.** Installation never edits the home `cordis.patch.yml`, any profile patch, `package.json`, bundle list or package-manager lock. Continue passing `--patch` after restarting Harness. Reinstall into the same scope to update; `--dry-run` shows planned writes. Standard `uninstall.py` removes the optimizer installation for that scope while preserving unrelated Harness files; stop passing the overlay after removal.
+Optimizer destinations use `<root>/.dsh`; setting `DSH_HOME` does not relocate them.
+For a custom Harness home, do not assume this default Desktop profile is the active
+one. Custom `DSH_AGENTS_HOME` and skill-root settings are not changed.
 
 ## Runtime behavior and configuration
 

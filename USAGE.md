@@ -2,8 +2,8 @@
 
 **Language:** English · [Русский](USAGE.ru.md)
 
-Adaptive, model-aware prompt optimization for coding agents. Preserves user
-intent and constraints, with no extra LLM calls.
+Model-aware optimization of coding-agent prompts. Preserves user intent and
+constraints without extra model calls.
 
 ## 1. Install and start
 
@@ -45,7 +45,7 @@ cd /path/to/project
 dsh --profile web --patch .dsh/prompt-optimizer.patch.yml
 ```
 
-Harness must already be installed; this installer does not download it or run its package manager. Global installation uses `--scope global`; pass the generated overlay's absolute path on every launch. `--patch` must precede app arguments. Configuration uses the same shared JSON below; PREVIEW is textual and advisory. See the [Harness guide](adapters/deepseek-harness/README.md) for host privacy settings and complete-prompt limitations.
+Harness must already be installed; this installer does not download it or run its package manager. For Desktop, use `python install.py --scope global --agents deepseek-harness --auto --yes`: the plugin is registered in **Plugins**, with its icon and English/Russian title and description selected by the interface language. The Components row uses the short ID `prompt-optimizer`; package and profile dependency remain `universal-prompt-optimizer`. Restart Harness if it does not apply the changed profile live. Uninstall removes only Harness entries recorded as installer-owned. Project CLI `--patch` must precede app arguments. Configuration uses the same shared JSON below; PREVIEW is textual and advisory. See the [Harness guide](adapters/deepseek-harness/README.md) for lifecycle and privacy boundaries.
 
 ## 2. Send a normal task
 

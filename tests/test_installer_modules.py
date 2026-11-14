@@ -65,6 +65,19 @@ class InstallerModuleTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 filesystem.atomic_write_text(target.parent, "bad")
 
+    def test_rollback_prunes_directories_created_by_transaction(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            target = root / "nested/value.txt"
+
+            with transaction.InstallTransaction() as active:
+                active.mkdir(target.parent)
+                active.record(target)
+                target.write_text("partial", encoding="utf-8")
+                active.rollback()
+
+            self.assertFalse((root / "nested").exists())
+
     def test_install_planner_is_pure_and_covers_standalone_routing_asset(self):
         manifest = catalog.load_catalog(ROOT)
         request = InstallRequest(Path("/tmp/project"), "project", frozenset({"opencode", "pi"}), automatic=True)
@@ -235,6 +248,19 @@ class InstallerModuleTests(unittest.TestCase):
 
         for gate in ("adaptive", "pass", True, False):
             self.assertEqual(managed_config("auto", "all", "skip", gate), legacy.managed_config("auto", "all", "skip", gate))
+
+    def test_failed_write_and_merge_prune_new_parent_directories(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            plan = InstallPlan((
+                Operation("merge", root / ".config/prompt-optimizer/config.json", content=b"{}"),
+                Operation("merge", root / ".config/broken/config.json", content=b"not json"),
+            ))
+
+            with self.assertRaises(ValueError):
+                execute_plan(plan, source_root=ROOT)
+
+            self.assertFalse((root / ".config").exists())
 
     def test_project_resources_execute_without_deleting_extra_user_files(self):
         with tempfile.TemporaryDirectory() as raw:

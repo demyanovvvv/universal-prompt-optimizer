@@ -1,11 +1,11 @@
-# Universal Prompt Optimizer v5.15
+# Universal Prompt Optimizer v5.16
 
 **Язык:** Русский · [English README](README.md)
 
 **Быстрые ссылки:** [Руководство пользователя](USAGE.ru.md) · [Установка](#установка) · [Команды](#универсальные-команды) · [OpenCode](#opencode) · [Совместимость](COMPATIBILITY.md) · [Выбор конфигурации](DECISION-GUIDE.md) · [История изменений](CHANGELOG.md)
 
-Адаптивная оптимизация запросов для coding-агентов с учётом активной модели.
-Сохраняет замысел и ограничения пользователя без дополнительных LLM-вызовов.
+Оптимизатор запросов для coding-агентов с учётом активной модели. Сохраняет
+замысел и ограничения пользователя без дополнительных LLM-вызовов.
 
 Напишите обычный запрос. Агент применит только полезные рекомендации для
 фактической модели и выполнит задачу в том же обращении к модели. Точные запросы
@@ -40,7 +40,7 @@ LLM-вызов для переписывания запроса не требу�
 | OpenCode | native server plugin + TUI | Да | Native | Advisory | Да |
 | Pi | native extension | Да | Native | Native | Да |
 | OMP (Oh My Pi) | native extension | Да | Native | Native confirm/editor, advisory | Да |
-| DeepSeek Harness | native Cordis plugin + явный `--patch` | Да, `modelSelection.model` | Native | Текстовый preview, advisory | Да |
+| DeepSeek Harness | native Desktop bundle / CLI `--patch` | Да, `modelSelection.model` | Native | Текстовый preview, advisory | Да |
 | Cursor | hooks + rule | Да, если модель передана runtime | Да | Question/fallback | Да |
 | Gemini CLI | hooks + `GEMINI.md` | Точная после BeforeModel; явная модель до первого вызова | Да | `ask_user`/fallback | Да |
 | Claude Code | skill + `CLAUDE.md` | Семейство Claude | Да | Question/fallback | Да |
@@ -50,7 +50,7 @@ LLM-вызов для переписывания запроса не требу�
 
 Установка, команды и ограничения подтверждения описаны в [руководстве OMP](adapters/omp/README.md). OMP использует отдельное расширение, а не пакет Pi.
 
-Для DeepSeek Harness используйте `--agents deepseek-harness --auto` (алиас `dsh`), затем запускайте Harness с созданным overlay `.dsh/prompt-optimizer.patch.yml`. Это явная загрузка через `--patch`, не автоматическое обнаружение профилем; см. [руководство DeepSeek Harness](adapters/deepseek-harness/README.md).
+Для DeepSeek Harness `--scope global --agents deepseek-harness --auto` (алиас `dsh`) устанавливает и регистрирует нативный Desktop-плагин с иконкой и русским/английским описанием по языку интерфейса. В списке компонентов используется короткий ID `prompt-optimizer`; имя пакета и зависимости профиля остаётся `universal-prompt-optimizer`. После установки откройте **Плагины**; проектная CLI-установка сохраняет явный overlay `.dsh/prompt-optimizer.patch.yml`. Деинсталлятор удаляет только записи Harness, принадлежащие по данным инвентаря установщику. См. [руководство Harness](adapters/deepseek-harness/README.md).
 
 ## Поддерживаемые модели
 
@@ -129,8 +129,9 @@ py -3 install.py --agents opencode --auto --lang ru
 Python и Bash без полного мастера сохраняют автоматическую интеграцию и текущие
 настройки общего конфига, если не заданы явные новые значения. Глобальная установка
 без `--agents` автоматически находит агентов в PATH и известных домашних каталогах
-конфигурации/приложений и добавляет их к ранее установленным адаптерам. Обновление
-проекта сохраняет записанный набор адаптеров. `--agents` задаёт явный выбор,
+конфигурации/приложений и добавляет их к ранее установленным адаптерам. Зарегистрированная
+в Windows desktop-установка DeepSeek Harness определяется по реальному пути, даже
+вне PATH. Обновление проекта сохраняет записанный набор адаптеров. `--agents` задаёт явный выбор,
 `--agents all` — всех поддерживаемых. Если нет обнаруженных или ранее установленных
 агентов, файлы не записываются. `--list-agents` показывает результаты без изменений,
 а `--detect-agents` включает поиск явно и для проекта. Полный Bash-мастер применяет

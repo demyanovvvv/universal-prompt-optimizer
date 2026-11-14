@@ -1,4 +1,4 @@
-// Universal Prompt Optimizer v5.15 - DeepSeek Harness (Cordis) runtime adapter.
+// Universal Prompt Optimizer v5.16 - DeepSeek Harness (Cordis) runtime adapter.
 //
 // Registers one native system-prompt section. On each assembly it reads the shared
 // prompt-optimizer configuration, resolves the active model route from the assembly's
@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url"
 export const name = "universal-prompt-optimizer"
 export const inject = ["systemPrompt", "agents", "workingDirectory"]
 
-const VERSION = "5.15"
+const VERSION = "5.16"
 const SECTION_NAME = "universal-prompt-optimizer"
 const SECTION_ORDER = 10300
 
@@ -33,9 +33,9 @@ function sharedGlobalConfigPath() {
   return join(homedir(), ".config", "prompt-optimizer", "config.json")
 }
 
-// The runtime resolves the canonical skill beside its installed plugin tree; the
-// manual-install target `<root>/.dsh/skills` holds the same canonical copy.
-const SKILL_ROOT = fileURLToPath(new URL("../../skills/prompt-optimizer", import.meta.url))
+// Each installed native bundle carries the canonical skill alongside its runtime.
+// The separate `<root>/.dsh/skills` copy remains available for manual discovery.
+const SKILL_ROOT = fileURLToPath(new URL("./skills/prompt-optimizer", import.meta.url))
 const REGISTRY_PATH = join(SKILL_ROOT, "references", "model-registry.json")
 const PROFILE_ROOT = join(SKILL_ROOT, "references")
 

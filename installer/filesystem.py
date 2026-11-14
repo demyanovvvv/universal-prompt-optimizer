@@ -17,7 +17,12 @@ def _validate_destination(path: Path) -> None:
 def atomic_write_bytes(path: Path, value: bytes) -> None:
     _validate_destination(path)
     mode = path.stat().st_mode if path.exists() else None
-    path.parent.mkdir(parents=True, exist_ok=True)
+    from .transaction import TransactionProvider
+    transaction = TransactionProvider.get()
+    if transaction is None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        transaction.mkdir(path.parent)
     fd, temporary = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
     try:
         with os.fdopen(fd, "wb") as handle:

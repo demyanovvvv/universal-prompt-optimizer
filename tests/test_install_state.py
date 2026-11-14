@@ -49,7 +49,10 @@ class InstallStateTests(unittest.TestCase):
                 self.assertFalse(state_path.exists())
                 self.assertFalse(runtime.exists())
                 self.assertEqual(neighbor.read_text(encoding="utf-8"), "user-owned")
-                self.assertEqual([p for p in root.rglob("*") if p.is_file()], [neighbor])
+                expected_files = {neighbor}
+                if scope == "global":
+                    expected_files.add(root / ".dsh/profiles/desktop/package.json")
+                self.assertEqual(set(p for p in root.rglob("*") if p.is_file()), expected_files)
 
     def test_failed_update_restores_version_and_obsolete_file(self):
         with tempfile.TemporaryDirectory() as raw:

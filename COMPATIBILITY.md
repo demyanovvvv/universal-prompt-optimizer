@@ -1,4 +1,4 @@
-# Compatibility — v5.15
+# Compatibility — v5.16
 
 For practical setup and task examples, see [Usage](USAGE.md) or
 [Руководство пользователя](USAGE.ru.md). Adapter-specific instructions are linked below.
@@ -8,7 +8,7 @@ For practical setup and task examples, see [Usage](USAGE.md) or
 | OpenCode | Yes | **Yes** | **Native** | **Advisory native question-tool flow** | **Yes** | v1 chat/system-transform plugin + native TUI plugin + Ctrl+P palette menu |
 | Pi | Yes | **Yes** (`ctx.model`) | **Native** | **Native confirm/editor tool** | **Yes** | Pi extension |
 | OMP | Yes | **Yes** (`ctx.model`) | **Native** | **Native confirm/editor tool; advisory** | **Yes** | [Oh My Pi extension](adapters/omp/README.md), OMP Zod schemas |
-| DeepSeek Harness | Yes | **Yes** (`modelSelection.model`) | **Native** | **Textual; advisory** | **Yes** | [Cordis section provider](adapters/deepseek-harness/README.md), explicit `--patch` overlay |
+| DeepSeek Harness | Yes | **Yes** (`modelSelection.model`) | **Native** | **Textual; advisory** | **Yes** | [Cordis section provider](adapters/deepseek-harness/README.md), registered Desktop bundle / project CLI overlay |
 | Cursor | Yes | **Yes** (`model`/`model_id` hook payload) | Yes | Ask Question / fallback | Yes | beforeSubmitPrompt state bridge + always rule |
 | Gemini CLI | Yes | **Exact after BeforeModel observation; explicit configured model before first call when visible** | Yes | **ask_user** / fallback | Yes | BeforeAgent + observation-only BeforeModel hook + GEMINI.md |
 | Claude Code | Yes | Claude-family; exact model depends on runtime exposure/config | Yes | native user-question / fallback | Yes | skills + CLAUDE.md |
@@ -23,7 +23,7 @@ Fable 5.2 and Hydrogen document signed history/prefix checks that can reject req
 ## Important limitations
 
 - OpenCode/OMP/Pi expose the resolved model directly before execution, enabling zero-extra-call native integration. OMP and Pi use distinct host packages and schema APIs; install the matching adapter.
-- DeepSeek Harness uses the step's captured `modelSelection.model` and a cooperative prompt section, not a request/history rewrite. Install does not modify Harness profiles: pass the generated overlay explicitly. `scope=first` follows the host's durable first turn, including its tool steps; complete-prompt presets suppress cooperative sections. PREVIEW is textual/advisory. The adapter adds no telemetry, but Harness's own session-log/telemetry settings remain authoritative.
+- DeepSeek Harness uses the step's captured `modelSelection.model` and a cooperative prompt section, not a request/history rewrite. Global automatic installation registers a local bundle in the Desktop profile, preserving unrelated manifest fields and patch text; project CLI installation uses an explicit overlay. Native display metadata includes an icon and English/Russian translations selected by Harness. `scope=first` follows the host's durable first turn, including its tool steps; complete-prompt presets suppress cooperative sections. PREVIEW is textual/advisory. The adapter adds no telemetry; Harness's own session-log/telemetry settings remain authoritative.
 - Cursor exposes exact `model`/`model_id` in hook input, but `beforeSubmitPrompt` is not a general additional-context injection API. v5 writes a tiny runtime state file; the rule reads it before applying the model profile.
 - Gemini CLI `BeforeAgent` provides per-turn context but does not expose the resolved model ID. The adapter therefore registers an observation-only `BeforeModel` hook: it records `llm_request.model` for the session and returns no request override. Before the first model call it uses only explicit `GEMINI_MODEL` / `model.name` when available; otherwise it does not guess. CLI `--model` cannot be known at `BeforeAgent`, so exact first-turn routing is not claimed in that case.
 - GitHub Copilot CLI's config-file `userPromptSubmitted` hook cannot rewrite the prompt; GitHub documents `modifiedPrompt` as SDK-programmatic only. v5 uses Agent Skills/custom instructions rather than claiming otherwise.

@@ -5,6 +5,7 @@ import json
 from pathlib import Path, PurePosixPath
 
 from .domain import InstallPlan, InstallRequest, Operation
+from . import harness
 
 
 def state_path(root: Path, scope: str) -> Path:
@@ -35,13 +36,18 @@ def owned_path(root: Path, scope: str, relative: str) -> Path:
     files.update(mapping["pi-extension"][1] / name for name in ("prompt-optimizer.ts", "model-registry.ts", "prompt-optimizer/runtime.ts"))
     # OMP also shares its native extension root with unrelated user modules.
     files.update(mapping["omp-extension"][1] / "prompt-optimizer" / name for name in ("index.ts", "runtime.ts", "model-registry.ts"))
-    # DeepSeek Harness owns only its plugin tree and overlay inside <root>/.dsh;
-    # the native skill copy is limited to the canonical prompt-optimizer skill.
+    # DeepSeek Harness inventories only installer package payloads beneath `.dsh`.
+    # Desktop manifests and profile patch layers remain host-owned.
     if mapping["dsh-skills"][1] / "prompt-optimizer" in path.parents:
         return path
     if mapping["dsh-plugin"][1] in path.parents:
         return path
     files.add(mapping["dsh-overlay"][1])
+    # Global installs additionally mirror the package into the Desktop profile. The
+    # profile manifest is never inventory-owned: only this package payload inside
+    # node_modules is listed, and the manifest lock is never recorded at all.
+    if scope == "global" and harness.profile_payload_path(root) in path.parents:
+        return path
     if path not in files:
         raise ValueError(f"inventory path is not package-owned: {relative}")
     return path
@@ -86,6 +92,7 @@ def config_paths(root: Path, scope: str) -> set[str]:
 
 def with_install_state(plan: InstallPlan, request: InstallRequest, package_root: Path) -> InstallPlan:
     files: set[str] = set()
+    previous = read_state(request.root, request.scope)
     for op in plan.operations:
         if op.kind in {"copy_file", "copy_owned_file", "write"}:
             files.add(op.path.relative_to(request.root).as_posix())
@@ -101,7 +108,6 @@ def with_install_state(plan: InstallPlan, request: InstallRequest, package_root:
                 files.add((op.path / relative).relative_to(request.root).as_posix())
     for relative in files:
         owned_path(request.root, request.scope, relative)
-    previous = read_state(request.root, request.scope)
     created_configs = set(previous.get('created_configs', [])) if previous else set()
     allowed_configs = config_paths(request.root, request.scope)
     for op in plan.operations:
@@ -109,7 +115,16 @@ def with_install_state(plan: InstallPlan, request: InstallRequest, package_root:
         if relative in allowed_configs and not op.path.exists():
             created_configs.add(relative)
     operations = []
-    # Keep adapters installed by earlier partial installs in the same scope.
+    if request.scope == "global" and request.automatic:
+        owned_overlay = harness.project_overlay_path(request.root).relative_to(request.root).as_posix()
+        if not previous or owned_overlay not in previous["files"]:
+            plan = InstallPlan(tuple(
+                operation for operation in plan.operations
+                if operation.label not in {
+                    "obsolete DeepSeek Harness overlay",
+                    "obsolete DeepSeek Harness overlay backup",
+                }
+            ))
     retained = set(previous["files"]) if previous else set()
     for relative in retained - files:
         path = owned_path(request.root, request.scope, relative)
@@ -120,13 +135,18 @@ def with_install_state(plan: InstallPlan, request: InstallRequest, package_root:
             operations.extend((Operation("delete_owned_file", path, label="obsolete package file"),
                                Operation("delete_owned_file", path.with_name(path.name + ".prompt-optimizer.bak"), label="obsolete backup")))
             retained.discard(relative)
+        if any(operation.kind == "delete_file_if_matches" and operation.path == path
+               for operation in plan.operations):
+            retained.discard(relative)
+            continue
     settings = {"behavior": request.behavior, "prompt_scope": request.prompt_scope,
                 "quality_gate": request.quality_gate, "unsupported_model": request.unsupported_model}
     value = {"schema": 1, "scope": request.scope,
              "version": (package_root / "VERSION").read_text(encoding="utf-8").strip(),
              "adapters": sorted(set(request.adapters) | set(previous["adapters"] if previous else [])),
              "automatic": request.automatic or bool(previous and previous["automatic"]),
-             "settings": settings, "files": sorted(files | retained), "created_configs": sorted(created_configs)}
+             "settings": settings, "files": sorted(files | retained),
+             "created_configs": sorted(created_configs)}
     operations.extend(plan.operations)
     operations.append(Operation("write", state_path(request.root, request.scope),
                                 content=(json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode(),

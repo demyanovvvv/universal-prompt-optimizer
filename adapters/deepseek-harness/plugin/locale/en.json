@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Prompt Optimizer",
+    "description": "Adapts coding-agent prompts to the active model while preserving intent and constraints, without extra model calls."
+  }
+}

@@ -31,6 +31,7 @@ class Operation:
         "delete_legacy_model_skill", "delete_legacy_model_command",
         "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs",
         "merge_json_plugin_specs", "prune_empty", "delete_json_scaffold",
+        "merge_dsh_manifest", "delete_dsh_manifest",
     ]
     path: Path
     content: bytes | None = None

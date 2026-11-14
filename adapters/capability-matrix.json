@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "5.15",
+  "version": "5.16",
   "adapters": [
     {
       "id": "opencode",
@@ -76,10 +76,10 @@
       "sessionState": "none",
       "persistence": "none",
       "telemetry": "none",
-      "mechanism": "Cordis systemPrompt.section provider with modelSelection.model and explicit --patch activation",
+      "mechanism": "Cordis systemPrompt.section provider with modelSelection.model; native Desktop bundle or project CLI overlay",
       "knownLimitations": [
         "PREVIEW is a textual model instruction, not a tool-execution barrier or native confirmation dialog.",
-        "Generated overlay must be passed explicitly; installation does not modify Harness profiles or home patches.",
+        "Global automatic installation registers the Desktop profile; project CLI launches require the explicit overlay. Profile changes may require restart without HMR.",
         "Host complete-prompt presets suppress cooperative prompt sections; host session-log and telemetry policies are unchanged."
       ]
     },

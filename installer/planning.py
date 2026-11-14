@@ -11,6 +11,7 @@ from pathlib import Path
 from .catalog import AdapterCatalog
 from .content import configured_snippet_block, merge_json
 from .domain import InstallPlan, InstallRequest, Operation
+from . import harness
 from config_contract import BEHAVIORS, SCOPES, UNSUPPORTED_MODELS, normalize_quality_gate
 from config_contract import managed_config
 
@@ -149,18 +150,46 @@ def plan_install(request: InstallRequest, catalog: AdapterCatalog) -> InstallPla
         base = root / (".omp/extensions" if request.scope == "project" else ".omp/agent/extensions")
         operations.append(Operation("copy_tree", base, source=Path("adapters/omp/extensions"), label="OMP extension"))
     if "deepseek-harness" in request.adapters:
-        # The canonical skill copy at .dsh/skills is the Harness discovery target.
-        # An automatic install additionally deploys the Cordis plugin and the
-        # installer-owned overlay; manual installs only provide the native skill.
+        # Manual installs deploy only the canonical native skill for Harness
+        # discovery. An automatic install additionally deploys the self-contained
+        # native package: a global registration adds the Desktop profile bundle,
+        # while a project install stays explicit through the --patch overlay.
         operations.append(Operation("copy_tree", root / ".dsh/skills", source=Path(".agents/skills"),
                                     label="DeepSeek Harness skills", params=skill_params))
         if request.automatic:
-            operations.append(Operation("copy_tree", root / ".dsh/plugins/prompt-optimizer",
+            operations.append(Operation("copy_tree", harness.plugin_package_path(root),
                                         source=Path("adapters/deepseek-harness/plugin"),
                                         label="DeepSeek Harness plugin"))
-            operations.append(Operation("copy_file", root / ".dsh/prompt-optimizer.patch.yml",
-                                        source=Path("adapters/deepseek-harness/prompt-optimizer.patch.yml"),
-                                        label="DeepSeek Harness overlay"))
+            operations.append(Operation("copy_tree", harness.plugin_package_path(root) / "skills",
+                                        source=Path(".agents/skills"),
+                                        label="DeepSeek Harness plugin skill", params=skill_params))
+            if request.scope == "project":
+                operations.append(Operation("copy_file", harness.project_overlay_path(root),
+                                            source=Path("adapters/deepseek-harness/prompt-optimizer.patch.yml"),
+                                            label="DeepSeek Harness overlay"))
+            else:
+                # The Desktop profile keeps the only loader registration: the
+                # native bundle plus its offline dependency on the installer-owned
+                # plugin tree. The obsolete explicit overlay is withdrawn.
+                operations.extend((
+                    Operation("copy_tree", harness.profile_payload_path(root),
+                              source=Path("adapters/deepseek-harness/plugin"),
+                              label="DeepSeek Harness profile plugin"),
+                    Operation("copy_tree", harness.profile_payload_path(root) / "skills",
+                              source=Path(".agents/skills"),
+                              label="DeepSeek Harness profile plugin skill", params=skill_params),
+                    Operation("merge_dsh_manifest", harness.manifest_path(root),
+                              content=json.dumps(harness.MANIFEST_PARAMS).encode("utf-8"),
+                              label="DeepSeek Harness native bundle registration"),
+                    Operation("delete_file_if_matches", harness.project_overlay_path(root),
+                              source=Path("adapters/deepseek-harness/prompt-optimizer.patch.yml"),
+                              label="obsolete DeepSeek Harness overlay"),
+                    Operation("delete_file_if_matches",
+                               harness.project_overlay_path(root).with_name(
+                                   harness.project_overlay_path(root).name + ".prompt-optimizer.bak"),
+                              source=Path("adapters/deepseek-harness/prompt-optimizer.patch.yml"),
+                               label="obsolete DeepSeek Harness overlay backup"),
+                ))
     runtime_ignores: list[str] = []
     if request.automatic and request.scope == "project" and "cursor" in request.adapters:
         operations.extend((

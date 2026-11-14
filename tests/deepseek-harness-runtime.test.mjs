@@ -22,19 +22,24 @@ process.on('exit', () => {
   rmSync(home, { recursive: true, force: true })
 })
 
-async function harness(t, config = {}) {
+async function harness(t, config = {}, { bundle = false } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'upo-dsh-runtime-'))
   t.after(() => rmSync(root, { recursive: true, force: true }))
-  const native = join(root, '.dsh')
-  cpSync(join(packageRoot, 'adapters/deepseek-harness/plugin'), join(native, 'plugins/prompt-optimizer'), { recursive: true })
-  cpSync(join(packageRoot, '.agents/skills/prompt-optimizer'), join(native, 'skills/prompt-optimizer'), { recursive: true })
+  // The installed native package is self-contained: its runtime, manifest,
+  // locale metadata and the canonical skill it resolves all travel together.
+  // `bundle: true` assembles it where a host-global profile installs it, i.e.
+  // outside the working directory, to prove the layout rather than the path.
+  const installRoot = bundle ? join(root, 'profile/node_modules/universal-prompt-optimizer') : join(root, '.dsh/plugins/prompt-optimizer')
+  cpSync(join(packageRoot, 'adapters/deepseek-harness/plugin'), installRoot, { recursive: true })
+  cpSync(join(packageRoot, '.agents/skills/prompt-optimizer'), join(installRoot, 'skills/prompt-optimizer'), { recursive: true })
+  cpSync(join(packageRoot, '.agents/skills/prompt-optimizer'), join(root, '.dsh/skills/prompt-optimizer'), { recursive: true })
   const configPath = join(root, '.prompt-optimizer.json')
   const globalPath = join(home, '.config/prompt-optimizer/config.json')
   rmSync(globalPath, { force: true })
   t.after(() => rmSync(globalPath, { force: true }))
   const setConfig = value => writeFileSync(configPath, JSON.stringify(value))
   setConfig(config)
-  const plugin = await import(pathToFileURL(join(native, 'plugins/prompt-optimizer/index.mjs')).href)
+  const plugin = await import(pathToFileURL(join(installRoot, 'index.mjs')).href)
   let section
   const ctx = {
     systemPrompt: { section(value) { assert.equal(section, undefined); section = value; return () => {} } },
@@ -45,8 +50,50 @@ async function harness(t, config = {}) {
   const agent = { session: { cwd: root, turn: 1, step: 1 }, options: { model: 'unknown-stale-model' } }
   const selection = { model: 'deepseek-flash', provider: 'deepseek-official', reasoningEffort: 'high' }
   const text = (snapshot = selection, currentAgent = agent) => section.text({ agent: currentAgent, modelSelection: snapshot })
-  return { root, plugin, section, ctx, agent, selection, text, setConfig, configPath, globalPath }
+  return { root, installRoot, plugin, section, ctx, agent, selection, text, setConfig, configPath, globalPath }
 }
+
+// The Host plugin manager reads a bundle's display metadata and icon from the
+// installed package root, selecting the translation by the Host UI language.
+function bundleMeta(manifest, language) {
+  const pick = value => (typeof value === 'string' ? value : value[language] ?? value.en)
+  const locale = code => JSON.parse(readFileSync(join(manifest.root, 'locale', `${code}.json`), 'utf8')).meta
+  const meta = locale(language) ?? locale('en')
+  return {
+    title: pick(meta.title),
+    description: pick(meta.description),
+    icon: readFileSync(join(manifest.root, iconRelative(manifest))),
+  }
+}
+
+function iconRelative(manifest) {
+  return JSON.parse(readFileSync(manifest.manifestPath, 'utf8')).icon.replace(/^\.\//, '')
+}
+
+test('Harness resolves guidance from the canonical skill carried inside the installed bundle', async t => {
+  const h = await harness(t, {}, { bundle: true })
+  // The bundle is installed outside the working directory, so only the skill it
+  // carries at ./skills/prompt-optimizer can answer.
+  for (const profile of registry.profiles.slice(0, 3)) {
+    const heading = readFileSync(join(packageRoot, '.agents/skills/prompt-optimizer/references', profile.file), 'utf8').split('\n')[0].replace(/^# /, '')
+    assert.ok(h.text({ model: profile.id, provider: 'irrelevant' }).includes(heading), profile.id)
+  }
+  assert.match(h.text(), /Prompt Optimizer v5\.16/)
+})
+
+test('Bundle package exposes localized display metadata and its manifest icon', async t => {
+  const h = await harness(t, {}, { bundle: true })
+  const manifest = { root: h.installRoot, manifestPath: join(packageRoot, 'adapters/deepseek-harness/plugin/package.json') }
+  for (const [language, title, description] of [
+    ['en', 'Prompt Optimizer', 'Adapts coding-agent prompts to the active model'],
+    ['ru', 'Оптимизатор промптов', 'Адаптирует запросы для coding-агентов к активной модели']
+  ]) {
+    const meta = bundleMeta(manifest, language)
+    assert.equal(meta.title, title)
+    assert.match(meta.description, new RegExp(description))
+    assert.ok(meta.icon.byteLength > 0)
+  }
+})
 
 test('Harness reads installed canonical profiles for every exact alias, without provider-based guesses', async t => {
   const h = await harness(t)

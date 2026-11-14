@@ -42,6 +42,11 @@ launching agents and separation of global detection from project-local directori
 Global CLI checks cover fresh detected-only installs, adding newly detected adapters
 on update, explicit selection, empty detection, read-only listing and config preservation.
 
+`tests/test_windows_harness_detection.py` covers nonstandard registered Desktop
+paths, quoted icon paths, stale registrations and missing Windows registry support.
+Detection fixtures isolate the machine registry so local Desktop installs cannot
+change test selection or cause writes to user application directories.
+
 Run `python -m unittest discover -s tests -v`, `npm run verify`,
 `bash -n install.sh uninstall.sh` and `npm run verify:bash` for launcher/lifecycle changes.
 On Windows with WSL's `bash` unavailable, invoke Git Bash explicitly.
@@ -159,7 +164,7 @@ path before comparing the selected mode.
 - Hook command planning covers global Gemini script location and Windows quoting.
 - Gemini routing covers every canonical alias and supported profile output.
 - Project Windsurf uninstall removes unchanged rules and preserves user edits.
-- DeepSeek Harness checks deploy canonical native skills plus an explicit overlay in both scopes; no host profile/YAML or dependency-manager changes. Runtime tests exercise the installed JavaScript with captured model selection, all canonical aliases, unknown/generic routes, AUTO/PREVIEW/OFF, exact quality gates, malformed global/project configuration and durable first-turn scope across tool steps and resume. The adapter uses no provider or telemetry clients; actual Harness boot compatibility must be reported separately from the deterministic service-contract tests.
+- DeepSeek Harness checks deploy self-contained native bundles with canonical skills. Global automatic installation registers the Desktop dependency and bundle selection; project CLI installation retains its explicit overlay. Cover preserved disabled state, unrelated profile fields/patch text, malformed manifests, foreign-package collisions, rollback, locks, symlinks and dry-run in `tests/test_deepseek_harness_desktop.py` and the existing installer tests. Runtime tests exercise the installed JavaScript with captured model selection, all canonical aliases, unknown/generic routes, AUTO/PREVIEW/OFF, exact quality gates, malformed global/project configuration and durable first-turn scope across tool steps and resume. Icon and English/Russian display metadata use the host's package/locale APIs. The adapter uses no provider or telemetry clients; actual Desktop/host-service checks must be reported separately from deterministic service-contract tests.
 - OpenCode session duplicate protection does not discard a new turn merely because
   its text matches the previous turn; the current prompt is reserved before the
   context hook and only committed as processed after the decision.

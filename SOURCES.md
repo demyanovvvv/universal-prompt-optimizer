@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.15
+# Source provenance — Universal Prompt Optimizer v5.16
 
 Checked: **2026-11-13** for Gemini 4 Hydrogen/Carbon/Argon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash, DeepSeek V4.1 Flash / 1017 and Muse Wonder. Other profiles retain their per-file checked dates. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
 

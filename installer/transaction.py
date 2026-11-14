@@ -14,7 +14,10 @@ TransactionProvider = ContextVar["InstallTransaction | None"]("prompt_optimizer_
 @dataclass
 class InstallTransaction:
     snapshots: dict[Path, tuple[bytes, int] | None] = field(default_factory=dict)
+    created_directories: list[Path] = field(default_factory=list)
+    defer_directory_cleanup: bool = False
     _token: Token["InstallTransaction | None"] | None = field(default=None, init=False, repr=False)
+    _directory_cleanup_pending: bool = field(default=False, init=False, repr=False)
 
     def __enter__(self) -> "InstallTransaction":
         self._token = TransactionProvider.set(self)
@@ -28,6 +31,16 @@ class InstallTransaction:
             if self._token is not None:
                 TransactionProvider.reset(self._token)
                 self._token = None
+
+
+    def mkdir(self, path: Path) -> None:
+        missing = []
+        current = path
+        while not current.exists():
+            missing.append(current)
+            current = current.parent
+        path.mkdir(parents=True, exist_ok=True)
+        self.created_directories.extend(reversed(missing))
 
     def record(self, path: Path) -> None:
         path = path.resolve()
@@ -52,9 +65,22 @@ class InstallTransaction:
                 continue
             content, mode = snapshot
             atomic_write_bytes(path, content)
-            path.chmod(mode)
+        self._directory_cleanup_pending = True
+        if not self.defer_directory_cleanup:
+            self.prune_created_directories()
         if token is not None:
             self._token = TransactionProvider.set(self)
+
+    def prune_created_directories(self) -> None:
+        if not self._directory_cleanup_pending:
+            return
+        for path in reversed(self.created_directories):
+            try:
+                path.rmdir()
+            except OSError:
+                pass
+        self.created_directories.clear()
+        self._directory_cleanup_pending = False
 
 
 def record_path(path: Path) -> None:

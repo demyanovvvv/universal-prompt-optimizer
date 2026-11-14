@@ -1,0 +1,19 @@
+{
+  "name": "universal-prompt-optimizer",
+  "version": "5.16.0",
+  "description": "Model-aware optimization of coding-agent prompts, preserving user intent and constraints without extra model calls.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.mjs",
+  "icon": "./icon.svg",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./icon.svg": "./icon.svg",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": ["index.mjs", "cordis.patch.yml", "icon.svg", "locale", "skills"],
+  "engines": { "dsh": ">=0.2.2-rc.3 <0.3.0" },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } }
+}

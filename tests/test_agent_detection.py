@@ -43,10 +43,19 @@ def write_executable(directory: Path, name: str) -> None:
     path.chmod(0o755)
 
 
+def isolated_registry_path(directory: Path) -> str:
+    """Disable the real user's Windows registry only in fixture subprocesses."""
+    startup = directory / "sitecustomize.py"
+    startup.write_text("import sys\nsys.modules['winreg'] = None\n", encoding="utf-8")
+    return str(directory)
+
+
 def cli_env(home: Path, bin_dir: Path) -> dict:
     """Environment for Python installer subprocesses with no ambient leakage."""
     return {
         "PATH": str(bin_dir),
+        "PYTHONPATH": isolated_registry_path(bin_dir),
+        "PYTHONDONTWRITEBYTECODE": "1",
         "PATHEXT": os.environ.get("PATHEXT", ".COM;.EXE;.BAT;.CMD"),
         "SYSTEMROOT": os.environ.get("SYSTEMROOT", "C:\\Windows"),
         "TEMP": os.environ.get("TEMP", tempfile.gettempdir()),
@@ -66,6 +75,9 @@ def run_installer(args, env, cwd=None):
 class DetectionBase(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory()
+        registry = patch("installer.detection._windows_harness_installation", return_value=None)
+        registry.start()
+        self.addCleanup(registry.stop)
         base = Path(self._tmp.name)
         self.home = base / "home"
         self.project = base / "project"
@@ -473,6 +485,8 @@ class InstallerBashDetectionTests(DetectionBase):
         entries = [str(path) for path in [*self.bash_path, bin_dir]]
         env = {
             "PATH": os.pathsep.join(entries),
+            "PYTHONPATH": isolated_registry_path(bin_dir),
+            "PYTHONDONTWRITEBYTECODE": "1",
             "HOME": str(self.home),
             "USERPROFILE": str(self.home),
             "PYTHON_BIN": Path(sys.executable).as_posix(),

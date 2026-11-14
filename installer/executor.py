@@ -4,20 +4,23 @@ from __future__ import annotations
 
 from pathlib import Path
 import json
+import os
 import re
+from contextlib import ExitStack
 
 from .content import merge_json
 from .domain import InstallPlan, Operation
 from .filesystem import atomic_write_bytes
+from .harness import MANIFEST_KINDS, lock_path_for, reject_symlink as _reject_symlink, release_lock as _release_lock
 from .transaction import InstallTransaction
 
 
-def _reject_symlink(path: Path) -> None:
-    current = path
-    while current != current.parent:
-        if current.is_symlink():
-            raise ValueError(f"refusing to write through symlink: {current}")
-        current = current.parent
+def manifest_locks(plan: InstallPlan) -> tuple[Path, ...]:
+    """Package locks guarding every native manifest edit in a plan, in stable order."""
+    if not any(operation.kind in MANIFEST_KINDS for operation in plan.operations):
+        return ()
+    return tuple(sorted({lock_path_for(operation.path) for operation in plan.operations
+                         if operation.kind in MANIFEST_KINDS}))
 
 
 def _backup_once(path: Path, transaction: InstallTransaction, enabled: bool) -> None:
@@ -50,7 +53,7 @@ def _copy_tree(operation: Operation, source_root: Path, transaction: InstallTran
     _reject_symlink(operation.path)
     if operation.path.exists() and not operation.path.is_dir():
         raise ValueError(f"destination is not a directory: {operation.path}")
-    operation.path.mkdir(parents=True, exist_ok=True)
+    transaction.mkdir(operation.path)
     include = set(operation.params.get("include", ())) if operation.params else None
     for source_file in source.rglob("*"):
         if source_file.is_symlink():
@@ -62,7 +65,7 @@ def _copy_tree(operation: Operation, source_root: Path, transaction: InstallTran
             continue
         destination = operation.path / relative
         _reject_symlink(destination)
-        destination.parent.mkdir(parents=True, exist_ok=True)
+        transaction.mkdir(destination.parent)
         _backup_once(destination, transaction, backup)
         transaction.record(destination)
         atomic_write_bytes(destination, source_file.read_bytes())
@@ -96,7 +99,7 @@ def _copy_files(operation: Operation, source_root: Path, transaction: InstallTra
             continue
         destination = operation.path / source_file.name
         _reject_symlink(destination)
-        destination.parent.mkdir(parents=True, exist_ok=True)
+        transaction.mkdir(destination.parent)
         _backup_once(destination, transaction, backup)
         transaction.record(destination)
         atomic_write_bytes(destination, source_file.read_bytes())
@@ -119,7 +122,7 @@ def _copy_owned_file(operation: Operation, source_root: Path, transaction: Insta
     if operation.path.exists() and not owned and operation.path.read_bytes() != source.read_bytes():
         raise ValueError(f"refusing to overwrite user-owned file: {operation.path}")
     _reject_symlink(operation.path)
-    operation.path.parent.mkdir(parents=True, exist_ok=True)
+    transaction.mkdir(operation.path.parent)
     _backup_once(operation.path, transaction, backup)
     transaction.record(operation.path)
     atomic_write_bytes(operation.path, source.read_bytes())
@@ -558,7 +561,7 @@ def _apply(operation: Operation, source_root: Path, transaction: InstallTransact
     if operation.kind == "copy_file":
         source = _source_file(operation, source_root)
         _reject_symlink(operation.path)
-        operation.path.parent.mkdir(parents=True, exist_ok=True)
+        transaction.mkdir(operation.path.parent)
         _backup_once(operation.path, transaction, backup)
         transaction.record(operation.path)
         atomic_write_bytes(operation.path, source.read_bytes())
@@ -577,6 +580,14 @@ def _apply(operation: Operation, source_root: Path, transaction: InstallTransact
         return
     if operation.kind == "merge_json_plugin_specs":
         _merge_json_plugin_specs(operation, transaction, backup)
+        return
+    if operation.kind == "merge_dsh_manifest":
+        from .harness import apply_merge
+        apply_merge(operation, transaction)
+        return
+    if operation.kind == "delete_dsh_manifest":
+        from .harness import apply_delete
+        apply_delete(operation, transaction)
         return
     if operation.kind == "merge_ignore":
         _merge_ignore(operation, transaction, backup)
@@ -617,12 +628,46 @@ def _apply(operation: Operation, source_root: Path, transaction: InstallTransact
     raise ValueError(f"unsupported operation kind: {operation.kind}")
 
 
+def _validate_harness_install(plan: InstallPlan, source_root: Path) -> None:
+    from . import harness
+    operations = [operation for operation in plan.operations
+                  if operation.kind == "copy_tree" and operation.label.startswith("DeepSeek Harness")]
+    if not operations:
+        return
+    manifest_ops = [operation for operation in plan.operations if operation.kind == "merge_dsh_manifest"]
+    if manifest_ops:
+        root = manifest_ops[0].path.parents[3]
+        harness.require_manifest(root)
+        harness.require_profile_manifest(root)
+    else:
+        dsh_root = next((parent for parent in operations[0].path.parents if parent.name == ".dsh"), None)
+        if dsh_root is None:
+            raise ValueError(f"invalid DeepSeek Harness destination: {operations[0].path}")
+        root = dsh_root.parent
+    legacy_owned = False
+    if manifest_ops:
+        from .state import read_state
+        state = read_state(root, "global")
+        legacy_owned = bool(state and "deepseek-harness" in state["adapters"]
+                            and ".dsh/plugins/prompt-optimizer/index.mjs" in state["files"])
+    plugin = harness.plugin_package_path(root)
+    for operation in operations:
+        if operation.source is None:
+            continue
+        source = operation.source if operation.source.is_absolute() else source_root / operation.source
+        if source.is_dir():
+            harness.validate_payload(
+                source, operation.path,
+                allow_legacy=(operation.path == plugin and legacy_owned),
+            )
+
 def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False, backup: bool = True) -> tuple[Path, ...]:
     """Apply a plan atomically and return affected paths.
 
     Dry-run performs validation of operation inputs but never creates or changes
     destination files. A failed real execution rolls back all recorded files.
     """
+    _validate_harness_install(plan, source_root)
     affected = tuple(operation.path for operation in plan.operations)
     if dry_run:
         for operation in plan.operations:
@@ -642,7 +687,7 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                     raise ValueError(f"missing package directory: {source}")
             elif operation.kind == "copy_owned_file":
                 _source_file(operation, source_root)
-            elif operation.kind in {"merge_block", "merge_tui", "merge_json_plugin_specs"} and operation.content is None:
+            elif operation.kind in {"merge_block", "merge_tui", "merge_json_plugin_specs", "merge_dsh_manifest"} and operation.content is None:
                 raise ValueError(f"{operation.kind} operation has no content: {operation.path}")
             elif operation.kind == "merge_ignore" and operation.content is None:
                 raise ValueError("merge_ignore operation has no content")
@@ -663,10 +708,24 @@ def execute_plan(plan: InstallPlan, *, source_root: Path, dry_run: bool = False,
                 "delete_owned_file", "delete_file_if_matches", "delete_tree_if_matches",
                 "delete_legacy_model_skill", "delete_legacy_model_command",
                 "delete_block", "delete_json_fields", "delete_json_hooks", "delete_json_plugin_specs", "prune_empty", "delete_json_scaffold",
+                "merge_dsh_manifest", "delete_dsh_manifest",
             }:
                 raise ValueError(f"unsupported operation kind: {operation.kind}")
         return affected
-    with InstallTransaction() as transaction:
-        for operation in plan.operations:
-            _apply(operation, source_root, transaction, backup)
-    return affected
+    transaction = InstallTransaction(defer_directory_cleanup=True)
+    try:
+        with ExitStack() as locks:
+            with transaction:
+                for lock in manifest_locks(plan):
+                    _reject_symlink(lock)
+                    transaction.mkdir(lock.parent)
+                    descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                    locks.callback(_release_lock, lock)
+                    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+                        handle.write(f"{os.getpid()}\n")
+                        handle.flush()
+                        os.fsync(handle.fileno())
+                for operation in plan.operations:
+                    _apply(operation, source_root, transaction, backup)
+    finally:
+        transaction.prune_created_directories()

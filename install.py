@@ -13,6 +13,7 @@ import tempfile
 from contextlib import nullcontext
 from pathlib import Path
 
+from installer import harness as _harness
 from installer.catalog import load_catalog
 from installer.content import merge_json as _merge_json, merge_managed_block as _merge_managed_block
 from installer.detection import AGENT_NAMES as _AGENT_NAMES, detect_agents
@@ -761,26 +762,17 @@ def _execute_plan_checked(plan, *, dry_run: bool, backup: bool) -> None:
         fail(L(str(exc), str(exc)))
 
 def deepseek_harness_hint(root: Path, scope: str, *, dry_run: bool = False) -> str:
-    """Return the exact activation instruction for the installed Cordis overlay.
+    """Describe native Desktop activation or the project CLI overlay."""
+    if scope == "global":
+        hint = _harness.native_activation_hint(root)
+        return L(("would configure " + hint) if dry_run else hint,
+                 ("будет настроено: " + hint) if dry_run else hint)
+    overlay = root / ".dsh/prompt-optimizer.patch.yml"
+    command = shell_command(["dsh", "--profile", "web", "--patch", str(overlay)])
+    hint = _harness.project_activation_hint(command)
+    return L(("would configure " + hint) if dry_run else hint,
+             ("будет настроено: " + hint) if dry_run else hint)
 
-    The overlay path is quoted for the current platform so paths with spaces keep
-    working. Dry runs only describe the post-install activation command.
-    """
-    overlay = root / '.dsh/prompt-optimizer.patch.yml'
-    command = shell_command(['dsh', '--profile', 'web', '--patch', str(overlay)])
-    if dry_run:
-        return L(
-            f'To activate after installation: {command} (place --patch before the app arguments; '
-            f'global installs must pass --patch explicitly). The installer never edits your Harness profile, cordis.patch.yml or package manifests.',
-            f'Для активации после установки: {command} (указывайте --patch до аргументов приложения; '
-            f'при глобальной установке передайте --patch явно). Установщик не изменяет профиль Harness, cordis.patch.yml и манифесты пакетов.',
-        )
-    return L(
-        f'DeepSeek Harness plugin and skill installed. To activate after installation: {command} (place --patch before the app arguments; '
-        f'global installs must pass --patch explicitly). The installer never edits your Harness profile, cordis.patch.yml or package manifests.',
-        f'Плагин и skill DeepSeek Harness установлены. Для активации после установки: {command} (указывайте --patch до аргументов приложения; '
-        f'при глобальной установке передайте --patch явно). Установщик не изменяет профиль Harness, cordis.patch.yml и манифесты пакетов.',
-    )
 
 def _install_plan_messages(plan, *, dry_run: bool, root: Path | None = None, scope: str | None = None) -> list[str]:
     messages = []
@@ -794,9 +786,14 @@ def _install_plan_messages(plan, *, dry_run: bool, root: Path | None = None, sco
         elif operation.kind == "copy_tree" and operation.params and operation.params.get("include"):
             paths = [operation.path / name for name in operation.params["include"]]
         messages.extend(f"{action} {operation.label}: {path}" for path in paths)
-    if root is not None and any(operation.label == "DeepSeek Harness overlay" for operation in plan.operations):
+    labels = {operation.label for operation in plan.operations}
+    if root is not None and (
+        "DeepSeek Harness overlay" in labels
+        or "DeepSeek Harness native bundle registration" in labels
+    ):
         messages.append(deepseek_harness_hint(root, scope or "project", dry_run=dry_run))
     return messages
+
 
 
 def install_project(root: Path, selected: set[str], auto: bool, behavior: str, scope: str, unsupported: str, quality_gate: str | bool, backup: bool, dry_run: bool, python_bin: str) -> list[str]:

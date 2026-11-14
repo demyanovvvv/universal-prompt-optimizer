@@ -14,15 +14,16 @@ from pathlib import Path
 from typing import Literal
 
 from .domain import InstallPlan, Operation
+from . import harness
 
 Scope = Literal["project", "global"]
 
 _BLOCK_LOGICAL = frozenset({"claude-block", "gemini-block", "copilot-block", "codex-block", "windsurf-block"})
 _CONFIG_LOGICAL = frozenset({"shared-config", "opencode-config"})
-_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension", "omp-extension", "dsh-skills", "dsh-plugin"})
+_DIR_LOGICAL = frozenset({"shared-skills", "claude-skills", "opencode-commands", "opencode-plugin", "opencode-tui-plugin", "pi-extension", "omp-extension", "dsh-skills", "dsh-plugin", "dsh-plugin-skill", "dsh-profile-plugin", "dsh-profile-plugin-skill"})
 # DeepSeek Harness owns exactly these trees inside <root>/.dsh; they are removed
 # after per-file cleanups so backups, state and locks inside them go first.
-_DSH_LOGICAL = frozenset({"dsh-skills", "dsh-plugin"})
+_DSH_LOGICAL = frozenset({"dsh-skills", "dsh-plugin", "dsh-profile-plugin"})
 
 
 def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tuple[Path, Path]]:
@@ -70,6 +71,23 @@ def managed_file_map(root: Path, package_root: Path, scope: str) -> dict[str, tu
         "dsh-plugin": (
             package_root / "adapters/deepseek-harness/plugin",
             root / ".dsh/plugins/prompt-optimizer",
+        ),
+        # The native package declares its executable skill inside its own tree, so
+        # the deployed package carries the canonical skill next to the runtime.
+        "dsh-plugin-skill": (
+            package_root / ".agents/skills",
+            root / ".dsh/plugins/prompt-optimizer/skills",
+        ),
+        # The Desktop profile payload is a second copy of the same package: the
+        # native manager resolves <profile>/node_modules/universal-prompt-optimizer
+        # and needs it for a network-free reinstall from the recorded file dependency.
+        "dsh-profile-plugin": (
+            package_root / "adapters/deepseek-harness/plugin",
+            root / ".dsh/profiles/desktop/node_modules/universal-prompt-optimizer",
+        ),
+        "dsh-profile-plugin-skill": (
+            package_root / ".agents/skills",
+            root / ".dsh/profiles/desktop/node_modules/universal-prompt-optimizer/skills",
         ),
         "dsh-overlay": (
             package_root / "adapters/deepseek-harness/prompt-optimizer.patch.yml",
@@ -135,9 +153,29 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
     cleaned explicitly. Runtime state and gitignore cleanup are appended last.
     """
     targets = uninstall_targets(root, package_root, scope)
+    from .state import owned_path, read_state, state_path
+    state = read_state(root, scope)
+    owned_files = set(state["files"]) if state else set()
+    owns_dsh = bool(state and "deepseek-harness" in state["adapters"])
+    native_manifest = (harness.profile_payload_path(root) / "package.json").relative_to(root).as_posix()
+    owns_native_dsh = bool(owns_dsh and scope == "global" and state["automatic"]
+                           and native_manifest in owned_files)
     operations: list[Operation] = []
     deferred_trees: list[Operation] = []
+    if owns_native_dsh:
+        operations.append(Operation("delete_dsh_manifest", harness.manifest_path(root),
+                                    content=json.dumps({"name": harness.BUNDLE_NAME,
+                                                        "spec": harness.DEPENDENCY_SPEC}).encode("utf-8"),
+                                    label="DeepSeek Harness native bundle registration"))
     for logical, (source, destination, strategy) in targets.items():
+        if logical in _DSH_LOGICAL | {"dsh-plugin-skill", "dsh-profile-plugin-skill", "dsh-overlay"}:
+            relative = destination.relative_to(root).as_posix()
+            prefix = relative.rstrip("/") + "/"
+            owned = relative in owned_files if logical == "dsh-overlay" else any(
+                path.startswith(prefix) for path in owned_files
+            )
+            if not owns_dsh or not owned:
+                continue
         if strategy == "block":
             operations.append(Operation("delete_block", destination, source=source, label=logical))
         elif strategy == "config":
@@ -149,16 +187,16 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                 operations.append(Operation("delete_json_plugin_specs", tui_config, label="opencode-tui-registration",
                                             params={"specs": [_TUI_PLUGIN_SPEC]}))
             if logical in _DSH_LOGICAL:
-                # DeepSeek Harness trees are removed after the per-file cleanups
-                # below, so backups, state and locks inside them go first.
-                # .dsh/skills is shared with user skills: only the exact
-                # prompt-optimizer copy is removed, never neighbors. The plugin
-                # tree is wholly installer-owned, so plain cleanup is safe there.
                 params: dict = {"remove_modified": True, "remove_unlisted": True}
                 if logical == "dsh-skills":
                     params["include"] = ["prompt-optimizer"]
-                deferred_trees.append(Operation("delete_tree_if_matches", destination, source=source, label=logical,
-                                                params=params))
+                deferred_trees.append(Operation("delete_tree_if_matches", destination, source=source,
+                                                label=logical, params=params))
+            elif logical in {"dsh-plugin-skill", "dsh-profile-plugin-skill"}:
+                deferred_trees.append(Operation("delete_tree_if_matches", destination, source=source,
+                                                label=logical,
+                                                params={"remove_modified": True, "remove_unlisted": True,
+                                                        "include": ["prompt-optimizer"]}))
             elif logical == "opencode-plugin":
                 opencode_config = root / (".opencode/opencode.json" if scope == "project" else ".config/opencode/opencode.json")
                 operations.append(Operation("delete_json_plugin_specs", opencode_config, label="opencode-server-registration",
@@ -171,15 +209,17 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                                                     "remove_modified": True, "remove_unlisted": True}))
                 operations.append(Operation("delete_owned_file", destination / ".prompt-optimizer-owner.json",
                                             label="opencode-tui-owner"))
-            elif logical != "opencode-plugin":
-                params: dict = {"remove_modified": True}
+            else:
+                params = {"remove_modified": True}
                 if logical in {"shared-skills", "claude-skills"}:
                     params.update({"include": ["prompt-optimizer"], "remove_unlisted": True})
                 elif logical == "opencode-commands":
                     params["include"] = ["prompt.md", "prompt-only.md", "prompt-optimizer.md"]
-                operations.append(Operation("delete_tree_if_matches", destination, source=source, label=logical, params=params))
+                operations.append(Operation("delete_tree_if_matches", destination, source=source,
+                                            label=logical, params=params))
         else:
             operations.append(Operation("delete_owned_file", destination, source=source, label=logical))
+    operations.extend(deferred_trees)
     if scope == "project":
         operations.append(Operation("delete_json_hooks", root / ".cursor/hooks.json", label="cursor-hooks",
                                     params={"events": ["beforeSubmitPrompt"]}))
@@ -187,15 +227,21 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
                                 params={"events": ["BeforeAgent", "BeforeModel"]}))
     operations.append(Operation("delete_block", root / ".gitignore", label="runtime ignores",
                                 params={"start": "# prompt-optimizer:runtime:start", "end": "# prompt-optimizer:runtime:end"}))
-    backup_paths = {operation.path for operation in operations if operation.kind != "delete_tree_if_matches"}
-    for source, destination, strategy in targets.values():
+    backup_paths = {operation.path for operation in operations
+                    if operation.kind not in {"delete_tree_if_matches", "delete_dsh_manifest"}}
+    for logical, (source, destination, strategy) in targets.items():
         if strategy == "dir":
+            if logical in _DSH_LOGICAL | {"dsh-plugin-skill", "dsh-profile-plugin-skill"} and not owns_dsh:
+                continue
             for source_file in source.rglob("*"):
                 if source_file.is_file():
                     relative = source_file.relative_to(source)
                     if destination.name == "skills" and relative.parts[0] != "prompt-optimizer":
                         continue
                     if destination.name == "commands" and relative.name not in {"prompt.md", "prompt-only.md", "prompt-optimizer.md"}:
+                        continue
+                    managed_path = (destination / relative).relative_to(root).as_posix()
+                    if logical in _DSH_LOGICAL | {"dsh-plugin-skill", "dsh-profile-plugin-skill"} and managed_path not in owned_files:
                         continue
                     backup_paths.add(destination / relative)
     for path in sorted(backup_paths):
@@ -207,8 +253,6 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
         root / ".gemini/.prompt-optimizer-session-state.json",
     ):
         operations.append(Operation("delete_owned_file", runtime, label="runtime state"))
-    from .state import owned_path, read_state, state_path
-    state = read_state(root, scope)
     if state:
         for relative in state.get("created_configs", []):
             operations.append(Operation("delete_json_scaffold", root / relative, label="installer-created configuration"))
@@ -222,8 +266,7 @@ def build_uninstall_plan(root: Path, package_root: Path, scope: str) -> InstallP
     metadata = state_path(root, scope)
     operations.extend((Operation("delete_owned_file", metadata, label="installation metadata"),
                        Operation("delete_owned_file", metadata.with_name(metadata.name + ".prompt-optimizer.bak"), label="metadata backup")))
-    directories = set()
-    operations.extend(deferred_trees)
+    directories: set[Path] = set()
     for operation in operations:
         parent = operation.path.parent
         while parent != root and root in parent.parents:
