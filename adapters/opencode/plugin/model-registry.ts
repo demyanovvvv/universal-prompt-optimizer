@@ -3,6 +3,8 @@ export type Profile =
   | "astra"
   | "sol"
   | "gpt-6.1-sol"
+  | "gpt-6.2-astra"
+  | "gpt-6.2-sol"
   | "terra"
   | "luna"
   | "gpt-5.6-sol"
@@ -39,6 +41,8 @@ export const PROFILE_IDS = [
   "astra",
   "sol",
   "gpt-6.1-sol",
+  "gpt-6.2-astra",
+  "gpt-6.2-sol",
   "terra",
   "luna",
   "gpt-5.6-sol",
@@ -78,6 +82,8 @@ export const EXACT_MODEL_ALIASES: Record<string, Profile> = {
   "gpt-6-sol": "sol",
   "sol": "sol",
   "gpt-6.1-sol": "gpt-6.1-sol",
+  "gpt-6.2-astra": "gpt-6.2-astra",
+  "gpt-6.2-sol": "gpt-6.2-sol",
   "gpt-5.6-terra": "terra",
   "terra": "terra",
   "gpt-6-luna": "luna",

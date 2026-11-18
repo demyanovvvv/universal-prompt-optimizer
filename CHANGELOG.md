@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- Added exact GPT-6.2 Astra and GPT-6.2 Sol routing with distinct prompt profiles and official GPT-6.2 guidance. Kept API migration and caching requirements separate from prompt text.
+
 ## 5.16 — 2026-11-14
 - Fixed duplicate package-name display in DeepSeek Harness: the component row now uses `prompt-optimizer` while package and dependency IDs remain `universal-prompt-optimizer`.
 - Synchronized version markers and package metadata at v5.16.0; refreshed plugin descriptions, model counts, and Harness installation instructions.
@@ -11,7 +14,7 @@
 - Global Python/Bash installation now auto-detects locally available agents by default, adds newly detected adapters to recorded installations, preserves current settings, and reports read-only discovery through `--list-agents`. Explicit selection and project update behavior remain available; empty detection never silently installs every adapter.
 - Detect Windows-registered DeepSeek Harness Desktop installations at their actual path, even outside PATH or the default directories; verify the registered executable without scanning drives or changing the application, registry, PATH or Harness data root.
 - Added DeepSeek Harness as the tenth adapter: native Cordis prompt-section integration, exact per-step model routing from the canonical skill, AUTO/PREVIEW/OFF and durable first-turn scope, project/global installation, detection, dry-run and removal. Global automatic installation registers a native Desktop bundle with an icon and host-selected English/Russian metadata; project CLI installation uses an explicit `--patch` overlay. Existing user plugins, profile patches, approvals, reasoning and network settings are preserved; PREVIEW is textual/advisory.
-- Added seven distinct profiles for Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder, bringing the shared registry to 34 profiles across ten adapters. Preserved exact variant routing and unknown-model fallback.
+- Added seven distinct profiles for Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder, bringing the shared registry to 34 profiles across ten adapters at v5.16. The unreleased GPT-6.2 profiles bring it to 36.
 - Refreshed Gemini 4 Argon and DeepSeek V4.1 Flash guidance from current primary sources; added the user-requested `-1017` snapshot alias to the V4.1 Flash profile and corrected outdated DeepSeek V4 Pro redirection and Argon cache-threshold notes.
 - Separated model-specific prompt advice, inherited family practices and derived heuristics from host/API reasoning, sampling, caching and tool-history requirements; documented source and effectiveness limits without adding model calls or changing host settings.
 - Extended executable routing/hook contracts and deterministic evaluation fixtures for the new variants and snapshot. The mock baseline is intentionally extended for those fixtures; it is not evidence of measured model-answer quality.

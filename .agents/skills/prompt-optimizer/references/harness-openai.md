@@ -1,3 +1,17 @@
+# OpenAI GPT-6.2 harness notes
+
+## GPT-6.2 Astra and Sol
+- GPT-6.2 rejects `reasoning.effort: "none"`; begin a new integration at `medium`, or `low` when migrating from `none` / `minimal`. This is an API starting point, not prompt text or a universal runtime setting.
+- Responses API tool calls require the Responses API. Chat Completions is supported, but tool calling is not.
+- Remove unsupported `temperature`, `top_p`, and the documented logprob controls for the selected endpoint.
+- To cache reusable instructions, put them in a `developer` message at the start of `input`; top-level `instructions` are appended after `input` for GPT-6.2 and are for request-specific guidance.
+- Keep the input prefix unchanged where possible; some prefix edits, model changes, or end-user/organization changes drop reasoning items and can reduce quality or repeat work.
+- Check current caching TTL, cache boundaries, and billing when migrating; API cache controls are not prompt wording.
+
+Sources:
+https://developers.openai.com/api/docs/guides/latest-model/gpt-6.2-astra#migration-quickstart
+https://developers.openai.com/api/docs/guides/prompt-caching#how-prefix-matching-works
+
 # OpenAI GPT-5.6 / GPT-6 harness notes
 
 Runtime settings are not prompt text.

@@ -722,7 +722,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         # registry and hook that drift together cannot hide a dropped model.
         resolved = {namespace['exact_profile_for'](alias) for profile in registry['profiles'] for alias in profile['aliases']}
         self.assertLessEqual({
-            'astra', 'sol', 'gpt-6.1-sol', 'terra', 'luna', 'gpt-5.6-sol', 'gpt-5.6-luna',
+            'astra', 'sol', 'gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6.1-sol', 'terra', 'luna', 'gpt-5.6-sol', 'gpt-5.6-luna',
             'glm-5.2', 'glm-5.3', 'glm-5.3-flash', 'glm-5.3-flashx',
             'deepseek-v4.1-flash', 'deepseek-v4-flash', 'deepseek-v4-pro',
             'claude-fable-5.2', 'claude-fable-5.1', 'claude-fable-5',
@@ -739,11 +739,16 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
-            for model in ('gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3', 'gemini-4-argon'):
+            for model in ('gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3', 'gemini-4-argon'):
                 env = dict(os.environ, GEMINI_MODEL=model)
                 run = subprocess.run([sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')], input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}), text=True, capture_output=True, env=env, check=True)
                 context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']
                 self.assertIn('Resolved model profile:', context)
+                if model == 'gpt-6.2-astra':
+                    self.assertIn('Resolved model profile: GPT-6.2 Astra.', context)
+                elif model == 'gpt-6.2-sol':
+                    self.assertIn('Resolved model profile: GPT-6.2 Sol.', context)
+                    self.assertNotIn('Resolved model profile: GPT-6.2 Astra.', context)
                 self.assertNotIn('No exact installed model profile', context)
 
     def test_global_gemini_hook_uses_home_script_not_project_script(self):

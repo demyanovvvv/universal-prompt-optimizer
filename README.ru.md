@@ -56,7 +56,7 @@ LLM-вызов для переписывания запроса не требу�
 
 | Семейство | Профили |
 |---|---|
-| OpenAI | GPT-6 Astra, GPT-6.1 Sol, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Terra, GPT-5.6 Sol, GPT-5.6 Luna |
+| OpenAI | GPT-6.2 Astra (`gpt-6.2-astra`), GPT-6.2 Sol (`gpt-6.2-sol`), GPT-6 Astra, GPT-6.1 Sol, GPT-6 Sol, GPT-6 Luna, GPT-5.6 Terra, GPT-5.6 Sol, GPT-5.6 Luna |
 | Claude | Fable 5.2 (`claude-fable-5.2` / `claude-fable-5-2`), Fable 5.1, Fable 5, Opus 5.5, Opus 5, Opus 4.8, Sonnet 5.5, Sonnet 5 |
 | GLM | GLM-5.2, GLM-5.3, GLM-5.3-Flash, GLM-5.3-FlashX (`glm-5.3-flashx`, отдельно от Flash) |
 | DeepSeek | V4.1 Flash (включая `deepseek-v4.1-flash-1017`), V4 Flash, V4 Pro |
@@ -66,7 +66,7 @@ LLM-вызов для переписывания запроса не требу�
 Поддерживаемые aliases перечислены во внутреннем [реестре моделей](.agents/skills/prompt-optimizer/references/model-registry.json).
 Неоднозначный `deepseek-v4` не выбирает вариант автоматически. `deepseek-v4.1-flash-1017` — алиас snapshot в оптимизаторе, а официальный API обслуживает текущую версию через `deepseek-flash`. Исторические ID V4 Flash и V4 Pro сохраняют отдельные профили оптимизатора независимо от перенаправлений у провайдера.
 
-Все 34 профиля используют общий канонический реестр в десяти поддерживаемых адаптерах. ID с провайдером, например `google/gemini-4-hydrogen`, выбираются по точному имени модели, если host его предоставляет. Варианты Gemini 4, GLM FlashX/Flash, Kimi K3.1 Pro/K3 и Muse Wonder/Spark не подменяют друг друга; cyber-permissive, legal, highspeed и Wonder Full автоматически не угадываются. Оптимизатор выбирает рекомендации, но не переключает модель, не открывает доступ у провайдера и не меняет API-настройки. Профили различают модельные источники, общие практики семейства и производные эвристики; см. [источники](SOURCES.md). Thinking, sampling, caching и требования к истории tool calls описаны отдельно в harness notes.
+Все 36 профилей используют общий канонический реестр в десяти поддерживаемых адаптерах. GPT-6.2 Astra и Sol маршрутизируются только по точным ID `gpt-6.2-astra` и `gpt-6.2-sol`; старые алиасы `astra` и `sol` по-прежнему относятся к GPT-6. Для ID с префиксом провайдера используется точное имя модели, если host его предоставляет. Варианты GPT-6.2, GPT-6.1 Sol, GPT-6, Gemini 4, GLM FlashX/Flash, Kimi K3.1 Pro/K3 и Muse Wonder/Spark не подменяют друг друга. Оптимизатор выбирает рекомендации, но не переключает модель, не открывает доступ у провайдера и не меняет API-настройки. См. [источники и происхождение рекомендаций](SOURCES.md); thinking, sampling, caching и история tool calls описаны отдельно.
 
 ## Универсальные команды
 

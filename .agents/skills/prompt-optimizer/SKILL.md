@@ -27,6 +27,8 @@ Profiles:
 
 - GPT-6 Astra -> `references/gpt-6-astra.md`
 - GPT-6 Sol / `sol` -> `references/gpt-6-sol.md`
+- GPT-6.2 Astra -> `references/gpt-6.2-astra.md`
+- GPT-6.2 Sol -> `references/gpt-6.2-sol.md`
 - GPT-6.1 Sol -> `references/gpt-6.1-sol.md`
 - GPT-6 Luna / `luna` -> `references/gpt-6-luna.md`
 - GPT-5.6 Terra / `terra` -> `references/gpt-5.6-terra.md`
@@ -63,6 +65,8 @@ Profiles:
 
 Short overrides `sol` and `luna` select GPT-6. Explicit GPT-5.6 IDs select their versioned profiles; never infer a GPT-6 variant from bare `gpt-6`.
 
+GPT-6.2 Astra and Sol use exact versioned IDs; never route them through GPT-6 aliases `astra` or `sol`.
+GPT-6.2 conditional recommendations live in `references/gpt-6.2-family.md`; load only when a relevant behavior needs tuning.
 Prefer official model-specific guidance over official family guidance, API/harness documentation, and explicitly marked heuristics, in that order.
 
 ## Quality gate

@@ -1,7 +1,7 @@
 {
   "version": "5.16",
   "schemaVersion": 1,
-  "checked": "2026-09-29",
+  "checked": "2026-11-18",
   "profiles": [
     {
       "id": "astra",
@@ -28,6 +28,22 @@
       ],
       "file": "gpt-6.1-sol.md",
       "provenance": "official-model+official-family"
+    },
+    {
+      "id": "gpt-6.2-astra",
+      "aliases": [
+        "gpt-6.2-astra"
+      ],
+      "file": "gpt-6.2-astra.md",
+      "provenance": "official-model+official-prompt-guide"
+    },
+    {
+      "id": "gpt-6.2-sol",
+      "aliases": [
+        "gpt-6.2-sol"
+      ],
+      "file": "gpt-6.2-sol.md",
+      "provenance": "official-model+official-family-prompt-guide"
     },
     {
       "id": "terra",

@@ -1,6 +1,6 @@
 # Source provenance — Universal Prompt Optimizer v5.16
 
-Checked: **2026-11-13** for Gemini 4 Hydrogen/Carbon/Argon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash, DeepSeek V4.1 Flash / 1017 and Muse Wonder. Other profiles retain their per-file checked dates. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
+Checked: **2026-11-18** for GPT-6.2 Astra and Sol. Earlier dated checks below cover the models listed there. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
 
 Rule precedence inside profiles:
 
@@ -26,6 +26,11 @@ A benchmark/default runtime parameter is not silently converted into a universal
 The registry supports provider-qualified model leaves and documented spelling aliases. A profile match is neither a provider-access guarantee nor permission to modify host settings, upload context, enable paid tools, persist prompts or weaken approval boundaries.
 
 ## OpenAI
+- GPT-6.2 Astra/Sol prompting best practices: https://developers.openai.com/api/docs/guides/latest-model/gpt-6.2-astra#prompting-best-practices
+- GPT-6.2 Astra model: https://developers.openai.com/api/docs/models/gpt-6.2-astra
+- GPT-6.2 Sol model: https://developers.openai.com/api/docs/models/gpt-6.2-sol
+- GPT-6.2 Responses API migration: https://developers.openai.com/api/docs/guides/latest-model/gpt-6.2-astra#migration-quickstart
+- GPT-6.2 prompt caching: https://developers.openai.com/api/docs/guides/prompt-caching#how-prefix-matching-works
 - GPT-6 family model/prompt guidance: https://developers.openai.com/api/docs/guides/latest-model
 - GPT-6.1 Sol model: https://developers.openai.com/api/docs/models/gpt-6.1-sol
 - GPT-6 prompting best practices: https://developers.openai.com/api/docs/guides/latest-model#prompting-best-practices

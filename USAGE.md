@@ -49,7 +49,7 @@ Harness must already be installed; this installer does not download it or run it
 
 ## 2. Send a normal task
 
-Select the model in your host/provider; the optimizer does not switch it. All supported adapters share the [canonical profiles and aliases](.agents/skills/prompt-optimizer/references/model-registry.json), including Gemini 4 Hydrogen/Carbon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder. Automatic routing uses the exact model ID where observable, including provider-qualified IDs; otherwise name the exact profile when invoking the skill. DeepSeek V4.1 Flash and its `-1017` snapshot use one profile. Unknown variants still follow `skip`/`generic`. Thinking, sampling, cache and tool-history settings remain host-controlled; see each profile's linked harness notes and [source provenance](SOURCES.md).
+Select the model in your host/provider; the optimizer does not switch it. All supported adapters share the [canonical profiles and aliases](.agents/skills/prompt-optimizer/references/model-registry.json), including GPT-6.2 Astra (`gpt-6.2-astra`) and GPT-6.2 Sol (`gpt-6.2-sol`), Gemini 4 Hydrogen/Carbon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder. GPT-6.2 IDs are exact and separate from the older GPT-6 `astra` and `sol` aliases. Automatic routing uses the exact model ID where observable, including provider-qualified IDs; otherwise name the exact profile when invoking the skill. Unknown variants still follow `skip`/`generic`. Thinking, sampling, cache and tool-history settings remain host-controlled; see each profile's linked harness notes and [source provenance](SOURCES.md).
 
 With automatic integration enabled, write your request normally:
 

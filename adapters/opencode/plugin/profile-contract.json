@@ -22,6 +22,18 @@
       ]
     },
     {
+      "id": "gpt-6.2-astra",
+      "aliases": [
+        "gpt-6.2-astra"
+      ]
+    },
+    {
+      "id": "gpt-6.2-sol",
+      "aliases": [
+        "gpt-6.2-sol"
+      ]
+    },
+    {
       "id": "terra",
       "aliases": [
         "gpt-5.6-terra",

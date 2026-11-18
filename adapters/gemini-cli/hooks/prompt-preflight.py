@@ -195,6 +195,8 @@ def exact_profile_for(model: str | None) -> str | None:
         "gpt-6-sol": "sol",
         "sol": "sol",
         "gpt-6.1-sol": "gpt-6.1-sol",
+        "gpt-6.2-astra": "gpt-6.2-astra",
+        "gpt-6.2-sol": "gpt-6.2-sol",
         "gpt-5.6-terra": "terra",
         "terra": "terra",
         "gpt-6-luna": "luna",
@@ -355,6 +357,10 @@ elif profile == "gemini-4-hydrogen":
     base += "Resolved model profile: Gemini 4 Hydrogen. Use clear goals, relevant context, constraints and expected output; add structure, examples, multi-file scope, dependencies and verification only when they remove real ambiguity. Preserve precise short requests, leave output headroom in the unified context window, do not pad prompts for caching, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Carbon or Gemini Flash guidance. "
 elif profile == "gemini-4-carbon":
     base += "Resolved model profile: Gemini 4 Carbon. Use clear goals, relevant context, constraints and expected output; for multi-file engineering make scope, dependencies and required validation explicit, and for image or document input state what to extract, with host tools governing access. Preserve precise short requests without Gemini Flash's aggressive gating, leave output headroom in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Hydrogen or Gemini Flash guidance. "
+elif profile == "gpt-6.2-astra":
+    base += "Resolved model profile: GPT-6.2 Astra. Keep briefs concise and direct; for code state relevant repository conventions and caller behavior. Continue authorized work when intent is clear; make long-task final answers self-contained. Add audience, tone or visual direction only when relevant. Keep API/runtime settings outside prompt text. "
+elif profile == "gpt-6.2-sol":
+    base += "Resolved model profile: GPT-6.2 Sol. State outcome, relevant context, constraints and expected result; for code include relevant conventions and preserved behavior. Allow reversible assumptions and authorized follow-through; make long-task final answers self-contained. These are family starting points, not measured Sol-only tendencies; keep API/runtime settings outside prompt text. "
 elif profile == "gpt-6.1-sol":
     base += "Resolved model profile: GPT-6.1 Sol. Preserve decisive context, scope, approval boundaries and observable completion; continue authorized work through relevant validation, use bounded current evidence, and keep reasoning effort in runtime rather than prompt text. "
 elif profile == "sol":
