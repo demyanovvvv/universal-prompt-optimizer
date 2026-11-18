@@ -1,4 +1,4 @@
-# Gemini CLI adapter — v5.16
+# Gemini CLI adapter — v5.17
 
 For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
 or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.

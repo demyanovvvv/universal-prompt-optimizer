@@ -1,4 +1,4 @@
-# Universal Prompt Optimizer v5.16
+# Universal Prompt Optimizer v5.17
 
 **Язык:** Русский · [English README](README.md)
 

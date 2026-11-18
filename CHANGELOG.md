@@ -1,7 +1,9 @@
 # Changelog
 
-## Unreleased
+## 5.17 — 2026-11-18
 - Added exact GPT-6.2 Astra and GPT-6.2 Sol routing with distinct prompt profiles and official GPT-6.2 guidance. Kept API migration and caching requirements separate from prompt text.
+- Synchronized package and adapter version markers at v5.17.0; the shared registry now contains 36 profiles.
+
 
 ## 5.16 — 2026-11-14
 - Fixed duplicate package-name display in DeepSeek Harness: the component row now uses `prompt-optimizer` while package and dependency IDs remain `universal-prompt-optimizer`.

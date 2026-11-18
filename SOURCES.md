@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.16
+# Source provenance — Universal Prompt Optimizer v5.17
 
 Checked: **2026-11-18** for GPT-6.2 Astra and Sol. Earlier dated checks below cover the models listed there. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
 
