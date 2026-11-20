@@ -78,15 +78,16 @@ test('Harness resolves guidance from the canonical skill carried inside the inst
     const heading = readFileSync(join(packageRoot, '.agents/skills/prompt-optimizer/references', profile.file), 'utf8').split('\n')[0].replace(/^# /, '')
     assert.ok(h.text({ model: profile.id, provider: 'irrelevant' }).includes(heading), profile.id)
   }
-  assert.match(h.text(), /Prompt Optimizer v5\.17/)
+  const version = readFileSync(join(packageRoot, 'VERSION'), 'utf8').trim()
+  assert.ok(h.text().includes(`Prompt Optimizer v${version}`))
 })
 
 test('Bundle package exposes localized display metadata and its manifest icon', async t => {
   const h = await harness(t, {}, { bundle: true })
   const manifest = { root: h.installRoot, manifestPath: join(packageRoot, 'adapters/deepseek-harness/plugin/package.json') }
   for (const [language, title, description] of [
-    ['en', 'Prompt Optimizer', 'Adapts coding-agent prompts to the active model'],
-    ['ru', 'Оптимизатор промптов', 'Адаптирует запросы для coding-агентов к активной модели']
+    ['en', 'Prompt Optimizer', 'Model-aware prompt optimization for coding agents'],
+    ['ru', 'Оптимизатор промптов', 'Адаптирует запросы coding-агентов к точной модели']
   ]) {
     const meta = bundleMeta(manifest, language)
     assert.equal(meta.title, title)

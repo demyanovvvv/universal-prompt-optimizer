@@ -1,7 +1,12 @@
 # Changelog
 
+## 5.19 — 2026-11-20
+- Added the Gemini 4 Neon profile alongside Hydrogen, Carbon, and Argon, with exact routing and model-specific guidance kept separate from host/API controls.
+- Refreshed English and Russian product descriptions, installation guidance, model counts, compatibility notes, and release metadata.
+- Synchronized package, skill, adapter, runtime, and documentation version markers at v5.19.0.
+
 ## 5.18 — 2026-11-20
-- Added Gemini 4 Neon with exact model routing, dedicated prompt and host/API guidance, and synchronized the shared Gemini 4 prompting recommendations.
+- Refreshed the shared Gemini 4 prompting recommendations without importing Gemini 3.8 Flash's quality gate.
 - Synchronized package, skill, adapter, runtime, and documentation version markers at v5.18.0.
 
 ## 5.17 — 2026-11-20

@@ -1,4 +1,4 @@
-# Source provenance — Universal Prompt Optimizer v5.17
+# Source provenance — Universal Prompt Optimizer v5.19
 
 Checked: **2026-11-18** for GPT-6.2 Astra and Sol. Earlier dated checks below cover the models listed there. Sources were inspected without model calls; recommendations are not a measured quality or performance claim.
 
@@ -15,7 +15,7 @@ A benchmark/default runtime parameter is not silently converted into a universal
 
 | Model | Evidence and prompt-shaping decision | Separate host/API concern |
 |---|---|---|
-| Gemini 4 Hydrogen / Carbon / Argon | Model-specific developer guides plus shared Google prompting practices: clear outcome, relevant context, constraints and output; examples only when useful. No new mandatory prompt template or inherited Flash-specific quality gate. | Unified context/output headroom; 4,096-token implicit cache prefix. Hydrogen additionally documents cross-turn thought signatures and prefix-binding/compaction constraints. |
+| Gemini 4 Hydrogen / Carbon / Neon / Argon | Model-specific developer guides plus shared Google prompting practices: clear outcome, relevant context, constraints and output; examples only when useful. Neon has its own model guide; no new mandatory prompt template or inherited Flash-specific quality gate. | Unified context/output headroom; 4,096-token implicit cache prefix. Hydrogen additionally documents cross-turn thought signatures and prefix-binding/compaction constraints. |
 | Claude Fable 5.2 | Dedicated prompt guide: preserve whole-task completion within authorization, precise scope and useful final evidence; omit broad code-ownership wording for minimal edits and do not add “think less” scaffolding. | Adaptive thinking, effort, append-only signed history and progress-display support are host controls. |
 | GLM-5.3-FlashX | Shared Flash/FlashX model page and Z.ai coding practices: goal/context/constraints/done; for visual deliverables compare actual rendered output. FlashX remains distinct from Flash. | Forced thinking, preserved reasoning history, tool streaming and sampling are API settings. |
 | Kimi K3.1 Pro | Model quickstart/tool guidance plus generic Kimi prompt practices: decisive context, explicit requirements and output; distinguish task steps from instructions to expose reasoning. No dedicated K3.1 Pro prompt template found. | Full assistant-message replay, always-on thinking, effort/cache interaction and tool-call pairing. |

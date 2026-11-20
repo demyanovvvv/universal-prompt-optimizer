@@ -2,8 +2,8 @@
 
 **Language:** English · [Русский](USAGE.ru.md)
 
-Model-aware optimization of coding-agent prompts. Preserves user intent and
-constraints without extra model calls.
+Adaptive, model-aware prompt optimization for coding agents. Preserves user
+intent, constraints, and approval boundaries without extra LLM calls.
 
 ## 1. Install and start
 

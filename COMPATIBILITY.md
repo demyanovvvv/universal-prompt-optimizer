@@ -1,4 +1,4 @@
-# Compatibility — v5.17
+# Compatibility — v5.19
 
 For practical setup and task examples, see [Usage](USAGE.md) or
 [Руководство пользователя](USAGE.ru.md). Adapter-specific instructions are linked below.
@@ -16,7 +16,7 @@ For practical setup and task examples, see [Usage](USAGE.md) or
 | OpenAI Codex | Yes | Best effort / explicit override | Yes | interaction-dependent fallback | Yes | skills + AGENTS.md |
 | Windsurf | Yes | Best effort / explicit override | Yes | interaction-dependent fallback | Yes | skills + `.windsurf/rules` (project) / global rules |
 
-All ten adapters consume the same 36 model profiles. GPT-6.2 Astra and Sol have distinct exact-version routing and prompt guidance; older `astra` and `sol` aliases retain their GPT-6 meaning. Other recent additions include Gemini 4 Hydrogen/Carbon, Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash and Muse Wonder. Exact routing accepts provider-qualified IDs where observable, but does not enable provider access or configure reasoning, sampling, caching, signatures or tool-history serialization. Those host/API requirements are documented separately in profile-linked harness notes. Distinct unregistered variants remain unsupported rather than falling through to a related model.
+All ten adapters consume the same 37 model profiles. GPT-6.2 Astra and Sol have distinct exact-version routing and prompt guidance; older `astra` and `sol` aliases retain their GPT-6 meaning. Gemini 4 Hydrogen, Carbon, Neon, and Argon use their exact IDs and matching developer guidance. Other recent additions include Claude Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash, and Muse Wonder. Exact routing accepts provider-qualified IDs where observable, but does not enable provider access or configure reasoning, sampling, caching, signatures, or tool-history serialization. Those host/API requirements are documented separately in profile-linked harness notes. Distinct unregistered variants remain unsupported rather than falling through to a related model.
 
 Fable 5.2 and Hydrogen document signed history/prefix checks that can reject requests when a host rewrites earlier system instructions, tools or messages. Profile selection does not prove provider-transport compatibility: hosts must preserve signed history and use supported instruction-update/compaction mechanisms. This update documents those requirements; it does not modify provider SDKs or claim a real-provider smoke test.
 

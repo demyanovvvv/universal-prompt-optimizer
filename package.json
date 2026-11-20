@@ -1,8 +1,8 @@
 {
   "name": "universal-prompt-optimizer",
   "private": true,
-  "version": "5.18.0",
-  "description": "Model-aware optimization of coding-agent prompts, preserving user intent and constraints without extra model calls.",
+  "version": "5.19.0",
+  "description": "Adaptive, model-aware prompt optimization for coding agents. Preserves intent, constraints, and approval boundaries without extra LLM calls.",
   "engines": {
     "node": ">=20"
   },

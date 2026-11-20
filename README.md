@@ -1,11 +1,11 @@
-# Universal Prompt Optimizer v5.18
+# Universal Prompt Optimizer v5.19
 
 **Language:** English · [Русский README](README.ru.md)
 
 **Quick links:** [Usage guide](USAGE.md) · [Installation](#installation) · [Commands](#universal-commands) · [OpenCode settings](#opencode-tui-controls) · [Compatibility](COMPATIBILITY.md) · [Configuration guide](DECISION-GUIDE.md) · [Changelog](CHANGELOG.md)
 
-Model-aware optimization of coding-agent prompts. Preserves user intent and
-constraints without extra model calls.
+Adaptive, model-aware prompt optimization for coding agents. Preserves user
+intent, constraints, and approval boundaries without extra LLM calls.
 
 Write a natural request. The active agent applies only useful guidance for its
 resolved model and executes in the same model turn. Clear requests stay lean;
@@ -18,7 +18,7 @@ and lower total tokens per completed task. No separate optimizer LLM call is req
 
 - **Adaptive preflight:** PASS keeps precise requests lean, LIGHT adds a missing
   boundary, and FULL builds a concise brief for complex tasks.
-- **Exact model routing:** 34 internal profiles cover supported OpenAI, Claude,
+- **Exact model routing:** 37 internal profiles cover supported OpenAI, Claude,
   DeepSeek, GLM, Gemini, and other models. Unknown or ambiguous IDs follow the
   configured `generic` or `skip` policy without guessing a model variant.
 - **AUTO / PREVIEW / OFF:** choose silent adaptation, review before execution,
