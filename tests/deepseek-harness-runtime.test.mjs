@@ -78,7 +78,7 @@ test('Harness resolves guidance from the canonical skill carried inside the inst
     const heading = readFileSync(join(packageRoot, '.agents/skills/prompt-optimizer/references', profile.file), 'utf8').split('\n')[0].replace(/^# /, '')
     assert.ok(h.text({ model: profile.id, provider: 'irrelevant' }).includes(heading), profile.id)
   }
-  assert.match(h.text(), /Prompt Optimizer v5\.16/)
+  assert.match(h.text(), /Prompt Optimizer v5\.17/)
 })
 
 test('Bundle package exposes localized display metadata and its manifest icon', async t => {

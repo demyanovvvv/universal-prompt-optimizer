@@ -20,6 +20,7 @@ test("Pi resolves every registry alias to its own profile, including provider-pr
   assert.equal(resolvePiProfile("gemini-4-hydrogen"), "gemini-4-hydrogen")
   assert.equal(resolvePiProfile("google/gemini-4-hydrogen"), "gemini-4-hydrogen")
   assert.equal(resolvePiProfile("gemini-4-carbon"), "gemini-4-carbon")
+  assert.equal(resolvePiProfile("gemini-4-neon"), "gemini-4-neon")
   assert.equal(resolvePiProfile("claude-fable-5.2"), "claude-fable-5.2")
   assert.equal(resolvePiProfile("anthropic/claude-fable-5-2"), "claude-fable-5.2")
   assert.equal(resolvePiProfile("z-ai/glm-5.3-flashx"), "glm-5.3-flashx")
@@ -44,7 +45,7 @@ test("Pi routing uses the exact shared aliases and supported latest suffix", () 
 
 test("Pi rejects unknown suffixes, family-only and near-version ids for the new profiles", () => {
   for (const model of [
-    "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "gemini-40-carbon", "gemini-4",
+    "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "gemini-4-neon-extra", "gemini-4-neons", "gemini-40-neon", "gemini-4.0-neon", "gemini-40-carbon", "gemini-4",
     "claude-fable", "claude-fable-5.2-extra", "claude-fable-5.20", "claude-fable-5x",
     "glm-5", "glm-5.3-flashxx", "glm-5.30-flashx", "glm-5.3-flashh",
     "glm-5.3-flashx-legal", "glm-5.3-flashx-legals", "glm-50-flashx",

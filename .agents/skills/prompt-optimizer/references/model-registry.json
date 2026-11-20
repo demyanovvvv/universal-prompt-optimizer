@@ -1,7 +1,7 @@
 {
-  "version": "5.17",
+  "version": "5.18",
   "schemaVersion": 1,
-  "checked": "2026-11-18",
+  "checked": "2026-11-20",
   "profiles": [
     {
       "id": "astra",
@@ -300,6 +300,14 @@
         "gemini-4-carbon"
       ],
       "file": "gemini-4-carbon.md",
+      "provenance": "official-model+api+family"
+    },
+    {
+      "id": "gemini-4-neon",
+      "aliases": [
+        "gemini-4-neon"
+      ],
+      "file": "gemini-4-neon.md",
       "provenance": "official-model+api+family"
     },
     {

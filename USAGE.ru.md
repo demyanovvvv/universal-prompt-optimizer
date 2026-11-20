@@ -5,7 +5,7 @@
 Оптимизатор запросов для coding-агентов с учётом активной модели. Сохраняет
 замысел и ограничения пользователя без дополнительных LLM-вызовов.
 
-Выберите модель в агенте/провайдере: оптимизатор её не переключает. Все адаптеры используют [общие профили и алиасы](.agents/skills/prompt-optimizer/references/model-registry.json), включая GPT-6.2 Astra (`gpt-6.2-astra`) и GPT-6.2 Sol (`gpt-6.2-sol`), Gemini 4 Hydrogen/Carbon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash и Muse Wonder. Для GPT-6.2 нужны точные версионированные ID; алиасы `astra` и `sol` остаются за GPT-6. Автомаршрутизация использует точный ID, в том числе с префиксом провайдера, если host его предоставляет; иначе укажите профиль при вызове skill. Неизвестные варианты следуют `skip`/`generic`. Thinking, sampling, cache и история tool calls остаются настройками host; см. harness notes профилей и [источники](SOURCES.md).
+Выберите модель в агенте/провайдере: оптимизатор её не переключает. Все адаптеры используют [общие профили и алиасы](.agents/skills/prompt-optimizer/references/model-registry.json), включая GPT-6.2 Astra (`gpt-6.2-astra`) и GPT-6.2 Sol (`gpt-6.2-sol`), Gemini 4 Hydrogen/Carbon/Neon/Argon, Fable 5.2, GLM-5.3-FlashX, Kimi K3.1 Pro, MiniMax M3.1 Flash и Muse Wonder. Для GPT-6.2 нужны точные версионированные ID; алиасы `astra` и `sol` остаются за GPT-6. Автомаршрутизация использует точный ID, в том числе с префиксом провайдера, если host его предоставляет; иначе укажите профиль при вызове skill. Неизвестные варианты следуют `skip`/`generic`. Thinking, sampling, cache и история tool calls остаются настройками host; см. рекомендации и harness notes профилей, а также [источники](SOURCES.md).
 
 ## 1. Установка и запуск
 

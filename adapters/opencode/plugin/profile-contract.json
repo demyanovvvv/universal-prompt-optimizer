@@ -233,6 +233,12 @@
       ]
     },
     {
+      "id": "gemini-4-neon",
+      "aliases": [
+        "gemini-4-neon"
+      ]
+    },
+    {
       "id": "gemini-3.8-flash",
       "aliases": [
         "gemini-3.8-flash"

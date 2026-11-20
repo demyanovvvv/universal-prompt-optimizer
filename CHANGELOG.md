@@ -1,8 +1,12 @@
 # Changelog
 
-## 5.17 — 2026-11-18
-- Added exact GPT-6.2 Astra and GPT-6.2 Sol routing with distinct prompt profiles and official GPT-6.2 guidance. Kept API migration and caching requirements separate from prompt text.
-- Synchronized package and adapter version markers at v5.17.0; the shared registry now contains 36 profiles.
+## 5.18 — 2026-11-20
+- Added Gemini 4 Neon with exact model routing, dedicated prompt and host/API guidance, and synchronized the shared Gemini 4 prompting recommendations.
+- Synchronized package, skill, adapter, runtime, and documentation version markers at v5.18.0.
+
+## 5.17 — 2026-11-20
+- Added exact Gemini 4 Neon routing with dedicated prompt and host/API notes. Gemini 4 profiles now reflect Google's shared recommendations for clear objectives, relevant context, useful structure, conflict-free instructions and iterative evaluation without importing Gemini 3.8 Flash's quality gate.
+- Synchronized package and adapter version markers at v5.17.0; the shared registry now contains 37 profiles.
 
 
 ## 5.16 — 2026-11-14

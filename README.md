@@ -1,4 +1,4 @@
-# Universal Prompt Optimizer v5.17
+# Universal Prompt Optimizer v5.18
 
 **Language:** English · [Русский README](README.ru.md)
 
@@ -101,9 +101,9 @@ V4.1 Flash uses one profile for `deepseek-v4.1-flash`, `deepseek-flash`, and `de
 Claude Fable 5.2 (`claude-fable-5.2` / vendor spelling `claude-fable-5-2`); Fable 5.1; Fable 5; Opus 5.5; Opus 5; Opus 4.8; Sonnet 5.5; Sonnet 5.
 
 ### Other
-Kimi K3.1 Pro (`kimi-k3.1-pro`); Kimi K3; MiniMax M3.1 Flash (`minimax-m3.1-flash`); Muse Wonder (`muse-wonder`, vendor ID `muse-wonder-1.0`); Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Hydrogen, Carbon and Argon (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-argon`); Grok 4.6.
+Kimi K3.1 Pro (`kimi-k3.1-pro`); Kimi K3; MiniMax M3.1 Flash (`minimax-m3.1-flash`); Muse Wonder (`muse-wonder`, vendor ID `muse-wonder-1.0`); Muse Spark 1.3; Hy4-preview; Qwen3.8-Max (including 0902/dated aliases); Gemini 3.8 Flash; Gemini 4 Hydrogen, Carbon, Neon and Argon (`gemini-4-hydrogen`, `gemini-4-carbon`, `gemini-4-neon`, `gemini-4-argon`); Grok 4.6.
 
-The 36 profiles share the same canonical registry across all ten supported adapters. Provider-qualified IDs such as `openai/gpt-6.2-astra` resolve by their exact model leaf where the host exposes it. GPT-6.2 Astra/Sol, GPT-6.1 Sol, GPT-6 variants, Gemini 4 variants, GLM FlashX/Flash, Kimi K3.1 Pro/K3 and Muse Wonder/Spark remain distinct; aliases and unknown variants are never guessed. The optimizer selects prompt guidance, not the host's model, provider access or API settings. Profiles distinguish model-specific sources, inherited family practices and derived heuristics; see [source provenance](SOURCES.md). Thinking, sampling, caching and tool-history requirements stay in separate harness notes.
+The 37 profiles share the same canonical registry across all ten supported adapters. Provider-qualified IDs such as `openai/gpt-6.2-astra` resolve by their exact model leaf where the host exposes it. GPT-6.2 Astra/Sol, GPT-6.1 Sol, GPT-6 variants, Gemini 4 variants, GLM FlashX/Flash, Kimi K3.1 Pro/K3 and Muse Wonder/Spark remain distinct; aliases and unknown variants are never guessed. The optimizer selects prompt guidance, not the host's model, provider access or API settings. Profiles distinguish model-specific sources, inherited family practices and derived heuristics; see [source provenance](SOURCES.md). Thinking, sampling, caching and tool-history requirements stay in separate harness notes.
 
 ## Modes
 

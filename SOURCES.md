@@ -105,11 +105,12 @@ The registry supports provider-qualified model leaves and documented spelling al
 - Function calling: https://docs.qwencloud.com/developer-guides/tool-calling/function-calling
 
 ## Google / Gemini
-- Gemini 4 Hydrogen/Carbon/Argon checked **2026-11-13**. Model/API facts and inherited shared prompting practices are labeled separately.
+- Gemini 4 Hydrogen/Carbon/Argon and Neon checked **2026-11-20**. Model/API facts and shared prompting practices are distinguished.
 - Hydrogen developer guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-hydrogen
 - Carbon developer guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-carbon
+- Neon developer guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-neon
 - Argon developer guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-argon
-- Argon model: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/gemini/4-argon
+- Gemini 4 family overview: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/start/get-started-with-gemini-4
 - Shared prompting practices: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/prompts/prompt-design-strategies
 - Gemini 3 prompt guidance: https://ai.google.dev/gemini-api/docs/generate-content/gemini-3
 - Gemini 3.8 Flash: https://ai.google.dev/gemini-api/docs/latest-model

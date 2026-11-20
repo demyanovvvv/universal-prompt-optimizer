@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "5.17",
+  "version": "5.18",
   "adapters": [
     {
       "id": "opencode",

@@ -4,10 +4,10 @@ description: Adapt a user task to the active model only when useful. Use for aut
 compatibility: Agent Skills compatible coding agents; native routing in OpenCode/Pi and rules or hook adapters elsewhere.
 metadata:
   author: developer-guidance-based
-  version: "5.17"
+  version: "5.18"
 ---
 
-# Universal Prompt Optimizer v5.17
+# Universal Prompt Optimizer v5.18
 
 Preserve the user's task while applying only model guidance that materially improves execution. A short, clear request should stay short.
 
@@ -56,11 +56,13 @@ Profiles:
 - Muse Spark 1.3 -> `references/muse-spark-1.3.md`
 - Hy4-preview -> `references/hy4-preview.md`
 - Qwen3.8-Max -> `references/qwen3.8-max.md`
-- Gemini 3.8 Flash -> `references/gemini-3.8-flash.md`
-- Gemini 4 Argon / `gemini-4-argon` -> `references/gemini-4-argon.md`
 - Gemini 4 Hydrogen / `gemini-4-hydrogen` -> `references/gemini-4-hydrogen.md`
 - Gemini 4 Carbon / `gemini-4-carbon` -> `references/gemini-4-carbon.md`
+- Gemini 4 Neon / `gemini-4-neon` -> `references/gemini-4-neon.md`
+- Gemini 4 Argon / `gemini-4-argon` -> `references/gemini-4-argon.md`
+- Gemini 3.8 Flash -> `references/gemini-3.8-flash.md`
 - Grok 4.6 -> `references/grok-4.6.md`
+
 - Unknown -> `references/generic-agent.md` only when neutral fallback is enabled.
 
 Short overrides `sol` and `luna` select GPT-6. Explicit GPT-5.6 IDs select their versioned profiles; never infer a GPT-6 variant from bare `gpt-6`.

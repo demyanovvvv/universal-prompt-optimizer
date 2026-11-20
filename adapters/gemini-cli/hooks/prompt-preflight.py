@@ -251,6 +251,7 @@ def exact_profile_for(model: str | None) -> str | None:
         "gemini-4-argon": "gemini-4-argon",
         "gemini-4-hydrogen": "gemini-4-hydrogen",
         "gemini-4-carbon": "gemini-4-carbon",
+        "gemini-4-neon": "gemini-4-neon",
         "gemini-3.8-flash": "gemini-3.8-flash",
         "grok-4.6": "grok-4.6"
     }
@@ -319,13 +320,13 @@ common = (
 )
 quality_gate = cfg.get("qualityGate", "adaptive")
 if quality_gate == "pass":
-    base = "Prompt Optimizer v5.17. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
+    base = "Prompt Optimizer v5.18. Quality gate is disabled: normalize every in-scope request into the leanest model-appropriate execution brief before acting. " + common
 elif quality_gate == "light":
-    base = "Prompt Optimizer v5.17. Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape before acting. " + common
+    base = "Prompt Optimizer v5.18. Selected quality gate: LIGHT. Add only a missing high-value boundary, constraint, done criterion, approval boundary, or output shape before acting. " + common
 elif quality_gate == "full":
-    base = "Prompt Optimizer v5.17. Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before acting. " + common
+    base = "Prompt Optimizer v5.18. Selected quality gate: FULL. Build a concise execution brief from only task-relevant context before acting. " + common
 else:
-    base = "Prompt Optimizer v5.17. Apply PASS/LIGHT/FULL quality gating before acting. " + common
+    base = "Prompt Optimizer v5.18. Apply PASS/LIGHT/FULL quality gating before acting. " + common
 
 # Prefer the exact model observed by BeforeModel in this session. Before the first
 # model call, use only explicit configuration visible to the hook. Never assume a
@@ -351,12 +352,15 @@ if profile == "gemini-3.8-flash":
         "Resolved model profile: Gemini 3.8 Flash. Prefer concise direct instructions and aggressively PASS/LIGHT. "
         "For long context put source data first and the specific task at the end; avoid verbose legacy prompt frameworks. "
     )
-elif profile == "gemini-4-argon":
-    base += "Resolved model profile: Gemini 4 Argon. Use clear goals, relevant context, constraints and expected output; add multi-file scope, dependencies and verification only when useful. Preserve precise short requests, leave output room in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Gemini Flash guidance. "
-elif profile == "gemini-4-hydrogen":
-    base += "Resolved model profile: Gemini 4 Hydrogen. Use clear goals, relevant context, constraints and expected output; add structure, examples, multi-file scope, dependencies and verification only when they remove real ambiguity. Preserve precise short requests, leave output headroom in the unified context window, do not pad prompts for caching, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Carbon or Gemini Flash guidance. "
-elif profile == "gemini-4-carbon":
-    base += "Resolved model profile: Gemini 4 Carbon. Use clear goals, relevant context, constraints and expected output; for multi-file engineering make scope, dependencies and required validation explicit, and for image or document input state what to extract, with host tools governing access. Preserve precise short requests without Gemini Flash's aggressive gating, leave output headroom in the unified context window, and keep thinking/sampling settings outside prompt text. Apply the matching installed profile; do not substitute Argon, Hydrogen or Gemini Flash guidance. "
+elif profile in {"gemini-4-argon", "gemini-4-hydrogen", "gemini-4-carbon", "gemini-4-neon"}:
+    model_name = {"gemini-4-argon": "Argon", "gemini-4-hydrogen": "Hydrogen", "gemini-4-carbon": "Carbon", "gemini-4-neon": "Neon"}[profile]
+    base += (
+        f"Resolved model profile: Gemini 4 {model_name}. State the objective, relevant context, constraints and requested output; "
+        "use labels, structure or examples only to resolve ambiguity or specify non-obvious formats; state scope, dependencies and verification when complex work needs them. "
+        "Delimit untrusted source material and state its intended use. Iterate recurring prompts against representative inputs and evaluate outputs; avoid redundant/conflicting instructions. "
+        "Keep relevant context and leave output headroom in the unified context window; keep reasoning and API settings outside prompt text. "
+        "Apply only the matching installed profile; do not substitute Gemini Flash or another Gemini 4 variant. "
+    )
 elif profile == "gpt-6.2-astra":
     base += "Resolved model profile: GPT-6.2 Astra. Keep briefs concise and direct; for code state relevant repository conventions and caller behavior. Continue authorized work when intent is clear; make long-task final answers self-contained. Add audience, tone or visual direction only when relevant. Keep API/runtime settings outside prompt text. "
 elif profile == "gpt-6.2-sol":

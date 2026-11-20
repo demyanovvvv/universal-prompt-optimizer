@@ -1,4 +1,4 @@
-# Gemini CLI adapter — v5.17
+# Gemini CLI adapter — v5.18
 
 For setup, task examples, modes, updates, and removal, see [Usage](../../USAGE.md)
 or [Руководство пользователя](../../USAGE.ru.md). This document covers host-specific integration.
@@ -12,7 +12,7 @@ The adapter registers the same observation/preflight script for two native Gemin
 
 The adapter never assumes that “Gemini CLI” means Gemini 3.8 Flash.
 
-`gemini-4-argon` selects its own installed profile and Argon-specific preflight. The profile combines labeled shared Google prompting practices with Argon context constraints; thinking and API parameters remain host-controlled. Similar IDs and other Argon variants do not select this profile.
+The exact IDs `gemini-4-argon`, `gemini-4-hydrogen`, `gemini-4-carbon` and `gemini-4-neon` select distinct installed profiles and matching preflight guidance. These combine shared Google prompt-design practices with model-aware context recommendations; for untrusted source material, state the intended use and preserve the instruction hierarchy. They do not set thinking, sampling, tools or API parameters. Similar IDs, provider names and other Gemini variants do not select a profile.
 
 Before the first model call it can safely use only an explicit model visible to the hook, in this order:
 

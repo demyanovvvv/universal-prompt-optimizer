@@ -40,6 +40,8 @@ const routes = [
   ["gemini-4-hydrogen", "gemini-4-hydrogen", "Gemini 4 Hydrogen"],
   ["google/gemini-4-hydrogen", "gemini-4-hydrogen", "Gemini 4 Hydrogen"],
   ["gemini-4-carbon", "gemini-4-carbon", "Gemini 4 Carbon"],
+  ["gemini-4-neon", "gemini-4-neon", "Gemini 4 Neon"],
+  ["google/gemini-4-neon", "gemini-4-neon", "Gemini 4 Neon"],
   ["claude-fable-5.2", "claude-fable-5.2", "Claude Fable 5.2"],
   ["claude-fable-5-2", "claude-fable-5.2", "Claude Fable 5.2"],
   ["anthropic/claude-fable-5-2", "claude-fable-5.2", "Claude Fable 5.2"],
@@ -66,7 +68,7 @@ const routes = [
 
 const unsupported = [
   "gemini-4", "gemini-4.0-argon", "gemini-4-argol", "gemini-4-argon-cyber-permissive", "gemini-4-argon-extra",
-  "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "gemini-40-hydrogen", "gemini-4.0-hydrogen",
+  "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "gemini-4-neon-extra", "gemini-4-neons", "gemini-40-neon", "gemini-4.0-neon", "gemini-40-hydrogen", "gemini-4.0-hydrogen",
   "gpt-6", "gpt-6-terra", "gpt-60-sol", "gpt-5.60-sol",
   "gpt-6-sol-extra", "gpt-6-sol-2026", "gpt-5.6-luna-extra", "solvent", "unknown-model",
   "claude-opus-5.50", "claude-opus-5-50", "claude-opus-5-2026", "claude-opus-5.5-extra",
@@ -127,6 +129,7 @@ test("OpenCode keeps less specific profiles when a family-specific sibling exist
   assert.equal(resolveModel("anthropic", "claude-fable-5.2").profile, "claude-fable-5.2")
   assert.equal(resolveModel("google", "gemini-4-argon").profile, "gemini-4-argon")
   assert.equal(resolveModel("google", "gemini-4-carbon").profile, "gemini-4-carbon")
+  assert.equal(resolveModel("google", "gemini-4-neon").profile, "gemini-4-neon")
   // Provider names are never model aliases: a provider called hydrogen or muse reveals nothing.
   assert.equal(resolveModel("hydrogen", "unknown").profile, undefined)
   assert.equal(resolveModel("muse-wonder", "unknown").profile, undefined)

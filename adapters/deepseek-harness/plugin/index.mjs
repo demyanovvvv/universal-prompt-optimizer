@@ -1,4 +1,4 @@
-// Universal Prompt Optimizer v5.17 - DeepSeek Harness (Cordis) runtime adapter.
+// Universal Prompt Optimizer v5.18 - DeepSeek Harness (Cordis) runtime adapter.
 //
 // Registers one native system-prompt section. On each assembly it reads the shared
 // prompt-optimizer configuration, resolves the active model route from the assembly's
@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url"
 export const name = "universal-prompt-optimizer"
 export const inject = ["systemPrompt", "agents", "workingDirectory"]
 
-const VERSION = "5.17"
+const VERSION = "5.18"
 const SECTION_NAME = "universal-prompt-optimizer"
 const SECTION_ORDER = 10300
 

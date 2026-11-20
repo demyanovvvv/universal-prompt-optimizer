@@ -615,6 +615,8 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
             ('meta/muse-wonder', 'muse-wonder'),
             ('muse-wonder-1.0', 'muse-wonder'),
             ('google/gemini-4-argon', 'gemini-4-argon'),
+            ('gemini-4-neon', 'gemini-4-neon'),
+            ('google/gemini-4-neon', 'gemini-4-neon'),
         ):
             with self.subTest(model=model):
                 self.assertEqual(resolve(model), profile)
@@ -629,7 +631,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         resolve = namespace['exact_profile_for']
         for model in (
             'gemini-4', 'gemini-4.0-hydrogen', 'gemini-4-hydrogen-extra', 'gemini-4-hydrogens',
-            'gemini-4-carbon-copy', 'claude-fable', 'claude-fable-5.2-extra', 'claude-fable-5.20',
+            'gemini-4-carbon-copy', 'gemini-4-neon-extra', 'gemini-4-neons', 'gemini-40-neon', 'gemini-4.0-neon',
             'glm-5', 'glm-5.3-flashxx', 'glm-5.30-flashx', 'glm-5.3-flashh',
             'glm-5.3-flashx-legal', 'glm-5.3-flashx-legals',
             'kimi-k3.1', 'kimi-k3.10-pro', 'kimi-k3-pro',
@@ -657,6 +659,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
                 ('muse-wonder', 'Resolved model profile: muse-wonder.'),
                 ('deepseek-v4.1-flash-1017', 'Resolved model profile: deepseek-v4.1-flash.'),
                 ('gemini-4-argon', 'Resolved model profile: Gemini 4 Argon.'),
+                ('gemini-4-neon', 'Resolved model profile: Gemini 4 Neon.'),
             ):
                 with self.subTest(model=model):
                     env = dict(os.environ, GEMINI_MODEL=model)
@@ -729,7 +732,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
             'claude-opus-5.5', 'claude-opus-5', 'claude-opus-4.8', 'claude-sonnet-5', 'claude-sonnet-5.5',
             'kimi-k3', 'kimi-k3.1-pro', 'minimax-m3.1-flash', 'muse-spark-1.3', 'muse-wonder',
             'hy4-preview', 'qwen3.8-max',
-            'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-4-carbon', 'gemini-3.8-flash', 'grok-4.6',
+            'gemini-4-argon', 'gemini-4-hydrogen', 'gemini-4-carbon', 'gemini-4-neon', 'gemini-3.8-flash', 'grok-4.6',
         }, resolved)
 
     def test_gemini_supported_profiles_render_without_false_fallback(self):
@@ -739,7 +742,7 @@ Do not edit persistent configuration and do not reveal hidden reasoning.
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             (root / '.prompt-optimizer.json').write_text('{"unsupportedModel":"skip"}', encoding='utf-8')
-            for model in ('gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3', 'gemini-4-argon'):
+            for model in ('gpt-6.2-astra', 'gpt-6.2-sol', 'gpt-6-astra', 'gpt-6-luna', 'gpt-5.6-terra', 'glm-5.3', 'kimi-k3', 'gemini-4-argon', 'gemini-4-neon'):
                 env = dict(os.environ, GEMINI_MODEL=model)
                 run = subprocess.run([sys.executable, '-B', str(ROOT / 'adapters/gemini-cli/hooks/prompt-preflight.py')], input=json.dumps({'cwd': str(root), 'hook_event_name': 'BeforeAgent'}), text=True, capture_output=True, env=env, check=True)
                 context = json.loads(run.stdout)['hookSpecificOutput']['additionalContext']

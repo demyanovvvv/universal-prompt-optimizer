@@ -416,6 +416,8 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(resolve("vendor/CLAUDE_SONNET_5.5-latest"), "claude-sonnet-5.5")
         self.assertEqual(resolve("claude-opus-5.5"), "claude-opus-5.5")
         self.assertEqual(resolve("google/gemini-4-argon"), "gemini-4-argon")
+        self.assertEqual(resolve("google/gemini-4-neon"), "gemini-4-neon")
+        self.assertIsNone(resolve("gemini-4-neon-extra"))
         self.assertIsNone(resolve("gemini-4-argon-cyber-permissive"))
         self.assertIsNone(resolve("gemini-4.0-argon"))
         self.assertIsNone(resolve("gpt-6.1-sol-extra"))
@@ -444,6 +446,8 @@ class InstallerTests(unittest.TestCase):
                 references = skills_dir / "prompt-optimizer/references"
                 self.assertTrue((references / "gemini-4-argon.md").is_file())
                 self.assertTrue((references / "harness-gemini-4-argon.md").is_file())
+                self.assertTrue((references / "gemini-4-neon.md").is_file())
+                self.assertTrue((references / "harness-gemini-4-neon.md").is_file())
             installer.uninstall(home, "global")
             self.assertFalse((home / ".agents/skills/prompt-optimizer/SKILL.md").exists())
 

@@ -13,6 +13,8 @@ const profileLabels = [
   ["gemini-4-hydrogen", "Gemini 4 Hydrogen"],
   ["google/gemini-4-hydrogen", "Gemini 4 Hydrogen"],
   ["gemini-4-carbon", "Gemini 4 Carbon"],
+  ["gemini-4-neon", "Gemini 4 Neon"],
+  ["google/gemini-4-neon", "Gemini 4 Neon"],
   ["claude-fable-5.2", "Claude Fable 5.2"],
   ["claude-fable-5-2", "Claude Fable 5.2"],
   ["glm-5.3-flashx", "GLM-5.3 FlashX"],
@@ -123,7 +125,7 @@ test("OMP injects each newly supported profile hint after the host prompt", asyn
 test("OMP leaves unknown variants to the unsupported-model policy", async t => {
   const h = harness(t)
   for (const id of [
-    "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "glm-5.3-flashxx",
+    "gemini-4-hydrogen-extra", "gemini-4-hydrogens", "gemini-4-carbon-copy", "gemini-4-neon-extra", "gemini-4-neons", "gemini-40-neon", "gemini-4.0-neon", "glm-5.3-flashxx",
     "glm-5.3-flashh", "glm-5.3-flashx-legal", "glm-5.3-flashx-legals", "glm-5.30-flashx",
     "kimi-k3.1", "kimi-k3.10-pro", "kimi-k3-pro", "minimax-m3.1", "minimax-m31-flash",
     "muse", "muse-spark", "muse-wonder-1.1", "muse-wonder-extra", "muse-wonder-full", "muse-wonderful",

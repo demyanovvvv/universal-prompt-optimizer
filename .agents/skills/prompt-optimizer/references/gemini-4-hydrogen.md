@@ -1,12 +1,10 @@
 # Gemini 4 Hydrogen prompt profile
 
-**Provenance:** official model-specific developer/API guide plus official Google family prompting guidance, checked 2026-11-13. The official model ID is `gemini-4-hydrogen`; there is no `gemini-4.0-hydrogen` and no bare `gemini-4` alias.
+**Provenance:** official Hydrogen developer/API guide plus shared Google prompting practices, checked 2026-11-20. The official model ID is `gemini-4-hydrogen`; there is no `gemini-4.0-hydrogen` and no bare `gemini-4` alias.
 
-Use clear, specific instructions: preserve the goal, relevant context, constraints, expected output and observable completion criteria. Add labels, delimiters or examples only where they remove real ambiguity. These are shared Google prompting practices applied to Hydrogen, not a newly prescribed Hydrogen prompt template.
+Use a clear objective, relevant context, hard constraints and the requested output. Add labels, delimiters or examples only when they resolve real ambiguity; use examples for non-obvious formats or behavior. For untrusted source material, clearly mark it as data and state how to use it. For recurring prompts, iterate against representative inputs and evaluate outputs. Avoid redundant/conflicting instructions and do not pad a precise request with a generic template. These are shared Google practices, not a Hydrogen-specific prompt recipe.
 
-For complex multi-file work, make scope, dependencies and required verification explicit when missing. Preserve a precise short request unchanged: this is the optimizer's lean quality gate, not a claim from the Hydrogen guide.
-
-Keep prompt shaping separate from runtime reasoning. Do not add manual chain-of-thought scaffolding: Google's shared guide recommends trying the model's native Thinking without explicit step-by-step instructions. Hydrogen's unified context includes input, thinking, function calls and final output, and thinking is part of the answer budget, so select relevant context and leave room for the result instead of filling the window. Do not pad prompts to reach a cache threshold.
+For complex multi-file work, state scope, dependencies and required verification when missing. Hydrogen's unified context includes input, thinking, function calls and final output, and thinking is part of the answer budget, so select relevant context and leave room for the result. Do not pad prompts to reach a cache threshold. Keep prompt shaping separate from runtime reasoning; do not add manual chain-of-thought scaffolding.
 
 `HIGH` is Hydrogen's default thinking level; `MEDIUM` is the latency-balanced choice for general coding, and `XHIGH` is reserved for the most complex multi-file, proof or scientific work. Those are host settings, not prompt text.
 

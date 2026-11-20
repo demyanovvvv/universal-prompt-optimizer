@@ -1,12 +1,10 @@
 # Gemini 4 Argon prompt profile
 
-**Provenance:** official model-specific developer/API guide plus official Google family prompting guidance, checked 2026-11-13. The official model ID is `gemini-4-argon`, not `gemini-4.0-argon`.
+**Provenance:** official Argon developer/API guide plus shared Google prompting practices, checked 2026-11-20. The official model ID is `gemini-4-argon`, not `gemini-4.0-argon`.
 
-Use clear, specific instructions: preserve the goal, relevant context, constraints, expected output and observable completion criteria. Add structure or examples only when they resolve ambiguity. These are shared Google prompting practices, not a newly prescribed Argon prompt template.
+Use a clear objective, relevant context, hard constraints and the requested output. Add labels, delimiters or examples only when they resolve real ambiguity; use examples for non-obvious formats or behavior. For untrusted source material, clearly mark it as data and state how to use it. For recurring prompts, iterate against representative inputs and evaluate outputs. Avoid redundant/conflicting instructions and do not pad a precise request with a generic template. These are shared Google practices, not an Argon-specific prompt recipe.
 
-For complex multi-file work, make scope, dependencies and required verification explicit when missing. Preserve a precise short request unchanged; do not import Gemini 3.8 Flash's aggressive PASS/LIGHT preference as an Argon-specific rule. This lean quality gate is the optimizer's operational heuristic, not a claim from the Argon guide.
-
-Keep prompt shaping separate from runtime reasoning. Do not add manual chain-of-thought scaffolding or invent sampling settings. Argon's unified context limit includes input, thinking, function calls and final output: select relevant context and leave room for the result rather than filling the entire window.
+For complex multi-file work, state scope, dependencies and required verification when missing. Argon's unified context limit includes input, thinking, function calls and final output, so select relevant context and leave room for the result. Keep prompt shaping separate from runtime reasoning; do not add manual chain-of-thought scaffolding or invent sampling settings.
 
 Official sources:
 - Model-specific guide: https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/guides/gemini-4-argon
